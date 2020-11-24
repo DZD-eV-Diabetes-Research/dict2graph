@@ -22,13 +22,13 @@ dict2graph comes with some data transform capabilities.
 
 BRANCH: master
 
-`pip3 install git+https://git.connect.dzd-ev.de/dzdtools/pythonmodules.git#subdirectory=dict2graph`
+`pip3 install git+https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph.git`
 
 **Dev**
 
 BRANCH: dict2graph-dev
 
-`pip3 install git+https://git.connect.dzd-ev.de/dzdtools/pythonmodules.git@dict2graph-dev#subdirectory=dict2graph`
+`pip3 install git+https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph.git@dev`
 
 ## Usage
 
