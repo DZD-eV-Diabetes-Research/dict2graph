@@ -60,7 +60,7 @@ json = {
     }
 }
 d2g = Dict2graph()
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -88,7 +88,7 @@ json = {
 d2g = Dict2graph()
 # we can disable specific Collection Hubs by providing a list with it names or disable Collection hubs globaly by providing the string "all"
 d2g.config_list_blocklist_collection_hubs = ["all"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -114,7 +114,7 @@ d2g.config_list_blocklist_collection_hubs = ["all"]
 d2g.config_dict_label_override = {"Action":"Voyage", "Entities":"Person"}
 d2g.config_dict_reltype_override = {"VOYAGE_HAS_PERSON":"TRAVELLER"}
 d2g.config_dict_property_name_override = {"Person":{"id":"Fullname"}, "Voyage":{"target":"destination"}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -128,9 +128,9 @@ There are a lot more possible ways to transform your data before pushing it to t
 
 ### Methods
 
-**Dict2graph.load_json(data,parent_label_name=None)**
+**Dict2graph.parse(data,parent_label_name=None)**
 
-- Description: Transform json data into multiple graphio.nodeset and graphio.relationset . You can apply `load_json` multiple time on a Dict2graph instance
+- Description: Transform json data into multiple graphio.nodeset and graphio.relationset . You can apply `parse` multiple time on a Dict2graph instance
 - Parameters:
 
   - data:
@@ -150,13 +150,13 @@ from py2neo import Graph
 
 json = {"name": "Isabelle Eberhardt"}
 d2g = Dict2graph()
-d2g.load_json(json, "Person")
+d2g.parse(json, "Person")
 d2g.merge(Graph())
 ```
 
 **Dict2graph.create_indexes(graph)**
 
-- Description: Create indexes based on the primary properties (aka merging keys) on the json data that is already loaded with `Dict2graph.load_json()` but not yet in the database
+- Description: Create indexes based on the primary properties (aka merging keys) on the json data that is already loaded with `Dict2graph.parse()` but not yet in the database
 - Parameters:
 
   - graph:
@@ -172,7 +172,7 @@ from py2neo import Graph
 
 json = {"name": "Isabelle Eberhardt"}
 d2g = Dict2graph()
-d2g.load_json(json, "Person")
+d2g.parse(json, "Person")
 d2g.create_indexes(Graph())
 # This will run a `CREATE INDEX ON :Person(name)`
 # Resulting in better Dict2graph.merge() perfomance on larger datasets
@@ -197,7 +197,7 @@ from py2neo import Graph
 
 json = {"Person":{"name": "Isabelle Eberhardt"})
 d2g = Dict2graph()
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 
@@ -219,7 +219,7 @@ from py2neo import Graph
 
 json = {"Person":{"name": "Isabelle Eberhardt"})
 d2g = Dict2graph()
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -273,9 +273,9 @@ json2repeat = {
         "Person": {"name": "Isabelle Eberhardt"},
     },
 }
-d2g.load_json(json1)
-d2g.load_json(json2)
-d2g.load_json(json2repeat)
+d2g.parse(json1)
+d2g.parse(json2)
+d2g.parse(json2repeat)
 d2g.create_merge_depending(Graph())
 # This will create multiple :Action nodes but only one :Person node
 ```
@@ -293,11 +293,11 @@ from py2neo import Graph
 
 json = {"Person":{"name": "Isabelle Eberhardt"})
 d2g = Dict2graph()
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 d2g.clear()
 json = {"Person":{"name": "Sophie Blanchard"})
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -322,7 +322,7 @@ json = {"perSon": {
         "name":"Alexandrine Tinné"}}
 d2g = Dict2graph()
 d2g.config_bool_capitalize_labels = True
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in a node `:Person{name:"Alexandrine Tinné"}`
 ```
@@ -341,7 +341,7 @@ json = {"Person": {
         "age":"34"}}
 d2g = Dict2graph()
 d2g.config_dict_property_casting =  {"Person":{"age":int}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 Results in a node `(:Person{name:"Eva Saxl",age:34})`
@@ -363,7 +363,7 @@ json = {"Hacker": {
         }}
 d2g = Dict2graph()
 d2g.config_dict_label_override = {"Hacker":{"Person":{"profession":"Hacker"}},{"Astronomer":{"Person":{"profession":"Astronomer"}}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in two nodes (:Person{name:"Jude Milhon",profession:"Hacker"}) and (:Person{name:"Giordano Bruno",profession:"Astronomer"})
 ```
@@ -385,7 +385,7 @@ json = {
 }
 d2g = Dict2graph()
 d2g.config_dict_reltype_override = {"PERSON_HAS_FRIENDSHIP":"FRIEND","FRIENDSHIP_PERSON_HAS":"FRIEND"}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in the two `:Person` nodes having following edges`(:Person{name:"Rudolf Manga Bell"})-FRIEND->(:Friendship)-FRIEND->(:Person{name:"Ekandjoum Joseph"})`
 ```
@@ -405,7 +405,7 @@ json = {"Person": {
         }
 d2g = Dict2graph()
 d2g.config_dict_property_name_override = {"Person": {"personname":"name","personjob":"profesion"}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in a node `:Person{name:"Sophie Germain",profesion:"Mathematician"}`
 ```
@@ -428,7 +428,7 @@ json = {"Person": {
         }
 d2g = Dict2graph()
 d2g.config_list_default_primarykeys = ["entity_id"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in merging all nodes by its property `entity_id` without the need to define it for every label like you would need with `config_dict_primarykey_attr_by_label`
 ```
@@ -450,7 +450,7 @@ json = {"Person": {
         }
 d2g = Dict2graph()
 d2g.config_list_default_primarykeys = {"Person":["person_id"],"Thing":["thing_id"]}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in merging `:Person` nodes by `person_id` and `:Thing` nodes by `thing_id`
 ```
@@ -504,7 +504,7 @@ json = {
 }
 d2g = Dict2graph()
 d2g.config_dict_primarykey_generated_hashed_attrs_by_label = {"House":"InnerContent","Floor":"AllAttributes","rooms":["name","habitant"]}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in a Node (:House{_id:"a5f8990bd535822ac12a85487f638af5"}), which hash is based on all children nodes
 # two nodes (:Floor{_id:"a8351c9ab6f8073d57c0a4525c9e8579",...}) and (:Floor{_id:"83871439e32cddd65544e22573c70080",...}) which "_id" propert hash is based on its attributes (Level and ground_floor in this case)
@@ -526,7 +526,7 @@ json = {"Person": {
 d2g = Dict2graph()
 d2g.config_dict_primarykey_generated_hashed_attrs_by_label = {"Person":"AllAttributes"}
 d2g.config_str_primarykey_generated_attr_name = "_hash_id"
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in a node (:Person{_hash_id:"some-md5-hash-string", Name:"Hypatia"})
 ```
@@ -550,7 +550,7 @@ When using `config_list_allowlist_collection_hubs`, only collection hubs with a 
 json = {"Philosophers":{"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}]}}
 d2g = Dict2graph()
 d2g.config_list_blocklist_collection_hubs = ["PhilosophersCollection"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 
 ``` 
@@ -577,7 +577,7 @@ json = {
     }
 d2g = Dict2graph()
 d2g.config_list_blocklist_reltypes = ["PERSON_HAS_FRIENDSHIP"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 results in two `:Person` nodes having no edge connecting them
@@ -606,7 +606,7 @@ json = {
     }}
 d2g = Dict2graph()
 d2g.config_list_blocklist_nodes = ["Friendship"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 results only two Nodes `(:Person{name:"Rudolf Manga Bell"})` and `(:Person{name:"Ekandjoum Joseph"})`
@@ -635,7 +635,7 @@ json = {
     }
 d2g = Dict2graph()
 d2g.config_dict_allowlist_props = {"Person":["name"]}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 results in a node `(:Person{name:"Rudolf Manga Bell"}}`. The `internal_id` property is ditched
@@ -669,7 +669,7 @@ d2g.config_list_allowlist_collection_hubs = ["None"]
 d2g.config_dict_in_between_node = {
     "Persons": {"PERSONS_HAS_PHILOSOPHER": "JobPhilosopher"}
 }
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 
@@ -699,7 +699,7 @@ json = {
 }
 d2g = Dict2graph()
 d2g.config_dict_flip_nodes = {"magazin": "issue"}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 Results in `(:Article)->(:issue)->(:magazin)` instead of `(:Article)->(:magazin)->(:issue)`
@@ -749,8 +749,8 @@ json2 = {
     }
 }
 d2g.config_list_allowlist_collection_hubs = ["NONE"]
-d2g.load_json(json)
-d2g.load_json(json2)
+d2g.parse(json)
+d2g.parse(json2)
 d2g.merge(Graph())
 ```
 
@@ -796,8 +796,8 @@ d2g.config_dict_hubbing = {
         "hub_id_from": "edge",
     }
 }
-d2g.load_json(json)
-d2g.load_json(json2)
+d2g.parse(json)
+d2g.parse(json2)
 d2g.merge(Graph())
 ```
 
@@ -828,7 +828,7 @@ Hubbing is great for larger datasets, when done correct, we can pack together ma
 json = {"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}]}
 d2g = Dict2graph()
 d2g.config_str_collection_hub_label = "{LIST_MEMBER_LABEL}_Collection}"
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in three Nodes (:Person{Name:"Hypatia"}), (:Person{Name:"Epikur"}), (:Person{Name:"Sokrates"}) connected to a node (:Person_Collection)
 ```
@@ -846,7 +846,7 @@ json = {"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}
 d2g = Dict2graph()
 d2g.config_str_collection_hub_label = "{LIST_MEMBER_LABEL}_Collection}"
 d2g.config_list_collection_hub_extra_labels = ["ColHub"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in three Nodes (:Person{Name:"Hypatia"}), (:Person{Name:"Epikur"}), (:Person{Name:"Sokrates"}) connected to a node (:Person_Collection:ColHub) which again will be connected to a Node (:Philosophers)
 ```
@@ -865,7 +865,7 @@ d2g.create(Graph())
 json = {"Philosophers": [{"Person":{"name": "Hypatia"}}, {"Person":{"name": "Epikur"}}, {"Person":{"name": "Sokrates"}}]}}
 d2g = Dict2graph()
 d2g.config_bool_collection_hub_attach_list_members_label = True
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in three Nodes (:Person{Name:"Hypatia"}), (:Person{Name:"Epikur"}), (:Person{Name:"Sokrates"}) connected to a node (:PersonCollection:CollectionHub:Person)
 ```
@@ -885,7 +885,7 @@ d2g.create(Graph())
 json = {"Philosophers": [{"Person":{"name": "Hypatia"}}]}}
 d2g = Dict2graph()
 d2g.config_bool_collection_hub_only_when_len_min_2 = True
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in two Nodes (:Person{Name:"Hypatia"}) and (:Philosophers) with a direct relation, instead of a CollectionHub
 ```
@@ -903,7 +903,7 @@ Nested lists will be represented by the prop name with and index number attached
 json = {"Person": {"firstname": "Dan", "lastname": "Cooper", "middlenames": ["D.", "B."]}}
 d2g = Dict2graph()
 d2g.config_list_deconstruction_limit_nodes = ["middlenames"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 Results in one node `(:Person{"middlenames_1":"B.","middlenames_0":"D.","firstname":"Dan","lastname":"Cooper"})` 
@@ -922,7 +922,7 @@ This would be the result **without** `config_list_deconstruction_limit_nodes*` :
 json = {"Person": {"firstname": "Dan", "lastname": "Cooper", "middlenames": ["D.", "B."]}}
 d2g = Dict2graph()
 d2g.config_dict_concat_list_attr = {"Person": {"middlenames": " "}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in one Node (:Person{middlenames:"D. B.",...}) instead of related extra nodes for every middlenames entry
 ```
@@ -954,7 +954,7 @@ def custom_post_func(node):
     return node
 d2g.config_func_node_post_modifier = custom_post_func
 d2g.config_func_node_pre_modifier = custom_pre_func
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # results in two Nodes (:Person:ExtraPersonLabel{name:"Hypatia",ExtraProp:"ExtraValue"}) and (:House) with a relation named "HOUSE_HAS_PERSON"
 ```
@@ -971,7 +971,7 @@ d2g.merge(Graph())
 json = {"Philosophers":{"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}]}}
 d2g = Dict2graph()
 d2g.config_graphio_batch_size = 2
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # This will push only 2 nodes at a time to the database. Which would be very inefficient when having larger datasets :)
 ```
@@ -988,7 +988,7 @@ d2g.create(Graph())
 json = {"Philosophers":{"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}]}}
 d2g = Dict2graph()
 d2g.config_dict_create_merge_depending_scheme = {"create": ["Philosophers"], "merge": ["Person"]}
-d2g.load_json(json)
+d2g.parse(json)
 # with Dict2graph.create_merge_depending(default) you can define the default operation for nodes or relations not defined in config_dict_create_merge_depending_scheme
 d2g.create_merge_depending(Graph(),default="create")
 # This will create :Philosophers node and merge :Person nodes
@@ -1006,7 +1006,7 @@ d2g.create_merge_depending(Graph(),default="create")
 json = {"Philosophers":{"Person": [{"name": "Hypatia", "period":"Late antiquity"}, {"name": "Epikur","period":"Roman Republic"}, {"name": "Sokrates","period":"Athenian democracy"}]}}
 d2g = Dict2graph()
 d2g.config_dict_property_to_extra_node = {"Person":["period"]}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # This will create extra nodes for "period" (e.g. (:period{perdiod:"Late antiquity"}) ) instead of attaching it as an property of :Person. The :period node will be connected to the :Person node
 ```
@@ -1025,7 +1025,7 @@ d2g.merge(Graph())
 json = {"Philosophers":{"Person": [{"id":1,"data":{"name": "Hypatia"}},{"id":1,"data":{"name": "Hypatia"}},{"id":1,"data":{"name": "Hypatia"}}]}}
 d2g = Dict2graph()
 d2g.config_dict_interfold_json_attr = {"Person":{"data":{"combine_attr_names":False}}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 # This will create :Person nodes with a "name" property. Without `config_dict_interfold_json_attr` it would result in :Person nodes with an extra child node :data (having the "name" property)
 ```
@@ -1047,7 +1047,7 @@ d2g.config_dict_attr_name_to_reltype_instead_of_label = {
 }
 # Ditch collection hubs for children
 d2g.config_list_skip_collection_hubs = ["ChildCollection"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 Results in a graph like `(:Child)<-DAUGHTERS-(:Person)-SONS->(:Child)` instead of `(:daughters)<-PERSON_HAS_DAUGHTERS-(:Person)-PERSON_HAS_SONS->(:sons)`
@@ -1075,7 +1075,7 @@ d2g = Dict2graph()
 d2g.config_list_allowlist_collection_hubs = ["None"]
 d2g.config_dict_node_prop_to_rel_prop = {"Person": {"type":["PERSON_HAS_CHILD"]}}
 d2g.config_dict_primarykey_attr_by_label = {"child": ["name"]}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 Results in a graph like  `(:child)<-[PERSON_HAS_CHILD{type:"Son"}-(:Person)-[PERSON_HAS_CHILD{type:"Daugther"}->(:child)`
@@ -1105,7 +1105,7 @@ json = {
 }
 d2g = Dict2graph()
 d2g.config_list_throw_away_from_nodes = ["unwanted_data"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 Results in a graph like  `(:Person{"name":"Hypatia","id":1})<-(:Philosophers)->(:Person{"name":"Other","id":2})`. note that `(:unwanted_data{"stuff": "we", "dont": "want"})` is missing
@@ -1124,7 +1124,7 @@ json = {"Person": [{"name": "Mahony"}, {}]}
 d2g = Dict2graph()
 d2g.config_list_allowlist_collection_hubs = [None]
 d2g.config_list_throw_away_nodes_with_no_or_empty_attrs = ["Person"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
 This will only insert only one person node `(:Person{"name": "Mahony"})` instead of another empty one `:Person{}`
@@ -1144,7 +1144,7 @@ d2g = Dict2graph()
 d2g.config_list_allowlist_collection_hubs = [None]
 d2g.config_dict_primarykey_attr_by_label = {"Person": ["name"]}
 d2g.config_list_throw_away_nodes_with_empty_key_attr = ["Person"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.merge(Graph())
 ```
  This will only insert one person node `(:Person{"name": "Mahony", "age": 23})` instead of another additional node with only the age `(:Person{"age": 25})` (or actually throwing an py2neo error, because of the missing merge key)
@@ -1167,7 +1167,7 @@ d2g.merge(Graph())
 json = {"Philosophers":{"Person": [{"name": "Hypatia"}, {"name": "Epikur"}, {"name": "Sokrates"}]}}
 d2g = Dict2graph()
 d2g.config_list_skip_collection_hubs = ["PhilosophersCollection"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in three Nodes (:Person{Name:"Hypatia"}), (:Person{Name:"Epikur"}), (:Person{Name:"Sokrates"}) directly connected to the parent node (:Philosophers)
 ```
@@ -1191,7 +1191,7 @@ json = {
     }
 d2g = Dict2graph()
 d2g.config_dict_reltype_override = ["PERSON_HAS_FRIENDSHIP"]
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in the two `:Person` nodes having no edge together
 ```
@@ -1219,7 +1219,7 @@ def custom_label(original_label):
         return original_label
 d2g.config_func_custom_relation_name_generator = custom_rel_name
 d2g.config_func_label_name_generator_func = custom_label
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 # results in two Nodes (:Person{Name:"Hypatia"}) and (:Building) with a relation named "BUILDING_CONTAINS_person"
 ```
@@ -1241,7 +1241,7 @@ json = {
     },
 }
 d2g = Dict2graph()
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 
@@ -1264,7 +1264,7 @@ json = {
 d2g = Dict2graph()
 d2g.config_dict_interfold_json_attr = {"Person": {"Friend": None}}
 d2g.config_dict_reltype_override = {"PERSON_HAS_PERSON": "FRIEND_WITH"}
-d2g.load_json(json)
+d2g.parse(json)
 d2g.create(Graph())
 ```
 
@@ -1306,4 +1306,4 @@ when retrieing due to failed insert wait a random time from 1 second to `max_ret
 
 `True` or `False`
 
-when calling `Dict2graph.load_json` a basic config check will be done. Can be disabled when config has proven. Could improve perfomance (but not really ATM, as the check is very basic and simple (aka fast))
+when calling `Dict2graph.parse` a basic config check will be done. Can be disabled when config has proven. Could improve perfomance (but not really ATM, as the check is very basic and simple (aka fast))

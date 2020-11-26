@@ -17,63 +17,69 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 import json
 import hashlib
 import collections
+from typing import Callable
 import uuid
 import random
 import time
 import graphio
 from linetimer import CodeTimer
-
+from collections import defaultdict
+from typing import List, Dict
 from py2neo import Graph
 
 # from py2neo.client import TransactionError
 from py2neo.database.work import TransientError
 
 
-from graphio import NodeSet, RelationshipSet
+from graphio import NodeSet, RelationshipSet, Relationship
 
 # i know this is a mess. the great refactoring is coming...
 
 
 class Dict2graph(object):
-    config_bool_legacy_support = None
-    config_bool_capitalize_labels = None
+    config_bool_legacy_support: bool = None
+    config_bool_capitalize_labels: bool = None
     # Override generated label names (which are based on json attr names)
     # e.g. config_dict_label_override = {"my_auto_label":"MyAutoLabel"}
     # optional you can attach extra attributes to the node
     # e.g. config_dict_label_override = {"my_auto_label_number4":{"MyAutoLabel":{"number":"4"}}
-    config_dict_label_override = None
-    config_dict_reltype_override = None
-    config_list_drop_reltypes = None  # deprecated
-    config_dict_property_casting = None
+    config_dict_label_override: dict = None
+    config_dict_reltype_override: dict = None
+    config_list_drop_reltypes: list = None  # deprecated
+    config_dict_property_casting: dict = None
     # Override property names for certain nodes
     # e.g. config_dict_property_name_override = {"Person":{"sons":"son","daughters":daughter}}
-    config_dict_property_name_override = None
-    config_list_default_primarykeys = None
-    config_dict_primarykey_attr_by_label = None
-    config_dict_primarykey_generated_hashed_attrs_by_label = None
-    config_str_primarykey_generated_attr_name = None
-    config_dict_hubbing = None
+    config_dict_property_name_override: dict = None
+    config_list_default_primarykeys: list = None
+    config_dict_primarykey_attr_by_label: dict = None
+    config_dict_primarykey_generated_hashed_attrs_by_label: dict = None
+    config_str_primarykey_generated_attr_name: str = None
+    config_dict_hubbing: dict = None
     # Collection hubs node label name. 'LIST_MEMBER_LABEL' can be used as placeholders var. e.g. "{LIST_MEMBER_LABEL}_Collection"
-    config_str_collection_hub_label = None
-    config_list_collection_hub_extra_labels = None
+    config_str_collection_hub_label: str = None
+    config_list_collection_hub_extra_labels: list = None
     # names of collections hubs that should be converted to multiple direct relations e.g. ["MyCollection","OtherCollection"]
     # Set to "all" to disable collection hubs
-    config_list_skip_collection_hubs = None  # deprecated
-    config_list_allowlist_collection_hubs = None
-    config_list_blocklist_collection_hubs = None
-    config_dict_in_between_node = None
+    config_list_skip_collection_hubs: list = None  # deprecated
+    config_list_allowlist_collection_hubs: list = None
+    config_list_blocklist_collection_hubs: list = None
+    config_dict_in_between_node: dict = None
     # If set to true, all collections hubs get a second label, named after the list member nodes
-    config_bool_collection_hub_attach_list_members_label = None
-    config_bool_collection_hub_only_when_len_min_2 = None
-    config_func_custom_relation_name_generator = None
-    config_func_label_name_generator_func = None
-    config_dict_concat_list_attr = None
-    config_func_node_post_modifier = None
-    config_func_node_pre_modifier = None
-    config_graphio_batch_size = None
-    config_dict_create_merge_depending_scheme = None
-    config_dict_property_to_extra_node = None
-    ## config_dict_interfold_json_attr
+    config_bool_collection_hub_attach_list_members_label: bool = None
+    config_bool_collection_hub_only_when_len_min_2: bool = None
+    config_func_custom_relation_name_generator:  Callable[[
+        "Dict2graph.Node", "Dict2graph.Node", dict], str] = None
+    config_func_label_name_generator_func:  Callable[[
+        "Dict2graph.Node"], str] = None
+    config_dict_concat_list_attr: dict = None
+    config_func_node_post_modifier: Callable[[
+        "Dict2graph.Node"],  "Dict2graph.Node"] = None
+    config_func_node_pre_modifier: Callable[[
+        "Dict2graph.Node"],  "Dict2graph.Node"] = None
+    config_graphio_batch_size: int = None
+    config_dict_create_merge_depending_scheme: dict = None
+    config_dict_property_to_extra_node: dict = None
+    # config_dict_interfold_json_attr
     # Reduce a chain of json attr into a node instead of multiple nodes
     # or in other words: merge child objects into its parent
     # {json-object-name:{json-object-attr:{"attrs":[json-sub-attrs],"combine_attr_names":False|True}
@@ -83,37 +89,41 @@ class Dict2graph(object):
     # will result in (:person)->(:family)->(:direct|extended)->(:person)
     # config_dict_interfold_json_attr = {"person":{"family":{"attrs":["direct","extended"]}
     # will result in (:person)->(:family_direct|family_extended)->(:person)
-    config_dict_interfold_json_attr = None
+    config_dict_interfold_json_attr: dict = None
     # Pivot json attribut name to relation type name and define alternative label for content
     # e.g. {"inventor":"Person"}
-    config_dict_attr_name_to_reltype_instead_of_label = None
-    config_dict_node_prop_to_rel_prop = None
+    config_dict_attr_name_to_reltype_instead_of_label: dict = None
+    config_dict_node_prop_to_rel_prop: dict = None
 
-    config_list_allowlist_reltypes = None
-    config_list_allowlist_nodes = None
-    config_dict_allowlist_props = None
+    config_list_allowlist_reltypes: list = None
+    config_list_allowlist_nodes: list = None
+    config_dict_allowlist_props: dict = None
 
-    config_list_blocklist_reltypes = None
-    config_list_blocklist_nodes = None
-    config_dict_blocklist_props = None
+    config_list_blocklist_reltypes: list = None
+    config_list_blocklist_nodes: list = None
+    config_dict_blocklist_props: dict = None
 
-    config_dict_flip_nodes = None
+    config_dict_flip_nodes: dict = None
 
-    config_list_throw_away_from_nodes = None
-    config_list_throw_away_nodes_with_empty_key_attr = None
-    config_list_throw_away_nodes_with_no_or_empty_attrs = None
+    config_list_throw_away_from_nodes: list = None
+    config_list_throw_away_nodes_with_empty_key_attr: list = None
+    config_list_throw_away_nodes_with_no_or_empty_attrs: list = None
 
-    config_list_deconstruction_limit_nodes = None
+    config_list_deconstruction_limit_nodes: list = None
 
-    max_retries_on_insert_errors = 10
-    max_retry_wait_time_sec = 30
+    max_retries_on_insert_errors: int = 10
+    max_retry_wait_time_sec: int = 30
 
-    set_insert_failed_callback = None
+    set_insert_failed_callback: Callable[[
+        str, Exception, NodeSet], None] = None
     disable_config_sanity_check = None
 
-    relationshipSets = None
+    relationshipSets: List[RelationshipSet] = None
 
-    nodeSets = None
+    nodeSets: List[NodeSet] = None
+
+    _current_nodes: List[dict] = None
+    _current_rels: List[Relationship] = None
 
     class Node(dict):
         """Dict2graph class
@@ -279,7 +289,8 @@ class Dict2graph(object):
                 # print("GETID_PK", self.__primarylabel__, dict(self))
                 pk_vals = dict(self)
             self._id_cache = self._d2g._hash_alg(
-                str(json.dumps(pk_vals, sort_keys=True) + "".join(self.labels)).encode()
+                str(json.dumps(pk_vals, sort_keys=True) +
+                    "".join(self.labels)).encode()
             ).hexdigest()
             return self._id_cache
 
@@ -470,7 +481,8 @@ class Dict2graph(object):
                 if isinstance(label_name_override_config, str):
                     label_name_adjusted = label_name_override_config
                 elif isinstance(label_name_override_config, dict):
-                    label_name_adjusted = list(label_name_override_config.keys())[0]
+                    label_name_adjusted = list(
+                        label_name_override_config.keys())[0]
                     # temp save extra props as configured by caller later as we dont have the final primary label yet
                     extra_props = list(label_name_override_config.values())[0]
 
@@ -505,7 +517,8 @@ class Dict2graph(object):
         self.config_dict_in_between_node = {}
         self.config_dict_concat_list_attr = {}
 
-        self.config_dict_create_merge_depending_scheme = {"create": [], "merge": []}
+        self.config_dict_create_merge_depending_scheme = {
+            "create": [], "merge": []}
         self.config_dict_attr_name_to_reltype_instead_of_label = {}
         self.config_dict_node_prop_to_rel_prop = {}
         self.config_list_drop_reltypes = []
@@ -578,12 +591,20 @@ class Dict2graph(object):
                         )
 
     def _legacy_support(self):
-        self.config_list_blocklist_reltypes.extend(self.config_list_drop_reltypes)
+        self.config_list_blocklist_reltypes.extend(
+            self.config_list_drop_reltypes)
         self.config_list_blocklist_collection_hubs.extend(
             self.config_list_skip_collection_hubs
         )
 
     def load_json(self, data, parent_label_name=None):
+        print(
+            "Warning: 'Dict2Graph.load_json()' is deprecated. Use 'Dict2Graph.parse()' instead")
+        self.parse(data, parent_label_name)
+
+    def parse(self, data, parent_label_name=None, instant_save=True):
+        self._current_nodes = defaultdict(list)
+        self._current_rels = defaultdict(list)
         if self.config_bool_legacy_support:
             self._legacy_support()
         if not self.disable_config_sanity_check:
@@ -594,9 +615,21 @@ class Dict2graph(object):
             j = data
         if not isinstance(j, dict) and not isinstance(j, list):
             raise ValueError(
-                "Expected json string, dict or list. got {}".format(type(j).__name__)
+                "Expected json string, dict or list. got {}".format(
+                    type(j).__name__)
             )
         self._jsondict2subgraph(parent_label_name, j)
+        if instant_save:
+            self._save()
+
+    def _save(self):
+        for nodeset_labels, node_properties in self._current_nodes.items():
+            self.nodeSets[nodeset_labels].add_nodes(
+                list_of_properties=node_properties)
+
+        for relationshipset_identifier, relationships in self._current_rels.items():
+            self.relationshipSets[relationshipset_identifier].relationships.extend(
+                relationships)
 
     def merge(self, graph: Graph):
         self._load_to_db(graph, "merge")
@@ -655,7 +688,8 @@ class Dict2graph(object):
         else:
             setname = _set.rel_type
         if (
-            type(error) in (TransientError,)  # (TransactionError, TransientError)
+            # (TransactionError, TransientError)
+            type(error) in (TransientError,)
             or _set._insert_try_count >= self.max_retries_on_insert_errors
         ):
 
@@ -732,9 +766,11 @@ class Dict2graph(object):
                 nodes.merge(graph, batch_size=self.config_graphio_batch_size)
             else:
                 if default == "create":
-                    nodes.create(graph, batch_size=self.config_graphio_batch_size)
+                    nodes.create(
+                        graph, batch_size=self.config_graphio_batch_size)
                 else:
-                    nodes.merge(graph, batch_size=self.config_graphio_batch_size)
+                    nodes.merge(
+                        graph, batch_size=self.config_graphio_batch_size)
 
         for rels in self.relationshipSets.values():
             if (
@@ -748,9 +784,11 @@ class Dict2graph(object):
                 rels.merge(graph, batch_size=self.config_graphio_batch_size)
             else:
                 if default == "create":
-                    rels.create(graph, batch_size=self.config_graphio_batch_size)
+                    rels.create(
+                        graph, batch_size=self.config_graphio_batch_size)
                 else:
-                    rels.merge(graph, batch_size=self.config_graphio_batch_size)
+                    rels.merge(
+                        graph, batch_size=self.config_graphio_batch_size)
 
     def clear(self):
         for ns in self.nodeSets.values():
@@ -885,12 +923,15 @@ class Dict2graph(object):
 
                                 for member in key_members:  # loop fill nodes
                                     if self._debug:
-                                        id_sources_info += "\n" + member.to_string(True)
-                                        hub.add_prop("_hubbing_type", "lead_hub")
+                                        id_sources_info += "\n" + \
+                                            member.to_string(True)
+                                        hub.add_prop(
+                                            "_hubbing_type", "lead_hub")
 
                                     hub_id_str += member.get_id()
 
-                                hub_id = self._hash_alg(hub_id_str.encode()).hexdigest()
+                                hub_id = self._hash_alg(
+                                    hub_id_str.encode()).hexdigest()
                             elif (
                                 hub_def["hub_id_from"] == "edge"
                             ):  # when 'edge'-hubbing, we build the hub id from the root and end node
@@ -904,11 +945,14 @@ class Dict2graph(object):
                                     hub_id_str += hub._edge_node.get_id()
                                     if self._debug:
                                         id_sources_info += (
-                                            "\n" + hub._edge_node.to_string(True)
+                                            "\n" +
+                                            hub._edge_node.to_string(True)
                                         )
-                                        hub.add_prop("_hubbing_type", "edge-hub")
+                                        hub.add_prop(
+                                            "_hubbing_type", "edge-hub")
 
-                                hub_id = self._hash_alg(hub_id_str.encode()).hexdigest()
+                                hub_id = self._hash_alg(
+                                    hub_id_str.encode()).hexdigest()
                             if self._debug:
                                 hub.add_prop("_hashed_from", id_sources_info)
                             hub.add_prop(
@@ -991,19 +1035,18 @@ class Dict2graph(object):
                 ].items():
                     if rel_name in _rel_names:
                         if _prop_name in _node:
-                            relation_props[_prop_name] = _node.pop(_prop_name, None)
+                            relation_props[_prop_name] = _node.pop(
+                                _prop_name, None)
 
         # add relationship to rel-set if not blocked by caller config
         if not relationshipset_identifier in self._blocked_reltypes:
-            self.relationshipSets[relationshipset_identifier].add_relationship(
-                start_node_properties=node.get_merge_props(
+            # Temp safe relationship
+            self._current_rels[relationshipset_identifier].append(
+                Relationship(start_node_labels=list(node_labels), end_node_labels=list(child_node_labels), start_node_properties=node.get_merge_props(
                     all_values_if_no_primary_keys=True
-                ),
-                end_node_properties=child_node.get_merge_props(
+                ), end_node_properties=child_node.get_merge_props(
                     all_values_if_no_primary_keys=True
-                ),
-                properties=relation_props,
-            )
+                ), properties=relation_props))
 
     def _add_relation(
         self, node: Node, child_node: Node, relation_props={}, parent_node=None,
@@ -1014,9 +1057,11 @@ class Dict2graph(object):
         if child_node.__primarylabel__ in self.config_list_throw_away_from_nodes:
             return
         if self._create_hubbing(node, child_node, relation_props):
-            return  # Skip if relation will be hubbed (according to config_dict_hubbing)
+            # Skip if relation will be hubbed (according to config_dict_hubbing)
+            return
         if self._flip_nodes(node, child_node, parent_node, relation_props):
-            return  # Skip if relation will be flipped (according to config_dict_flip_nodes)
+            # Skip if relation will be flipped (according to config_dict_flip_nodes)
+            return
 
         if hasattr(node, "_thrown_away") or hasattr(child_node, "_thrown_away"):
             # node is ditched in _add_node() according to config_list_throw_away_nodes_with_empty_key_attr
@@ -1044,7 +1089,8 @@ class Dict2graph(object):
             return  # Skip if one of the nodes is missing in allowlist or existent in blocklist
 
         if node.__primarylabel__ in self.config_dict_in_between_node:
-            rel_name = self._get_relation_name(node, child_node, relation_props)
+            rel_name = self._get_relation_name(
+                node, child_node, relation_props)
             if rel_name in self.config_dict_in_between_node[node.__primarylabel__]:
                 # caller wants an etxra node in this relationship
                 extra_node_label = self.config_dict_in_between_node[
@@ -1052,7 +1098,8 @@ class Dict2graph(object):
                 ][rel_name]
                 extra_node = Dict2graph(extra_node_label)
                 extra_node.__primarylabel__ = extra_node_label
-                self._generate_id_attr(extra_node, dict(child_node), parent_node)
+                self._generate_id_attr(
+                    extra_node, dict(child_node), parent_node)
                 self._add_node(extra_node)
                 self._add_relation(node, extra_node)
                 self._add_relation(extra_node, child_node)
@@ -1103,11 +1150,11 @@ class Dict2graph(object):
             # get primary keys
             self.nodeSets[labels] = NodeSet(
                 list(labels),
-                merge_keys=node.get_merge_keys(all_values_if_no_primary_keys=True),
+                merge_keys=node.get_merge_keys(
+                    all_values_if_no_primary_keys=True),
             )
-        # add node to nodeset
-
-        self.nodeSets[labels].add_node(node.get_props())
+        # Temp save node
+        self._current_nodes[labels].append(node.get_props())
 
     def _adjust_property_name(self, label, property_name):
         if label in self.config_dict_property_name_override:
@@ -1162,7 +1209,8 @@ class Dict2graph(object):
         def recurse(t, parent_key=""):
             if isinstance(t, list):
                 for i in range(len(t)):
-                    recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
+                    recurse(t[i], parent_key + sep + str(i)
+                            if parent_key else str(i))
             elif isinstance(t, dict):
                 for k, v in t.items():
                     recurse(v, parent_key + sep + k if parent_key else k)
@@ -1223,7 +1271,7 @@ class Dict2graph(object):
 
     def _jsondict2subgraph(self, label_name: str, data_dict, parent_node=None) -> Node:
         """[summary]
-        
+
         Arguments:
             self {[type]} -- [description]
             Dict2graph {[type]} -- [description]
@@ -1277,7 +1325,8 @@ class Dict2graph(object):
                 self.config_bool_collection_hub_only_when_len_min_2
                 and len(data_dict) == 1
             ):
-                node = self._jsondict2subgraph(label_name, data_dict[0], parent_node)
+                node = self._jsondict2subgraph(
+                    label_name, data_dict[0], parent_node)
 
             else:
                 # create collection hub for list children, if applicable
@@ -1308,7 +1357,8 @@ class Dict2graph(object):
                         # DISABLED (by 1 == 2)
                         # ToDo: create config variable for this behavior
                         list_item_node = self._jsondict2subgraph(
-                            list(list_item.keys())[0], list(list_item.values())[0], node
+                            list(list_item.keys())[0], list(
+                                list_item.values())[0], node
                         )
                     else:
                         # we have a list of objects e.g. [{"name":"John"}]
@@ -1329,7 +1379,8 @@ class Dict2graph(object):
                                 }
                                 node.override_reltype = override_val
                             self._add_relation(
-                                node, list_item_node, {"position": index}, parent_node,
+                                node, list_item_node, {
+                                    "position": index}, parent_node,
                             )
             # node = self._generate_id_attr(node, json_data, parent_node)
         elif isinstance(data_dict, dict) and label_name is not None:
@@ -1383,7 +1434,8 @@ class Dict2graph(object):
 
             for attr_to_cn in attrs_to_child_nodes:
                 # create child nodes and connect them to current node
-                child_node = self._jsondict2subgraph(attr_to_cn[0], attr_to_cn[1], node)
+                child_node = self._jsondict2subgraph(
+                    attr_to_cn[0], attr_to_cn[1], node)
 
                 if child_node is not None and child_node != node:
                     if (

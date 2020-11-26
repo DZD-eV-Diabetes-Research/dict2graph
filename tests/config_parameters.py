@@ -1,14 +1,18 @@
 import os
 import sys
 import unittest
+from py2neo import Graph
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
-        os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+        os.path.realpath(os.path.join(
+            os.getcwd(), os.path.expanduser(__file__)))
     )
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 from dict2graph import Dict2graph
+NEO4J_CONF = os.getenv("NEO4J", {})
+g = Graph(**NEO4J_CONF)
 
 
 class TestConfigParameters(unittest.TestCase):
@@ -25,62 +29,27 @@ class TestConfigParameters(unittest.TestCase):
                 {"Person": {"name": "bronko alberts", "age": "34"}},
             ]
         }
+        g.run("Match (n) DETACH DELETE n")
         d2g = Dict2graph()
         d2g.config_list_allowlist_collection_hubs = ["None"]
         d2g.config_list_deconstruction_limit_nodes = ["Person"]
         d2g.config_dict_primarykey_attr_by_label = {"Person": "name"}
-        d2g.load_json(json)
-        expected_result = {
-            "nodesSets": [
-                {
-                    "labels": ["Person"],
-                    "primary_keys": ["name"],
-                    "nodes": [
-                        {
-                            "name": "Eva Saxl",
-                            "age": "34",
-                            "adresse_0_street": "Backogstreet",
-                            "adresse_0_city": "Wankufer",
-                        },
-                        {"name": "bronko alberts", "age": "34"},
-                    ],
-                },
-                {"labels": ["Members"], "primary_keys": [], "nodes": [{}]},
-            ],
-            "relationshipSets": [
-                {
-                    "rel_type": "MEMBERS_HAS_PERSON",
-                    "start_node_labels": frozenset({"Members"}),
-                    "end_node_labels": frozenset({"Person"}),
-                    "start_node_properties": [],
-                    "end_node_properties": ["name"],
-                    "rels": [
-                        {
-                            "start_node_properties": {},
-                            "end_node_properties": {"name": "Eva Saxl"},
-                            "properties": {"position": 0},
-                        },
-                        {
-                            "start_node_properties": {},
-                            "end_node_properties": {"name": "bronko alberts"},
-                            "properties": {"position": 1},
-                        },
-                    ],
-                }
-            ],
-        }
-        self.assertDictEqual(d2g.to_dict(), expected_result)
+        d2g.parse(json)
+        d2g.merge(g)
+        result = g.run("Match(n)-[r] -> (m) Return n, r, m").data()
+        expected_result = []
+        self.assertListEqual(result, expected_result)
 
     def test_config_dict_json_attr_to_reltype_instead_of_label(self):
         json = {
-            "Person": {"name": "Ben", "daughters": ["Kielyr"], "sons": ["Bodevan"],}
+            "Person": {"name": "Ben", "daughters": ["Kielyr"], "sons": ["Bodevan"], }
         }
         d2g = Dict2graph()
         d2g.config_dict_json_attr_to_reltype_instead_of_label = {
             "daughters": "Child",
             "sons": "Child",
         }
-        d2g.load(json)
+        d2g.parse(json)
         expected_result = {
             "nodesSets": [
                 {
@@ -144,7 +113,7 @@ class TestConfigParameters(unittest.TestCase):
                 "PERSON_HAS_CHILD": {"to": ["type"]}
             }
             d2g.config_dict_primarykey_attr_by_label = {"child": "name"}
-            d2g.load_json(json)
+            d2g.parse(json)
 
             expected_result = {
                 "nodesSets": [
@@ -210,7 +179,8 @@ class TestConfigParameters(unittest.TestCase):
                             {"id": 2, "name": "Other"},
                         ],
                     },
-                    {"labels": ["Philosophers"], "primary_keys": [], "nodes": [{}]},
+                    {"labels": ["Philosophers"],
+                        "primary_keys": [], "nodes": [{}]},
                 ],
                 "relationshipSets": [
                     {
