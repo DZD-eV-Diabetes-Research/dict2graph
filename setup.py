@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="dict2graph",
-    version="0.4.3",
+    version="0.4.4",
     description="Class to transfer json to a neo4j graph",
     url="",
     author="TB",

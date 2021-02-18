@@ -122,8 +122,8 @@ class Dict2graph(object):
 
     nodeSets: List[NodeSet] = None
 
-    _current_nodes: List[dict] = None
-    _current_rels: List[Relationship] = None
+    _current_nodes = None
+    _current_rels = None
 
     class Node(dict):
         """Dict2graph class
@@ -141,7 +141,7 @@ class Dict2graph(object):
 
         def __init__(
             self,
-            d2g: "dict2graph",
+            d2g: "Dict2graph",
             source_data_dict_attribute_name: str,
             parent_node: "Dict2graph.Node" = None,
             subordinate_data=None,
@@ -188,8 +188,10 @@ class Dict2graph(object):
             return "(" + ":".join(self.labels) + str(dict(self)) + ")"
 
         def __str__(self):
-            return "(" + ":".join(self.labels) + str(self.get_merge_props()) + ")"
-
+            if self.get_merge_props():
+                return "(" + ":".join(self.labels) + str(self.get_merge_props()) + ")"
+            else:
+                return "(" + ":".join(self.labels) + str(id(self)) + ")"
         def to_string(self, show_all_props=False):
             if show_all_props:
                 return self.__repr__()
@@ -311,7 +313,9 @@ class Dict2graph(object):
                 hash_mode = self._d2g.config_dict_primarykey_generated_hashed_attrs_by_label[
                     self.__primarylabel__
                 ]
-
+                children_id: str = None
+                parent_id: str = None
+                id_val: str = None
                 if hash_mode is not None:
 
                     if isinstance(hash_mode, list):
@@ -866,12 +870,15 @@ class Dict2graph(object):
             # iterate all hub definitions
             for hub_def in hub_defs:
                 # look if caller wants us to create a hub
+
                 if (
                     node_label in hub_def["hub_member_labels"]
                     or node_label == hub_root_label
                 ) and child_node_label in hub_def["hub_member_labels"]:
+
                     hubs = []
                     # do we allready have created a hub?
+                    
                     if (
                         hasattr(child_node, "_hub_member_of")
                         and child_node._hub_member_of
@@ -890,11 +897,18 @@ class Dict2graph(object):
                         hubs[0]._edge_node = child_node
                         # save hub to child node
                         child_node._hub_member_of = hubs
+                    
                     if node_label != hub_root_label:
                         if hasattr(node, "_hub_member_of"):
-                            node._hub_member_of = list(
-                                set(node._hub_member_of) | set(hubs)
-                            )
+                            # Nono, this generated a bug, because hubs will be compared with __eq__ by key/values not by memory address.
+                            # As hubs have no ID yet here, all are "equal" and will disappear here. only the first in list will be kept.
+                            #node._hub_member_of = list(
+                            #    set(node._hub_member_of) | set(hubs)
+                            #)
+                            
+                            # This makes more sense and is easier :).  duplicates will be removed when merging data the to db anyway as the hubs will have the same hash
+                            # This will break "Dict2graph.create" function, but it is broken anyway and has to be removed :)
+                            node._hub_member_of.extend(hubs)
                         else:
                             node._hub_member_of = hubs
                         for hub in hubs:
@@ -903,6 +917,8 @@ class Dict2graph(object):
                     if (
                         hub_root_label == node_label
                     ):  # we are at the root node of the hub. lets produce the (root)-(hub)-[(members)] subgraph
+                        id_sources_info: str = None
+                        hub_id: str = None
                         for hub in hubs:
 
                             if (
@@ -1279,6 +1295,7 @@ class Dict2graph(object):
             Node -- The generated top anchor node from the subgraph
         """
         node = None
+        label_name_adjusted: str = None
         if self._is_empty(data_dict):
             return None
         if label_name is not None:
