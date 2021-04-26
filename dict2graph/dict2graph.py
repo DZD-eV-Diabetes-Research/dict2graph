@@ -31,7 +31,7 @@ from py2neo import Graph
 from py2neo.database.work import TransientError
 
 
-from graphio import NodeSet, RelationshipSet, Relationship
+from graphio import NodeSet, RelationshipSet
 
 # i know this is a mess. the great refactoring is coming...
 
@@ -192,6 +192,7 @@ class Dict2graph(object):
                 return "(" + ":".join(self.labels) + str(self.get_merge_props()) + ")"
             else:
                 return "(" + ":".join(self.labels) + str(id(self)) + ")"
+
         def to_string(self, show_all_props=False):
             if show_all_props:
                 return self.__repr__()
@@ -267,7 +268,7 @@ class Dict2graph(object):
                 return self.__primarykeys__
 
         def get_id(self) -> str:
-            """ 
+            """
             Similar purpose as pythons hash() function but deterministic. Will create the same result on all architectures and python versions
             """
             if self._id_cache is not None:
@@ -632,8 +633,11 @@ class Dict2graph(object):
                 list_of_properties=node_properties)
 
         for relationshipset_identifier, relationships in self._current_rels.items():
-            self.relationshipSets[relationshipset_identifier].relationships.extend(
-                relationships)
+            for rel in relationships:
+                self.relationshipSets[relationshipset_identifier].add_relationship(
+                    **rel)
+            # self.relationshipSets[relationshipset_identifier].relationships.extend(
+            #    relationships)
 
     def merge(self, graph: Graph):
         self._load_to_db(graph, "merge")
@@ -729,7 +733,8 @@ class Dict2graph(object):
         """This is a debug function for showing all nodeset with all nodes and all relationshipset with all relations. Only use this on tiny debug sample datasets, using this on real sized datasets will propaply eat all your memory
 
         Returns:
-            dict: {"nodesSets": [graphio.objects.nodeset.NodeSet], "relationshipSets": [graphio.objects.nodeset.RelationshipSet]}
+            dict: {"nodesSets": [graphio.objects.nodeset.NodeSet], "relationshipSets": [
+                graphio.objects.nodeset.RelationshipSet]}
         """
         nodesets = []
         for nodes in self.nodeSets.values():
@@ -878,7 +883,7 @@ class Dict2graph(object):
 
                     hubs = []
                     # do we allready have created a hub?
-                    
+
                     if (
                         hasattr(child_node, "_hub_member_of")
                         and child_node._hub_member_of
@@ -897,15 +902,15 @@ class Dict2graph(object):
                         hubs[0]._edge_node = child_node
                         # save hub to child node
                         child_node._hub_member_of = hubs
-                    
+
                     if node_label != hub_root_label:
                         if hasattr(node, "_hub_member_of"):
                             # Nono, this generated a bug, because hubs will be compared with __eq__ by key/values not by memory address.
                             # As hubs have no ID yet here, all are "equal" and will disappear here. only the first in list will be kept.
-                            #node._hub_member_of = list(
+                            # node._hub_member_of = list(
                             #    set(node._hub_member_of) | set(hubs)
-                            #)
-                            
+                            # )
+
                             # This makes more sense and is easier :).  duplicates will be removed when merging data the to db anyway as the hubs will have the same hash
                             # This will break "Dict2graph.create" function, but it is broken anyway and has to be removed :)
                             node._hub_member_of.extend(hubs)
@@ -1058,11 +1063,11 @@ class Dict2graph(object):
         if not relationshipset_identifier in self._blocked_reltypes:
             # Temp safe relationship
             self._current_rels[relationshipset_identifier].append(
-                Relationship(start_node_labels=list(node_labels), end_node_labels=list(child_node_labels), start_node_properties=node.get_merge_props(
+                {"start_node_properties": node.get_merge_props(
                     all_values_if_no_primary_keys=True
-                ), end_node_properties=child_node.get_merge_props(
+                ), "end_node_properties": child_node.get_merge_props(
                     all_values_if_no_primary_keys=True
-                ), properties=relation_props))
+                ), "properties": relation_props})
 
     def _add_relation(
         self, node: Node, child_node: Node, relation_props={}, parent_node=None,
