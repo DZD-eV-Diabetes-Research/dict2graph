@@ -29,7 +29,6 @@ from graphio import NodeSet, RelationshipSet
 
 
 class Dict2graph(object):
-    config_bool_legacy_support: bool = None
     config_bool_capitalize_labels: bool = None
     # Override generated label names (which are based on json attr names)
     # e.g. config_dict_label_override = {"my_auto_label":"MyAutoLabel"}
@@ -102,7 +101,6 @@ class Dict2graph(object):
 
     def __init__(self):
         self.config_bool_capitalize_labels = False
-        self.config_bool_legacy_support = True
         self.config_dict_label_override = {}
         self.config_dict_reltype_override = {}
         self.config_dict_property_name_override = {}
@@ -185,22 +183,10 @@ class Dict2graph(object):
                         None,
                     ]:
                         raise ValueError(
-                            "Invalid mode for 'config_dict_primarykey_generated_hashed_attrs_by_label' on label {}. For usage info have a look at 'https://git.connect.dzd-ev.de/dzdtools/pythonmodules/-/tree/master/DZDjson2GraphIO#config_dict_primarykey_generated_hashed_attrs_by_label'".format(
+                            "Invalid mode for 'config_dict_primarykey_generated_hashed_attrs_by_label' on label {}. For usage info have a look at 'https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph/-/blob/master/README.md#config_dict_primarykey_generated_hashed_attrs_by_label'".format(
                                 label
                             )
                         )
-
-    def _legacy_support(self):
-        self.config_list_blocklist_reltypes.extend(
-            self.config_list_drop_reltypes)
-        self.config_list_blocklist_collection_hubs.extend(
-            self.config_list_skip_collection_hubs
-        )
-
-    def load_json(self, data, parent_label_name=None):
-        print(
-            "Warning: 'Dict2Graph.load_json()' is deprecated. Use 'Dict2Graph.parse()' instead")
-        self.parse(data, parent_label_name)
 
     def parse(self, data: Dict, parent_label_name: str = None, instant_save: bool = True) -> Tuple[List[graphio.NodeSet], List[graphio.RelationshipSet]]:
         """[summary]
@@ -220,8 +206,6 @@ class Dict2graph(object):
         """
         self._current_nodes = defaultdict(list)
         self._current_rels = defaultdict(list)
-        if self.config_bool_legacy_support:
-            self._legacy_support()
         if not self.disable_config_sanity_check:
             self._config_sanity_check()
         if isinstance(data, str):
@@ -236,9 +220,7 @@ class Dict2graph(object):
         self._jsondict2subgraph(parent_label_name, j)
         if instant_save:
             self.save()
-            return self._current_nodes, self._current_rels
-        else:
-            return self._current_nodes, self._current_rels
+        return self._current_nodes, self._current_rels
 
     def save(self):
         for nodeset_labels, node_properties in self._current_nodes.items():
@@ -249,6 +231,32 @@ class Dict2graph(object):
             for rel in relationships:
                 self.relationshipSets[relationshipset_identifier].add_relationship(
                     **rel)
+
+    def get_nodesets(self):
+        for nodeset in self.nodeSets:
+            yield nodeset
+
+    def get_relationshipsets(self):
+        for relationshipSets in self.relationshipSets:
+            yield relationshipSets
+
+    def create_indexes(self, graph: Graph):
+        for rels in self.relationshipSets.values():
+            rels.create_index(graph)
+        for nodes in self.nodeSets.values():
+            nodes.create_index(graph)
+
+    def create(self, graph: Graph):
+        for nodes in self.nodeSets.values():
+            nodes.create(graph)
+        for rels in self.relationshipSets.values():
+            rels.create(graph)
+
+    def merge(self, graph: Graph):
+        for nodes in self.nodeSets.values():
+            nodes.merge(graph)
+        for rels in self.relationshipSets.values():
+            rels.merge(graph)
 
     def to_dict(self):
         """This is a debug function for showing all nodeset with all nodes and all relationshipset with all relations. Only use this on small datasets, using this on large sized datasets will propaply eat all your memory
@@ -283,12 +291,6 @@ class Dict2graph(object):
             ns.nodes = []
         for rs in self.relationshipSets.values():
             rs.relationships = []
-
-    def create_indexes(self, graph: Graph):
-        for rels in self.relationshipSets.values():
-            rels.create_index(graph)
-        for nodes in self.nodeSets.values():
-            nodes.create_index(graph)
 
     def _is_basic_type(self, val):
         if isinstance(val, (str, int, float, bool)):

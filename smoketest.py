@@ -6,7 +6,8 @@ from py2neo import Graph
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
-        os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+        os.path.realpath(os.path.join(
+            os.getcwd(), os.path.expanduser(__file__)))
     )
 
     sys.path.append(os.path.normpath(SCRIPT_DIR))
@@ -61,7 +62,8 @@ person2 = {
 }
 
 d2g = Dict2graph()
-d2g.config_list_skip_collection_hubs = ["PhonenumberCollection", "NestedlistCollection"]
+d2g.config_list_skip_collection_hubs = [
+    "PhonenumberCollection", "NestedlistCollection"]
 
 d2g.config_dict_primarykey_attr_by_label = {
     "Address": "streetAddress",
@@ -85,8 +87,8 @@ d2g.config_dict_property_name_override = {
 
 d2g.config_dict_label_override = {"phoneNumbers": "phoneNumber"}
 d2g.config_dict_property_name_override = {"children": {"children": "child"}}
-d2g.load_json(person, "Person")
-d2g.load_json(person2, "Person")
+d2g.parse(person, "Person")
+d2g.parse(person2, "Person")
 
 persons = [
     {
@@ -133,18 +135,13 @@ persons = [
     },
 ]
 
-d2g.load_json(persons, "Person")
+d2g.parse(persons, "Person")
 g = Graph()
 # print(d2g.relationshipSets[frozenset({"Phonenumbers", "CollectionHub"})])
 print("Indexes...")
 d2g.create_indexes(g)
 print("..created")
-d2g.config_dict_create_merge_depending_scheme["create"] = [
-    ["Phonenumber"],
-    "PERSON_HAS_NESTEDLIST",
-]
-d2g.config_dict_create_merge_depending_scheme["merge"] = []
-d2g.create_merge_depending(g, "merge")
+d2g.merge(g)
 
 
 person5 = {
@@ -181,7 +178,7 @@ d2g.config_dict_reltype_override = {"DAUGHTERS": "DAUGHTER", "SONS": "SON"}
 # d2g.config_dict_property_name_override["daughters"] = "child"
 # d2g.config_dict_property_name_override["sons"] = "child"
 d2g.config_dict_label_override["Human"] = "Person"
-d2g.load_json(person5)
+d2g.parse(person5)
 
 person6 = {
     "Person": {
@@ -198,7 +195,7 @@ person6 = {
 d2g.config_dict_interfold_json_attr = {"Person": {"children": None}}
 
 d2g.config_dict_json_attr_to_reltype_instead_of_label.update(
-    {"children_daughters": "Child", "children_sons": "Child",}
+    {"children_daughters": "Child", "children_sons": "Child", }
 )
 d2g.config_dict_property_name_override.update(
     {"Child": {"children_daughters": "child", "children_sons": "child"}}
@@ -214,7 +211,7 @@ d2g.config_dict_property_name_override.update(
     {"Child": {"children_daughters": "child", "children_sons": "child"}}
 )
 """
-d2g.load_json(person6)
+d2g.parse(person6)
 
 
 person7 = {
@@ -240,6 +237,5 @@ d2g.config_dict_label_override.update(
 )
 d2g.config_dict_property_to_extra_node = {"Person": "spouse"}
 
-d2g.load_json(person7)
-d2g.make_distinct_before_insert = True
+d2g.parse(person7)
 d2g.merge(g)

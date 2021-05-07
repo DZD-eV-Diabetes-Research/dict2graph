@@ -1,16 +1,16 @@
 import os
 import sys
 import unittest
-from py2neo import Graph
+from py2neo import Graph, Node, Relationship, Path
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
-        os.path.realpath(os.path.join(
-            os.getcwd(), os.path.expanduser(__file__)))
+        os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
     )
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 from dict2graph import Dict2graph
+
 NEO4J_CONF = os.getenv("NEO4J", {})
 g = Graph(**NEO4J_CONF)
 
@@ -36,16 +36,33 @@ class TestConfigParameters(unittest.TestCase):
         d2g.config_dict_primarykey_attr_by_label = {"Person": "name"}
         d2g.parse(json)
         d2g.merge(g)
-        result = g.run("Match(n)-[r] -> (m) Return n, r, m").data()
-        expected_result = []
-        self.assertListEqual(result, expected_result)
+        result = g.run("Match p=(n)-[r]->(m) Return p").to_subgraph()
+        self.assertEqual(len(list(result.nodes)), 3)
+        self.assertEqual(len(list(result.relationships)), 2)
+        return
+
+        expected_node_members = Node("Members")
+        expected_node_eva = Node(
+            "Person",
+            age="34",
+            name="Eva Saxl",
+            **{"adresse-0-city": "Wankufer", "adresse-0-street": "Backogstreet"}
+        )
+        expected_node_bronko = Node("Person", age="34", name="bronko alberts")
+        expected_rels = (
+            Relationship(expected_node_members, "MEMBERS_HAS_PERSON", expected_node_eva)
+            | Relationship(
+                expected_node_members, "MEMBERS_HAS_PERSON", expected_node_bronko
+            ),
+        )
+        self.assertListEqual(list(result.relationships), expected_rels)
 
     def test_config_dict_json_attr_to_reltype_instead_of_label(self):
         json = {
-            "Person": {"name": "Ben", "daughters": ["Kielyr"], "sons": ["Bodevan"], }
+            "Person": {"name": "Ben", "daughters": ["Kielyr"], "sons": ["Bodevan"],}
         }
         d2g = Dict2graph()
-        d2g.config_dict_json_attr_to_reltype_instead_of_label = {
+        d2g.config_dict_attr_name_to_reltype_instead_of_label = {
             "daughters": "Child",
             "sons": "Child",
         }
@@ -179,8 +196,7 @@ class TestConfigParameters(unittest.TestCase):
                             {"id": 2, "name": "Other"},
                         ],
                     },
-                    {"labels": ["Philosophers"],
-                        "primary_keys": [], "nodes": [{}]},
+                    {"labels": ["Philosophers"], "primary_keys": [], "nodes": [{}]},
                 ],
                 "relationshipSets": [
                     {
