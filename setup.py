@@ -11,7 +11,7 @@ setup(
     packages=["dict2graph"],
     install_requires=[
         "py2neo",
-        "graphio @ git+https://github.com/motey/graphio.git",
+        "graphio",
         "linetimer",
     ],
     zip_safe=False,
