@@ -1,0 +1,24 @@
+image: python:3
+
+stages:
+  - deploy
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+before_script:
+  - python -V # Print out python version for debugging
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+deploy-job:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - pip install .
+    - python setup.py sdist bdist_wheel
+    - pip install twine
+    #- TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+    - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*

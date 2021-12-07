@@ -1,8 +1,8 @@
 # Dict2graph
 
-Transfer python dict data into a neo4j graph with the help of https://github.com/kaiserpreusse/graphio
+Transfer python-dict/json data into a neo4j graph with the help of https://github.com/kaiserpreusse/graphio
 
-dict2graph comes with some data transform capabilities.
+dict2graph also comes with some data transform capabilities.
 
 ## About
 
