@@ -17,138 +17,90 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 import json
 import hashlib
 import collections
-from typing import Callable
+from typing import Callable, Union
 import uuid
 import graphio
 from collections import defaultdict
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Literal
 from py2neo import Graph
-
+from neo4j import Driver
 
 from graphio import NodeSet, RelationshipSet
 
 
 class Dict2graph(object):
-    config_bool_capitalize_labels: bool = None
-    # Override generated label names (which are based on json attr names)
-    # e.g. config_dict_label_override = {"my_auto_label":"MyAutoLabel"}
-    # optional you can attach extra attributes to the node
-    # e.g. config_dict_label_override = {"my_auto_label_number4":{"MyAutoLabel":{"number":"4"}}
-    config_dict_label_override: dict = None
-    config_dict_reltype_override: dict = None
-    config_list_drop_reltypes: list = None  # deprecated
-    config_dict_property_casting: dict = None
-    # Override property names for certain nodes
-    # e.g. config_dict_property_name_override = {"Person":{"sons":"son","daughters":daughter}}
-    config_dict_property_name_override: dict = None
-    config_list_default_primarykeys: list = None
-    config_dict_primarykey_attr_by_label: dict = None
-    config_dict_primarykey_generated_hashed_attrs_by_label: dict = None
-    config_str_primarykey_generated_attr_name: str = None
-    config_dict_hubbing: dict = None
-    # Collection hubs node label name. 'LIST_MEMBER_LABEL' can be used as placeholders var. e.g. "{LIST_MEMBER_LABEL}_Collection"
-    config_str_collection_hub_label: str = None
-    config_list_collection_hub_extra_labels: list = None
-    # names of collections hubs that should be converted to multiple direct relations e.g. ["MyCollection","OtherCollection"]
-    # Set to "all" to disable collection hubs
-    config_list_skip_collection_hubs: list = None  # deprecated
-    config_list_allowlist_collection_hubs: list = None
-    config_list_blocklist_collection_hubs: list = None
-    config_dict_in_between_node: dict = None
-    # If set to true, all collections hubs get a second label, named after the list member nodes
-    config_bool_collection_hub_attach_list_members_label: bool = None
-    config_bool_collection_hub_only_when_len_min_2: bool = None
-    config_func_custom_relation_name_generator: Callable[
-        ["Dict2graph.Node", "Dict2graph.Node", dict], str
-    ] = None
-    config_func_label_name_generator_func: Callable[["Dict2graph.Node"], str] = None
-    config_dict_concat_list_attr: dict = None
-    config_func_node_post_modifier: Callable[
-        ["Dict2graph.Node"], "Dict2graph.Node"
-    ] = None
-    config_func_node_pre_modifier: Callable[
-        ["Dict2graph.Node"], "Dict2graph.Node"
-    ] = None
-    config_graphio_batch_size: int = None
-    config_dict_create_merge_depending_scheme: dict = None
-    config_dict_property_to_extra_node: dict = None
-    config_dict_interfold_json_attr: dict = None
-    config_dict_attr_name_to_reltype_instead_of_label: dict = None
-    config_dict_node_prop_to_rel_prop: dict = None
-
-    config_list_allowlist_reltypes: list = None
-    config_list_allowlist_nodes: list = None
-    config_dict_allowlist_props: dict = None
-
-    config_list_blocklist_reltypes: list = None
-    config_list_blocklist_nodes: list = None
-    config_dict_blocklist_props: dict = None
-
-    config_dict_flip_nodes: dict = None
-
-    config_list_throw_away_from_nodes: list = None
-    config_list_throw_away_nodes_with_empty_key_attr: list = None
-    config_list_throw_away_nodes_with_no_or_empty_attrs: list = None
-
-    config_list_deconstruction_limit_nodes: list = None
-
-    disable_config_sanity_check: bool = None
-
-    relationshipSets: List[RelationshipSet] = None
-
-    nodeSets: List[NodeSet] = None
-
-    _current_nodes = None
-    _current_rels = None
-
     def __init__(self):
-        self.config_bool_capitalize_labels = False
-        self.config_dict_label_override = {}
-        self.config_dict_reltype_override = {}
-        self.config_dict_property_name_override = {}
-        self.config_dict_property_casting = {}
-        self.config_dict_primarykey_generated_hashed_attrs_by_label = {}
-        self.config_dict_primarykey_attr_by_label = {}
-        self.config_list_default_primarykeys = ["id", "_id"]
-        self.config_str_primarykey_generated_attr_name = "_id"
-        self.config_dict_hubbing = {}
-        self.config_str_collection_hub_label = "{LIST_MEMBER_LABEL}Collection"
-        self.config_list_collection_hub_extra_labels = ["CollectionHub"]
-        self.config_bool_collection_hub_attach_list_members_label = False
-        self.config_bool_collection_hub_only_when_len_min_2 = False
-        self.config_dict_in_between_node = {}
-        self.config_dict_concat_list_attr = {}
+        self.config_bool_capitalize_labels: bool = False
+        self.config_dict_label_override: Dict[str, Union[str, Dict[str, str]]] = {}
+        self.config_dict_reltype_override: Dict[str, Union[str, Dict[str, str]]] = {}
+        self.config_dict_property_name_override: Dict[str, Dict[str, str]] = {}
+        self.config_dict_property_casting: Dict[str, Dict[str, str]] = {}
+        self.config_dict_primarykey_generated_hashed_attrs_by_label: Dict[
+            str, Union[str, List[str]]
+        ] = {}
+        self.config_dict_primarykey_attr_by_label: Dict[str, List] = {}
+        self.config_list_default_primarykeys: List[str] = ["id", "_id"]
+        self.config_str_primarykey_generated_attr_name: str = "_id"
+        self.config_dict_hubbing: Dict[str, Dict[str, Union[str, List[str]]]] = {}
+        self.config_str_collection_hub_label: str = "{LIST_MEMBER_LABEL}Collection"
+        self.config_list_collection_hub_extra_labels: List[str] = ["CollectionHub"]
+        self.config_bool_collection_hub_attach_list_members_label: bool = False
+        self.config_bool_collection_hub_only_when_len_min_2: bool = False
+        self.config_dict_in_between_node: Dict[str, Dict[str, str]] = {}
+        self.config_dict_concat_list_attr: Dict[str, Dict[str, str]] = {}
 
-        self.config_dict_create_merge_depending_scheme = {"create": [], "merge": []}
-        self.config_dict_attr_name_to_reltype_instead_of_label = {}
-        self.config_dict_node_prop_to_rel_prop = {}
-        self.config_list_drop_reltypes = []
+        self.config_func_node_post_modifier: Callable[
+            ["Dict2graph.Node"], "Dict2graph.Node"
+        ] = None
+        self.config_func_node_pre_modifier: Callable[
+            ["Dict2graph.Node"], "Dict2graph.Node"
+        ] = None
+        self.config_func_label_name_generator_func: Callable[
+            ["Dict2graph.Node"], str
+        ] = None
+        self.config_func_custom_relation_name_generator: Callable[
+            ["Dict2graph.Node", "Dict2graph.Node", dict], str
+        ] = None
 
-        self.config_list_allowlist_collection_hubs = []
-        self.config_list_allowlist_reltypes = []
-        self.config_list_allowlist_nodes = []
-        self.config_dict_allowlist_props = {}
+        self.config_dict_create_merge_depending_scheme: Dict[
+            Literal["create", "merge"], List[str]
+        ] = {"create": [], "merge": []}
+        self.config_dict_property_to_extra_node: Dict[
+            str, Union[List[str], Dict[str : Literal["copy", "move"]]]
+        ] = {}
 
-        self.config_list_blocklist_collection_hubs = []
-        self.config_list_blocklist_reltypes = []
-        self.config_list_blocklist_nodes = []
-        self.config_dict_blocklist_props = {}
+        self.config_dict_interfold_json_attr: Dict[str, Dict[str, str]] = None
 
-        self.config_list_skip_collection_hubs = []  # deprecated
-        self.config_list_deconstruction_limit_nodes = []
-        self.config_dict_flip_nodes = {}
+        self.config_dict_attr_name_to_reltype_instead_of_label: Dict[str, str] = {}
+        self.config_dict_node_prop_to_rel_prop: Dict[str, Dict[str, List[str]]] = {}
 
-        self.config_list_throw_away_from_nodes = []
-        self.config_list_throw_away_nodes_with_empty_key_attr = []
-        self.config_list_throw_away_nodes_with_no_or_empty_attrs = []
+        self.config_list_allowlist_collection_hubs: List[str] = []
+        self.config_list_allowlist_reltypes: List[str] = []
+        self.config_list_allowlist_nodes: List[str] = []
+        self.config_dict_allowlist_props: Dict[str, List[str]] = {}
 
-        self.relationshipSets = {}
-        self.nodeSets = {}
+        self.config_list_blocklist_collection_hubs: List[str] = []
+        self.config_list_blocklist_reltypes: List[str] = []
+        self.config_list_blocklist_nodes: List[str] = []
+        self.config_dict_blocklist_props: Dict[str, List[str]] = {}
 
-        self.disable_config_sanity_check = False
-        self._blocked_reltypes = []
+        self.config_list_deconstruction_limit_nodes: List[str] = []
+        self.config_dict_flip_nodes: Dict[str, str] = {}
+
+        self.config_list_throw_away_from_nodes: List[str] = []
+        self.config_list_throw_away_nodes_with_empty_key_attr: List[str] = []
+        self.config_list_throw_away_nodes_with_no_or_empty_attrs: List[str] = []
+
+        self.relationshipSets: Dict[str, RelationshipSet] = {}
+        self.nodeSets: Dict[str, NodeSet] = {}
+
+        self.disable_config_sanity_check: bool = False
+        self._blocked_reltypes: List[str] = []
         self._hash_alg = hashlib.md5
-        self._debug = False
+        self._debug: bool = False
+
+        self._current_nodes: List[graphio.NodeSet] = None
+        self._current_rels: List[graphio.RelationshipSet] = None
 
     def _config_sanity_check(self):
         if self.config_list_allowlist_reltypes and self.config_list_blocklist_reltypes:
@@ -242,19 +194,19 @@ class Dict2graph(object):
         for relationshipSets in self.relationshipSets:
             yield relationshipSets
 
-    def create_indexes(self, graph: Graph):
+    def create_indexes(self, graph: Union[Graph, Driver]):
         for rels in self.relationshipSets.values():
             rels.create_index(graph)
         for nodes in self.nodeSets.values():
             nodes.create_index(graph)
 
-    def create(self, graph: Graph):
+    def create(self, graph: Union[Graph, Driver]):
         for nodes in self.nodeSets.values():
             nodes.create(graph)
         for rels in self.relationshipSets.values():
             rels.create(graph)
 
-    def merge(self, graph: Graph):
+    def merge(self, graph: Union[Graph, Driver]):
         for nodes in self.nodeSets.values():
             nodes.merge(graph)
         for rels in self.relationshipSets.values():
