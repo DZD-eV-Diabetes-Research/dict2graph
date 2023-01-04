@@ -1,5 +1,7 @@
 # Dict2graph
 
+V3 - BRANCH - Total Refactoring WIP!
+
 Transfer python-dict/json data into a neo4j graph with the help of https://github.com/kaiserpreusse/graphio
 
 dict2graph also comes with some data transform capabilities.
