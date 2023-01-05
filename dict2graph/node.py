@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Dict, Tuple
+from typing import TYPE_CHECKING, List, Dict, Tuple, Union
 import json
 import uuid
 
@@ -11,17 +11,14 @@ class Node(dict):
     def __init__(
         self,
         labels: Tuple[str],
-        parent_node: Node,
-        subordinate_data: Dict,
-        primary_prop="id",
-        primary_label=None,
+        subordinate_data: Union[Dict, List, str, int],
         **kwargs,
     ):
         self.labels = labels
-        self.primary_label = primary_label if primary_label else labels[0]
-        self.parent_node = parent_node
+        self.primary_label = labels[0]
+        self.parent_node = None
         self.subordinate_data = subordinate_data
-        self.primary_prop = primary_prop
+        self.primary_prop = "id"
         self._origin_primary_label = self.primary_label
         self.update(**kwargs)
         self.relations: List = []
