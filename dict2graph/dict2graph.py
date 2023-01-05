@@ -18,6 +18,7 @@ import json
 import hashlib
 import collections
 from typing import Callable, Union
+import datetime
 import uuid
 import graphio
 from collections import defaultdict
@@ -26,9 +27,129 @@ from py2neo import Graph
 from neo4j import Driver
 
 from graphio import NodeSet, RelationshipSet
+from dict2graph.node import Node
+from dict2graph.relation import Relation
 
 
-class Dict2graph(object):
+class Dict2graph:
+    def __init__(self, create_hub_nodes_for_lists: bool = True):
+        self.create_hub_nodes_for_lists = create_hub_nodes_for_lists
+
+        self._nodeSets: Dict[NodeSet] = {}
+        self._relSets: Dict[RelationshipSet] = {}
+
+    def parse(self, data: Dict, root_node_label: str = None):
+        if isinstance(data, str):
+            j = json.loads(data)
+        else:
+            j = data
+        if not isinstance(j, dict) and not isinstance(j, list):
+            raise ValueError(
+                "Expected json string, dict or list. got {}".format(type(j).__name__)
+            )
+        if self._is_empty(j):
+            return None
+        if isinstance(j, dict):
+            self._parse_traverse_dict_fragment(label_name=root_node_label, data=j)
+        elif isinstance(j, list):
+            self._parse_traverse_list_fragment(label_name=root_node_label, data=j)
+
+    def _parse_traverse_dict_fragment(
+        self, label_name: str, data: Dict, parent_node=None
+    ) -> Node:
+        new_node = Node(labels=[label_name], subordinate_data=data)
+        new_child_nodes = []
+        for key, val in data.items():
+            if self._is_basic_attribute_type(val):
+                # value is a simple type. attach as property to node
+                new_node[key] = val
+            elif isinstance(val, dict):
+                # value is dict in itself and therefore sub node
+                new_child_nodes.append(
+                    self._parse_traverse_dict_fragment(label_name=key, data=val)
+                )
+            elif isinstance(val, list):
+                # value is list and therefore a collection of sub nodes
+                new_child_nodes.extend(
+                    self._parse_traverse_list_fragment(label_name=key, data=val)
+                )
+
+    def _parse_traverse_list_fragment(
+        self, label_name: str, data: Dict, parent_node=None
+    ) -> List[Node]:
+        list_root_hub_node: Node = parent_node
+        if self.create_hub_nodes_for_lists:
+            list_root_hub_node = Node(
+                self._get_list_root_hub_node_labels(label_name=label_name),
+                subordinate_data=data,
+            )
+        new_nodes: List[Node] = []
+        for index, obj in enumerate(data):
+            if isinstance(obj, dict):
+                new_nodes.append(
+                    self._parse_traverse_dict_fragment(label_name=label_name, data=obj)
+                )
+            elif isinstance(obj, list):
+                new_nodes.extend(
+                    self._parse_traverse_list_fragment(label_name=label_name, data=obj)
+                )
+            elif self._is_basic_attribute_type(obj):
+                n = Node([label_name], subordinate_data=obj)
+                n["_data"] = obj
+                new_nodes.append()
+
+    def _is_empty(self, val):
+        if not val:
+            return True
+        if isinstance(val, str) and val.upper() in ["", "NULL"]:
+            return True
+        return False
+
+    def _is_basic_attribute_type(self, val):
+        if isinstance(val, (str, int, float, bool)):
+            return True
+        else:
+            return False
+
+    def _get_list_root_hub_node_labels(self, label_name) -> str:
+        return ["CollectionHub", label_name]
+
+    def _add_node(self, node: Node):
+        node_set: NodeSet = self._get_or_create_nodeSet(node)
+        node_set.add_node(node)
+
+    def _get_or_create_nodeSet(self, node: Node) -> NodeSet:
+        if node.labels not in self._nodeSets:
+            self._nodeSets[node.labels] = NodeSet(
+                labels=node.labels,
+                merge_keys=[node.primary_prop] if node.primary_prop else None,
+            )
+        return self._nodeSets[node.labels]
+
+    def _add_rel(self, relation: Relation):
+        rel_set: RelationshipSet = self._get_or_create_relSet(relation)
+        rel_set.add_relationship(
+            start_node_properties=relation.start_node,
+            end_node_properties=relation.end_node,
+            properties=relation,
+        )
+
+    def _get_or_create_relSet(self, relation: Relation) -> RelationshipSet:
+        rel_id = tuple(
+            relation.start_node.labels, relation.relation_type, relation.end_node.labels
+        )
+        if rel_id not in self._relSets:
+            self._relSets[rel_id] = RelationshipSet(
+                rel_type=relation.relation_type,
+                start_node_labels=relation.start_node.labels,
+                end_node_labels=relation.end_node.labels,
+                start_node_properties=[relation.start_node.primary_prop],
+                end_node_properties=[relation.end_node.primary_prop],
+            )
+        return self._relSets[rel_id]
+
+
+class Dict2graph_old(object):
     def __init__(self):
         self.config_dict_label_override: Dict[str, Union[str, Dict[str, str]]] = {}
         self.config_dict_reltype_override: Dict[str, Union[str, Dict[str, str]]] = {}
@@ -254,7 +375,7 @@ class Dict2graph(object):
     def _is_empty(self, val):
         if not val:
             return True
-        if isinstance(val, str) and val.upper() in ["", "NULL", "NONE"]:
+        if isinstance(val, str) and val.upper() in ["", "NULL"]:
             return True
         return False
 

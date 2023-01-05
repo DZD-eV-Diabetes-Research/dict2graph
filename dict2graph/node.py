@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Dict
+from typing import TYPE_CHECKING, List, Dict, Tuple
 import json
 import uuid
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class Node(dict):
     def __init__(
         self,
-        labels: List[str],
+        labels: Tuple[str],
         parent_node: Node,
         subordinate_data: Dict,
         primary_prop="id",
@@ -24,6 +24,7 @@ class Node(dict):
         self.primary_prop = primary_prop
         self._origin_primary_label = self.primary_label
         self.update(**kwargs)
+        self.relations: List = []
 
     @property
     def id(self):

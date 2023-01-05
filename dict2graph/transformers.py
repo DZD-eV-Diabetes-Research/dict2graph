@@ -87,6 +87,13 @@ class OverrideReliationType(_RelationTransformerBase):
         rel.relation_type = self.value
 
 
+class FlipNodes(_RelationTransformerBase):
+    def transform_rel(self, rel: Relation):
+        start_node = rel.start_node
+        rel.start_node = rel.end_node
+        rel.end_node = start_node
+
+
 class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
     def __init__(self, source_property_name: str, target_property_name: str):
         self.source_property_name = source_property_name
@@ -103,10 +110,21 @@ class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
         self.transform(rel)
 
 
-NODE_TRANSFORMERS = typing.Union[
+class NodeTrans:
+    OverridePrimaryLabel = OverridePrimaryLabel
+    CapitalizeLabels = CapitalizeLabels
+    OverridePropertyName = OverridePropertyName
+
+
+class RelTrans:
+    OverrideReliationType = OverrideReliationType
+    OverridePropertyName = OverridePropertyName
+
+
+NODE_TRANSFORMER = typing.Union[
     OverridePrimaryLabel, CapitalizeLabels, OverridePropertyName
 ]
-REL_TRANSFORMERS = typing.Union[OverrideReliationType, OverridePropertyName]
+REL_TRANSFORMER = typing.Union[OverrideReliationType, OverridePropertyName]
 
 
 class Transformer:
@@ -115,14 +133,14 @@ class Transformer:
             self.primary_label_match = primary_label_match
             self.label_match = label_match
 
-        def do(self, transform: NODE_TRANSFORMERS):
+        def do(self, transform: NODE_TRANSFORMER):
             transform._set_primary_label_match = self.label_match
 
     class RelTransformerMatcher:
         def _set_rel_matcher(self, relation_match):
             self.relation_match = relation_match
 
-        def do(self, transform: REL_TRANSFORMERS):
+        def do(self, transform: REL_TRANSFORMER):
             transform._set_primary_label_match = self.label_match
 
     @classmethod
@@ -132,8 +150,8 @@ class Transformer:
         label: Union[str, AnyLabel] = AnyLabel,
         relation_name: Union[str, AnyLabel] = AnyRelation,
     ) -> NodeTransformerMatcher:
-        tm = Transformer.TransformerMatcher()
-        tm._set_matcher(
+        tm = Transformer.NodeTransformerMatcher()
+        tm._set_node_matcher(
             primary_label_match=primary_label,
             label_match=label,
             relation_match=relation_name,
@@ -145,12 +163,14 @@ class Transformer:
         cls,
         relation_name: Union[str, AnyRelation] = AnyRelation,
     ) -> RelTransformerMatcher:
-        tm = Transformer.TransformerMatcher()
-        tm._set_matcher(
+        tm = Transformer.RelTransformerMatcher()
+        tm._set_rel_matcher(
             relation_match=relation_name,
         )
         return tm
 
 
-Transformer.match_node(label="thing").do(OverridePropertyName())
+Transformer.match_node(label="thing").do(
+    NodeTrans.OverridePropertyName("propa", "propb")
+)
 Transformer.match_rel(relation_name="thing").do(OverrideReliationType("Thong"))
