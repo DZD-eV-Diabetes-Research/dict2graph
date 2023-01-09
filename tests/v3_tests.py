@@ -22,8 +22,8 @@ json = {
         ],
     }
 }
+json1 = [1, 2, 3, 4, 5]
+json2 = {"Article": "dummes json"}
 d2g = Dict2graph()
 d2g.parse(json, "test")
-print(d2g._nodeSets)
-print(d2g._relSets)
-d2g.merge(GraphDatabase.driver("neo4j://localhost"))
+d2g.create(GraphDatabase.driver("neo4j://localhost"))

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Dict, Tuple, Union
+from typing import TYPE_CHECKING, List, Dict, Tuple, Union, FrozenSet
 import json
 import uuid
 
@@ -10,25 +10,33 @@ if TYPE_CHECKING:
 class Node(dict):
     def __init__(
         self,
-        labels: Tuple[str],
-        subordinate_data: Union[Dict, List, str, int],
+        labels: FrozenSet[str],
+        source_data: Union[Dict, List, str, int],
         **kwargs,
     ):
-        self.labels = labels
-        self.primary_label = labels[0]
+        self.labels = frozenset(labels) if labels else frozenset()
+        self.primary_label = labels[0] if self.labels else None
         self.parent_node = None
-        self.subordinate_data = subordinate_data
-        self.primary_prop = "id"
+        self.source_data = source_data
+        self._merge_properties: List[str] = None
         self._origin_primary_label = self.primary_label
         self.update(**kwargs)
         self.relations: List = []
 
     @property
+    def merge_properties(self) -> List[str]:
+        return self._merge_properties if self._merge_properties else list(self.keys())
+
+    @merge_properties.setter
+    def merge_properties(self, primary_props: List[str]):
+        self._merge_properties = primary_props
+
+    @property
     def id(self):
-        if self.primary_prop:
-            return self[self.primary_prop]
+        if self.merge_properties and len(self.merge_properties) == 1:
+            return self[self.merge_properties[0]]
         else:
-            return None
+            return hash(tuple([self[key] for key in self.merge_properties]))
 
 
 class Node_old(dict):

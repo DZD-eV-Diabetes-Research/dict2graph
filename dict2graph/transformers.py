@@ -1,4 +1,4 @@
-from typing import Callable, Union, Dict, Type, Any, Tuple, Literal
+from typing import Callable, Union, Dict, Type, Any, Tuple, Literal, List
 from dict2graph.node import Node
 from dict2graph.relation import Relation
 import typing
@@ -77,6 +77,14 @@ class OverridePrimaryLabel(_NodeTransformerBase):
         node.primary_label = self.value
 
 
+class SetMergeProperties(_NodeTransformerBase):
+    def __init__(self, props: List[str]):
+        self.props = list(props)
+
+    def transform_node(self, node: Node):
+        node.merge_properties = self.props
+
+
 class OverrideReliationType(_RelationTransformerBase):
     def __init__(self, value: str = None):
         if not value:
@@ -133,15 +141,16 @@ class Transformer:
             self.primary_label_match = primary_label_match
             self.label_match = label_match
 
-        def do(self, transform: NODE_TRANSFORMER):
+        def do(self, transform: NODE_TRANSFORMER) -> NODE_TRANSFORMER:
             transform._set_primary_label_match = self.label_match
 
     class RelTransformerMatcher:
-        def _set_rel_matcher(self, relation_match):
-            self.relation_match = relation_match
+        def _set_rel_matcher(self, relation_type_match):
+            self.relation_type_match = relation_type_match
 
-        def do(self, transform: REL_TRANSFORMER):
-            transform._set_primary_label_match = self.label_match
+        def do(self, transform: REL_TRANSFORMER) -> REL_TRANSFORMER:
+            transform._set_relation_type_match = self.relation_type_match
+            return transform
 
     @classmethod
     def match_node(
@@ -165,12 +174,14 @@ class Transformer:
     ) -> RelTransformerMatcher:
         tm = Transformer.RelTransformerMatcher()
         tm._set_rel_matcher(
-            relation_match=relation_name,
+            relation_type_match=relation_name,
         )
         return tm
 
 
+"""
 Transformer.match_node(label="thing").do(
     NodeTrans.OverridePropertyName("propa", "propb")
 )
 Transformer.match_rel(relation_name="thing").do(OverrideReliationType("Thong"))
+"""
