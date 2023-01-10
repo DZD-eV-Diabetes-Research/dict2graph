@@ -3,8 +3,10 @@ from typing import TYPE_CHECKING, List, Dict, Tuple, Union, FrozenSet
 import json
 import uuid
 
+
 if TYPE_CHECKING:
     from dict2graph import Dict2graph
+    from dict2graph.relation import Relation
 
 
 class Node(dict):
@@ -14,14 +16,17 @@ class Node(dict):
         source_data: Union[Dict, List, str, int],
         **kwargs,
     ):
+        if isinstance(labels, str):
+            labels = [labels]
         self.labels = frozenset(labels) if labels else frozenset()
-        self.primary_label = labels[0] if self.labels else None
-        self.parent_node = None
-        self.source_data = source_data
+        self.primary_label: str = labels[0] if self.labels else None
+        self.parent_node: Node = None
+        self.source_data: Dict = source_data
         self._merge_properties: List[str] = None
-        self._origin_primary_label = self.primary_label
         self.update(**kwargs)
-        self.relations: List = []
+        self.relations: List[Relation] = []
+        self.is_list_collection_hub: bool = False
+        self.deleted = False
 
     @property
     def merge_properties(self) -> List[str]:
@@ -37,6 +42,14 @@ class Node(dict):
             return self[self.merge_properties[0]]
         else:
             return hash(tuple([self[key] for key in self.merge_properties]))
+
+    @property
+    def outgoing_relations(self) -> List[Relation]:
+        return [rel for rel in self.relations if rel.start_node == self]
+
+    @property
+    def incoming_relations(self) -> List[Relation]:
+        return [rel for rel in self.relations if rel.end_node == self]
 
 
 class Node_old(dict):

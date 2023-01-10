@@ -1,0 +1,55 @@
+from typing import TYPE_CHECKING, Callable, Union, Dict, Type, Any, Tuple, Literal, List
+from dict2graph.node import Node
+from dict2graph.relation import Relation
+from dict2graph.transformers._base import (
+    _NodeTransformerBase,
+    _RelationTransformerBase,
+    AnyLabel,
+    AnyRelation,
+)
+import typing
+
+
+class CapitalizeLabels(_NodeTransformerBase):
+    def transform_node(self, node: Node):
+        node.labels = frozenset([label.capitalize() for label in node.labels])
+        node.primary_label = node.primary_label.capitalize()
+
+
+class OverrideLabel(_NodeTransformerBase):
+    def __init__(self, value: str = None):
+        """Override any generated labels with another string
+
+        Args:
+            value (bool, optional): The new label string. Defaults to None.
+        """
+        if not value:
+            raise ValueError(f"Value must be a string. Got '{value}'")
+        self.value = value
+
+    def transform_node(self, node: Node):
+        node.labels = [
+            self.value if self.label_match in [label, None, AnyLabel] else label
+            for label in node.labels
+        ]
+
+
+class SetMergeProperties(_NodeTransformerBase):
+    def __init__(self, props: List[str]):
+        self.props = list(props)
+
+    def transform_node(self, node: Node):
+        node.merge_properties = self.props
+
+
+class PopListHubNodes(_NodeTransformerBase):
+    def custom_node_match(self, node: Node) -> bool:
+        return node.is_list_collection_hub
+
+    def transform_node(self, node: Node):
+        new_list_item_nodes_parent = node.parent_node
+        for list_item_rel in node.outgoing_relations:
+            list_item_rel.start_node = new_list_item_nodes_parent
+        for parent_rels in node.incoming_relations:
+            parent_rels.deleted = True
+        node.deleted = True

@@ -29,7 +29,12 @@ from neo4j import Driver
 from graphio import NodeSet, RelationshipSet
 from dict2graph.node import Node
 from dict2graph.relation import Relation
-from dict2graph.transformers import NODE_TRANSFORMER, REL_TRANSFORMER
+from dict2graph.transformers.generic_transformers import (
+    NODE_TRANSFORMER,
+    REL_TRANSFORMER,
+    _NodeTransformerBase,
+    _RelationTransformerBase,
+)
 
 
 class Dict2graph:
@@ -44,11 +49,31 @@ class Dict2graph:
         self.node_transformators: List[NODE_TRANSFORMER] = []
         self.relation_transformators: List[REL_TRANSFORMER] = []
 
-    def add_node_transformation(self, transformator: NODE_TRANSFORMER):
-        self.node_transformators.append(transformator)
+    def add_node_transformation(
+        self, transformator: Union[NODE_TRANSFORMER, List[NODE_TRANSFORMER]]
+    ):
+        if isinstance(transformator, list):
+            for trans in transformator:
+                self.add_node_transformation(trans)
+        if not issubclass(transformator.__class__, _NodeTransformerBase):
+            raise ValueError(
+                f"Expected transformer of subclass '{_NodeTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_relation_transformation()` instead of `add_node_transformation`?"
+            )
+        else:
+            self.node_transformators.append(transformator)
 
-    def add_relation_transformation(self, transformator: REL_TRANSFORMER):
-        self.relation_transformators.append(transformator)
+    def add_relation_transformation(
+        self, transformator: Union[REL_TRANSFORMER, List[REL_TRANSFORMER]]
+    ):
+        if isinstance(transformator, list):
+            for trans in transformator:
+                self.add_relation_transformation(trans)
+        elif not issubclass(transformator.__class__, _RelationTransformerBase):
+            raise ValueError(
+                f"Expected transformer of subclass '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_node_transformation()` instead of `add_relation_transformation`?"
+            )
+        else:
+            self.relation_transformators.append(transformator)
 
     def parse(self, data: Dict, root_node_labels: Union[str, List[str]]):
         root_node_labels = (
@@ -101,7 +126,6 @@ class Dict2graph:
                 new_child_nodes.append(n)
                 new_rels.append(
                     Relation(
-                        relation_type=self._get_relation_type(n, new_node),
                         start_node=new_node,
                         end_node=n,
                     )
@@ -114,7 +138,6 @@ class Dict2graph:
                     new_child_nodes.append(child_node)
                     new_rels.append(
                         Relation(
-                            relation_type=self._get_relation_type(new_node, child_node),
                             start_node=new_node,
                             end_node=child_node,
                         )
@@ -135,6 +158,7 @@ class Dict2graph:
                 self._get_list_root_hub_node_labels(labels=labels),
                 source_data=data,
             )
+            list_root_hub_node.is_list_collection_hub = True
             list_root_hub_node.parent_node = parent_node
             self._node_cache.append(list_root_hub_node)
         # parse nodes
@@ -156,11 +180,10 @@ class Dict2graph:
 
         # create relations to list root node
         child_ids: List[str] = []
-        if self.create_hub_nodes_for_lists:
+        if list_root_hub_node.is_list_collection_hub:
             for index, node in enumerate(new_list_item_nodes):
                 child_ids.append(node.id)
                 r = Relation(
-                    relation_type=self._get_relation_type(list_root_hub_node, node),
                     start_node=list_root_hub_node,
                     end_node=node,
                     index=index,
@@ -168,7 +191,7 @@ class Dict2graph:
                 node.parent_node = list_root_hub_node
                 self._rel_cache.append(r)
             list_root_hub_node["id"] = hash(frozenset(child_ids))
-            list_root_hub_node.primary_label = "_id"
+            list_root_hub_node.merge_properties = "_id"
             return [list_root_hub_node]
         return new_list_item_nodes
 
@@ -227,24 +250,24 @@ class Dict2graph:
             )
         return self._relSets[rel_id]
 
-    def _get_relation_type(self, start_node: Node, end_node: Node) -> str:
-        return f"{start_node.primary_label}_HAS_{end_node.primary_label}"
-
     def _flush_cache(self):
         for node in self._node_cache:
             self._run_node_transformations(node)
-            self._add_node(node)
+            if not node.deleted:
+                self._add_node(node)
         for rel in self._rel_cache:
             self._run_rel_transformations(rel)
-            self._add_rel(rel)
+            if not rel.deleted:
+                self._add_rel(rel)
 
     def _run_node_transformations(self, node: Node) -> Node:
         for trans in self.node_transformators:
-            node = trans.transform_node(node)
+            print(node)
+            trans._run_node_match_and_transform(node)
 
     def _run_rel_transformations(self, rel: Relation):
         for trans in self.relation_transformators:
-            trans.transform_rel(rel)
+            trans._run_rel_match_and_transform(rel)
 
 
 class Dict2graph_old(object):
