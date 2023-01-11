@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Dict, Tuple, Union, FrozenSet
 import json
 import uuid
-
+import hashlib
 
 if TYPE_CHECKING:
     from dict2graph import Dict2graph
@@ -14,34 +14,98 @@ class Node(dict):
         self,
         labels: FrozenSet[str],
         source_data: Union[Dict, List, str, int],
+        parent_node: Node,
         **kwargs,
     ):
         if isinstance(labels, str):
             labels = [labels]
         self.labels = frozenset(labels) if labels else frozenset()
         self.primary_label: str = labels[0] if self.labels else None
-        self.parent_node: Node = None
+        self.parent_node: Node = parent_node
         self.source_data: Dict = source_data
-        self._merge_properties: List[str] = None
+        self._merge_property_keys: List[str] = None
         self.update(**kwargs)
         self.relations: List[Relation] = []
         self.is_list_collection_hub: bool = False
+        self.is_root_node: bool = False
         self.deleted = False
 
     @property
-    def merge_properties(self) -> List[str]:
-        return self._merge_properties if self._merge_properties else list(self.keys())
+    def merge_property_keys(self) -> List[str]:
+        return (
+            self._merge_property_keys
+            if self._merge_property_keys
+            else list(self.keys())
+        )
 
-    @merge_properties.setter
-    def merge_properties(self, primary_props: List[str]):
-        self._merge_properties = primary_props
+    @merge_property_keys.setter
+    def merge_property_keys(self, primary_props: List[str]):
+        self._merge_property_keys = primary_props
 
     @property
     def id(self):
-        if self.merge_properties and len(self.merge_properties) == 1:
-            return self[self.merge_properties[0]]
+        if self.merge_property_keys and len(self.merge_property_keys) == 1:
+            return self[self.merge_property_keys[0]]
         else:
-            return hash(tuple([self[key] for key in self.merge_properties]))
+            return hashlib.md5(
+                bytes(
+                    json.dumps([self[key] for key in self.merge_property_keys]),
+                    "utf-8",
+                ),
+            ).hexdigest()
+
+    def get_hash(
+        self,
+        include_merge_properties: bool = True,
+        include_other_properties: bool = True,
+        include_parent_properties: bool = False,
+        include_children_properties: bool = False,
+        include_children_data: bool = False,
+    ) -> str:
+        hash_source_values = []
+        if include_merge_properties:
+            hash_source_values.extend(
+                [
+                    {key: val}
+                    for key, val in self.items()
+                    if key in self.merge_property_keys
+                ]
+            )
+        if include_other_properties:
+            hash_source_values.extend(
+                [
+                    {key: val}
+                    for key, val in self.items()
+                    if key not in self.merge_property_keys
+                ]
+            )
+        if include_parent_properties and self.parent_node is not None:
+            hash_source_values.extend(
+                [
+                    {key: val}
+                    for key, val in self.parent_node.items()
+                    if key not in self.parent_node.merge_property_keys
+                ]
+            )
+        if include_children_properties:
+            for child in self.child_nodes:
+                hash_source_values.extend(
+                    [
+                        {key: val}
+                        for key, val in child.items()
+                        if key not in child.merge_property_keys
+                    ]
+                )
+        if include_children_data:
+            for child in self.child_nodes:
+                hash_source_values.append(child.source_data)
+
+        return hashlib.md5(
+            bytes(
+                json.dumps(hash_source_values),
+                "utf-8",
+            ),
+        ).hexdigest()
 
     @property
     def outgoing_relations(self) -> List[Relation]:
@@ -50,6 +114,14 @@ class Node(dict):
     @property
     def incoming_relations(self) -> List[Relation]:
         return [rel for rel in self.relations if rel.end_node == self]
+
+    @property
+    def child_nodes(self) -> List[Node]:
+        return [rel.end_node for rel in self.outgoing_relations]
+
+    def __str__(self):
+
+        return f"({':'.join(self.labels)}{super().__str__()})"
 
 
 class Node_old(dict):

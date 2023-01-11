@@ -30,27 +30,28 @@ from graphio import NodeSet, RelationshipSet
 from dict2graph.node import Node
 from dict2graph.relation import Relation
 from dict2graph.transformers.generic_transformers import (
-    NODE_TRANSFORMER,
-    REL_TRANSFORMER,
     _NodeTransformerBase,
     _RelationTransformerBase,
 )
 
 
 class Dict2graph:
-    simple_list_item_data_property_name = "_list_item_data"
+    simple_list_item_data_property_name: str = "_list_item_data"
+    list_item_relation_index_property_name: str = "_index"
+    list_hub_id_property_name: str = "id"
+    root_node_labels: List[str] = ["Dict2GraphRoot"]
+    root_node_default_id_propery_name = "id"
 
-    def __init__(self, create_hub_nodes_for_lists: bool = True):
-        self.create_hub_nodes_for_lists = create_hub_nodes_for_lists
+    def __init__(self):
         self._node_cache: List[Node] = []
         self._rel_cache: List[Relation] = []
         self._nodeSets: Dict[Tuple, NodeSet] = {}
         self._relSets: Dict[Tuple, RelationshipSet] = {}
-        self.node_transformators: List[NODE_TRANSFORMER] = []
-        self.relation_transformators: List[REL_TRANSFORMER] = []
+        self.node_transformators: List[_NodeTransformerBase] = []
+        self.relation_transformators: List[_RelationTransformerBase] = []
 
     def add_node_transformation(
-        self, transformator: Union[NODE_TRANSFORMER, List[NODE_TRANSFORMER]]
+        self, transformator: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
     ):
         if isinstance(transformator, list):
             for trans in transformator:
@@ -63,7 +64,8 @@ class Dict2graph:
             self.node_transformators.append(transformator)
 
     def add_relation_transformation(
-        self, transformator: Union[REL_TRANSFORMER, List[REL_TRANSFORMER]]
+        self,
+        transformator: Union[_RelationTransformerBase, List[_RelationTransformerBase]],
     ):
         if isinstance(transformator, list):
             for trans in transformator:
@@ -75,26 +77,40 @@ class Dict2graph:
         else:
             self.relation_transformators.append(transformator)
 
-    def parse(self, data: Dict, root_node_labels: Union[str, List[str]]):
-        root_node_labels = (
-            root_node_labels
-            if isinstance(root_node_labels, list)
-            else [root_node_labels]
-        )
+    def parse(self, data: Dict, root_node_labels: Union[str, List[str]] = None):
+        if root_node_labels is None:
+            if len(data.keys()) == 1:
+                # we only have one key and therefore only one Node on the top-/root-level. We dont need a root Node to connect the toplevels nodes.
+                root_node_labels = list(data.keys())[0]
+                data = data[root_node_labels]
+            else:
+                root_node_labels = [self.root_node_labels]
+        elif isinstance(root_node_labels, str):
+            root_node_labels = [root_node_labels]
+
         if isinstance(data, str):
             j = json.loads(data)
         else:
             j = data
         if not isinstance(j, dict) and not isinstance(j, list):
             raise ValueError(
-                "Expected json string, dict or list. got {}".format(type(j).__name__)
+                "Expected json compatible object like a dict or list. got {}".format(
+                    type(j).__name__
+                )
             )
         if self._is_empty(j):
             return None
         if isinstance(j, dict):
-            self._parse_traverse_dict_fragment(labels=root_node_labels, data=j)
+            root_node = self._parse_traverse_dict_fragment(
+                labels=root_node_labels, data=j, parent_node=None
+            )
+
         elif isinstance(j, list):
-            self._parse_traverse_list_fragment(labels=root_node_labels, data=j)
+            root_node = self._parse_traverse_list_fragment(
+                labels=root_node_labels, data=j, parent_node=None
+            )
+        self._prepare_root_node(root_node)
+
         self._flush_cache()
 
     def merge(self, graph: Union[Graph, Driver]):
@@ -109,10 +125,19 @@ class Dict2graph:
         for rels in self._relSets.values():
             rels.create(graph)
 
+    def _prepare_root_node(self, node: Node):
+        node.is_root_node = True
+        if len(node.keys()) == 0:
+            node[self.root_node_default_id_propery_name] = node.get_hash(
+                include_children_data=True
+            )
+
+            node.merge_property_keys = [self.root_node_default_id_propery_name]
+
     def _parse_traverse_dict_fragment(
-        self, data: Dict, labels: List[str] = None, parent_node=None
+        self, data: Dict, parent_node: Node, labels: List[str] = None
     ) -> Node:
-        new_node = Node(labels=labels, source_data=data)
+        new_node = Node(labels=labels, source_data=data, parent_node=parent_node)
         new_node.parent_node = parent_node
         new_child_nodes: List[Node] = []
         new_rels: List[Relation] = []
@@ -120,9 +145,16 @@ class Dict2graph:
             if self._is_basic_attribute_type(val):
                 # value is a simple type. attach as property to node
                 new_node[key] = val
-            elif isinstance(val, dict):
-                # value is dict in itself and therefore a child node
-                n = self._parse_traverse_dict_fragment(labels=key, data=val)
+            else:
+                # value is dict or list in itself and therefore one or multiple child nodes
+                if isinstance(val, dict):
+                    n = self._parse_traverse_dict_fragment(
+                        labels=[key], data=val, parent_node=new_node
+                    )
+                elif isinstance(val, list):
+                    n = self._parse_traverse_list_fragment(
+                        labels=[key], data=val, parent_node=new_node
+                    )
                 new_child_nodes.append(n)
                 new_rels.append(
                     Relation(
@@ -130,37 +162,24 @@ class Dict2graph:
                         end_node=n,
                     )
                 )
-            elif isinstance(val, list):
-                # value is list and therefore a collection of sub nodes
-                for child_node in self._parse_traverse_list_fragment(
-                    labels=[key], data=val, parent_node=new_node
-                ):
-                    new_child_nodes.append(child_node)
-                    new_rels.append(
-                        Relation(
-                            start_node=new_node,
-                            end_node=child_node,
-                        )
-                    )
+
         self._node_cache.append(new_node)
         self._rel_cache.extend(new_rels)
 
         return new_node
 
     def _parse_traverse_list_fragment(
-        self, labels: List[str], data: Dict, parent_node=None
-    ) -> List[Node]:
+        self, labels: List[str], parent_node: Node, data: Dict
+    ) -> Node:
         # create/set list root node. this is the node on which the list items will attach to
         # the parent_node is the default root
-        list_root_hub_node: Node = parent_node
-        if self.create_hub_nodes_for_lists:
-            list_root_hub_node = Node(
-                self._get_list_root_hub_node_labels(labels=labels),
-                source_data=data,
-            )
-            list_root_hub_node.is_list_collection_hub = True
-            list_root_hub_node.parent_node = parent_node
-            self._node_cache.append(list_root_hub_node)
+        list_root_hub_node: Node = Node(
+            self._get_list_root_hub_node_labels(labels=labels),
+            source_data=data,
+            parent_node=parent_node,
+        )
+        list_root_hub_node.is_list_collection_hub = True
+        self._node_cache.append(list_root_hub_node)
         # parse nodes
         new_list_item_nodes: List[Node] = []
         for index, obj in enumerate(data):
@@ -171,29 +190,34 @@ class Dict2graph:
                 new_list_item_nodes.append(n)
             elif isinstance(obj, dict):
                 new_list_item_nodes.append(
-                    self._parse_traverse_dict_fragment(labels=labels, data=obj)
+                    self._parse_traverse_dict_fragment(
+                        labels=labels, data=obj, parent_node=list_root_hub_node
+                    )
                 )
             elif isinstance(obj, list):
-                new_list_item_nodes.extend(
-                    self._parse_traverse_list_fragment(labels=labels, data=obj)
+                new_list_item_nodes.append(
+                    self._parse_traverse_list_fragment(
+                        labels=labels, data=obj, parent_node=list_root_hub_node
+                    )
                 )
 
         # create relations to list root node
         child_ids: List[str] = []
-        if list_root_hub_node.is_list_collection_hub:
-            for index, node in enumerate(new_list_item_nodes):
-                child_ids.append(node.id)
-                r = Relation(
-                    start_node=list_root_hub_node,
-                    end_node=node,
-                    index=index,
-                )
-                node.parent_node = list_root_hub_node
-                self._rel_cache.append(r)
-            list_root_hub_node["id"] = hash(frozenset(child_ids))
-            list_root_hub_node.merge_properties = "_id"
-            return [list_root_hub_node]
-        return new_list_item_nodes
+
+        for index, node in enumerate(new_list_item_nodes):
+            child_ids.append(node.id)
+            r = Relation(
+                start_node=list_root_hub_node,
+                end_node=node,
+            )
+            r[self.list_item_relation_index_property_name] = index
+            node.parent_node = list_root_hub_node
+            self._rel_cache.append(r)
+
+        list_root_hub_node[self.list_hub_id_property_name] = hash(frozenset(child_ids))
+        list_root_hub_node.merge_property_keys = [self.list_hub_id_property_name]
+
+        return list_root_hub_node
 
     def _is_empty(self, val):
         if not val:
@@ -219,8 +243,8 @@ class Dict2graph:
         if node.labels not in self._nodeSets:
             self._nodeSets[node.labels] = NodeSet(
                 labels=node.labels,
-                merge_keys=node.merge_properties
-                if node.merge_properties
+                merge_keys=node.merge_property_keys
+                if node.merge_property_keys
                 else list(node.keys()),
             )
         return self._nodeSets[node.labels]
@@ -245,8 +269,8 @@ class Dict2graph:
                 rel_type=relation.relation_type,
                 start_node_labels=relation.start_node.labels,
                 end_node_labels=relation.end_node.labels,
-                start_node_properties=relation.start_node.merge_properties,
-                end_node_properties=relation.end_node.merge_properties,
+                start_node_properties=relation.start_node.merge_property_keys,
+                end_node_properties=relation.end_node.merge_property_keys,
             )
         return self._relSets[rel_id]
 
@@ -262,7 +286,6 @@ class Dict2graph:
 
     def _run_node_transformations(self, node: Node) -> Node:
         for trans in self.node_transformators:
-            print(node)
             trans._run_node_match_and_transform(node)
 
     def _run_rel_transformations(self, rel: Relation):

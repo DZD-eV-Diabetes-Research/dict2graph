@@ -16,12 +16,16 @@ class Relation(dict):
 
     @property
     def relation_type(self) -> str:
-        return (
-            self._relation_type
-            if self._relation_type
-            else f"{self.start_node.primary_label}_HAS_{self.end_node.primary_label}"
-        )
+        if self._relation_type:
+            return self._relation_type
+        elif self.start_node is not None and self.end_node is not None:
+            return f"{self.start_node.primary_label}_HAS_{self.end_node.primary_label}"
+        else:
+            return "NON_NAMED_REL"
 
     @relation_type.setter
     def relation_type(self, value: str) -> str:
         self._relation_type = value
+
+    def __str__(self):
+        return f"{self.start_node}-[{self.relation_type}]->({self.end_node})"

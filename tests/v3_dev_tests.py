@@ -9,6 +9,7 @@ if __name__ == "__main__":
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 
+
 # init-test
 json = {
     "Article": {
@@ -17,16 +18,16 @@ json = {
             {
                 "firstName": "Mike",
                 "lastName": "Pondsmith",
-                "affiliation": [{"name": "University 1"}],
+                "affiliation": [{"name": "University 1"}, {"name": "University 2"}],
             },
         ],
     }
 }
 json1 = [1, 2, 3, 4, 5]
 json2 = {"Article": "dummes json"}
-d2g = Dict2graph(create_hub_nodes_for_lists=True)
+d2g = Dict2graph()
 d2g.add_node_transformation(Transformer.match_node().do(NodeTrans.CapitalizeLabels()))
-d2g.add_node_transformation(Transformer.match_node().do(NodeTrans.BlankListHubNodes()))
+# d2g.add_node_transformation(Transformer.match_node().do(NodeTrans.BlankListHubNodes()))
 d2g.add_relation_transformation(
     Transformer.match_rel().do(RelTrans.UppercaseRelationType())
 )

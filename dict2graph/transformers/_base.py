@@ -3,9 +3,6 @@ from dict2graph.node import Node
 from dict2graph.relation import Relation
 
 
-from dict2graph.transformers import REL_TRANSFORMER_TYPE, NODE_TRANSFORMER_TYPE
-
-
 class AnyLabel:
     pass
 
@@ -28,7 +25,11 @@ class _NodeTransformerBase:
         if (
             self.label_match in node.labels or self.label_match in [None, AnyLabel]
         ) and self.custom_node_match(node):
-            self.transform_node(node=node)
+            try:
+                self.transform_node(node=node)
+            except:
+                print(f"Transformation failed for node '{node}'")
+                raise
 
     def custom_node_match(self, node: Node) -> bool:
         return True
@@ -54,7 +55,11 @@ class _RelationTransformerBase:
             AnyRelation,
             rel.relation_type,
         ] and self.custom_rel_match(rel):
-            self.transform_rel(rel=rel)
+            try:
+                self.transform_rel(rel=rel)
+            except:
+                print(f"Transformation failed for rel '{rel}'")
+                raise
 
     def custom_rel_match(self, rel: Relation) -> bool:
         return True
@@ -68,7 +73,7 @@ class Transformer:
         def _set_node_matcher(self, label_match):
             self.label_match = label_match
 
-        def do(self, transform: NODE_TRANSFORMER_TYPE) -> NODE_TRANSFORMER_TYPE:
+        def do(self, transform: _NodeTransformerBase) -> _NodeTransformerBase:
             transform._set_label_match(self.label_match)
             return transform
 
@@ -76,7 +81,7 @@ class Transformer:
         def _set_rel_matcher(self, relation_type_match):
             self.relation_type_match = relation_type_match
 
-        def do(self, transform: REL_TRANSFORMER_TYPE) -> REL_TRANSFORMER_TYPE:
+        def do(self, transform: _RelationTransformerBase) -> _RelationTransformerBase:
             transform._set_relation_type_match(self.relation_type_match)
             return transform
 

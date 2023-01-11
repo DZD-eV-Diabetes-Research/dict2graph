@@ -3,9 +3,7 @@ from dict2graph.node import Node
 from dict2graph.relation import Relation
 from dict2graph.transformers._base import (
     _NodeTransformerBase,
-    _RelationTransformerBase,
     AnyLabel,
-    AnyRelation,
 )
 import typing
 
@@ -13,7 +11,11 @@ import typing
 class CapitalizeLabels(_NodeTransformerBase):
     def transform_node(self, node: Node):
         node.labels = frozenset([label.capitalize() for label in node.labels])
-        node.primary_label = node.primary_label.capitalize()
+        node.primary_label = (
+            node.primary_label.capitalize()
+            if node.primary_label
+            else node.primary_label
+        )
 
 
 class OverrideLabel(_NodeTransformerBase):
@@ -39,7 +41,7 @@ class SetMergeProperties(_NodeTransformerBase):
         self.props = list(props)
 
     def transform_node(self, node: Node):
-        node.merge_properties = self.props
+        node.merge_property_keys = self.props
 
 
 class PopListHubNodes(_NodeTransformerBase):
