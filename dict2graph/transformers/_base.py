@@ -18,13 +18,11 @@ class _NodeTransformerBase:
     ):
         pass
 
-    def _set_label_match(self, label_match: Union[str, Type[AnyLabel]]):
-        self.label_match = label_match
+    def _set_matcher(self, matcher: "Transformer.NodeTransformerMatcher"):
+        self.matcher = matcher
 
     def _run_node_match_and_transform(self, node: Node):
-        if (
-            self.label_match in node.labels or self.label_match in [None, AnyLabel]
-        ) and self.custom_node_match(node):
+        if (self.matcher._match(node)) and self.custom_node_match(node):
             try:
                 self.transform_node(node=node)
             except:
@@ -45,16 +43,11 @@ class _RelationTransformerBase:
     ):
         pass
 
-    def _set_relation_type_match(
-        self, relation_type_match: Union[str, Type[AnyLabel]] = AnyLabel
-    ):
-        self.relation_type_match = relation_type_match
+    def _set_matcher(self, matcher: "Transformer.RelTransformerMatcher"):
+        self.matcher = matcher
 
     def _run_rel_match_and_transform(self, rel: Relation):
-        if self.relation_type_match in [
-            AnyRelation,
-            rel.relation_type,
-        ] and self.custom_rel_match(rel):
+        if (self.matcher._match(rel)) and self.custom_rel_match(rel):
             try:
                 self.transform_rel(rel=rel)
             except:
@@ -73,16 +66,29 @@ class Transformer:
         def _set_node_matcher(self, label_match):
             self.label_match = label_match
 
+        def _match(self, node: Node) -> bool:
+            if self.label_match in [None, AnyLabel] or self.label_match in node.labels:
+                return True
+            return False
+
         def do(self, transform: _NodeTransformerBase) -> _NodeTransformerBase:
-            transform._set_label_match(self.label_match)
+            transform._set_matcher(self)
             return transform
 
     class RelTransformerMatcher:
         def _set_rel_matcher(self, relation_type_match):
             self.relation_type_match = relation_type_match
 
+        def _match(self, rel: Relation) -> bool:
+            if (
+                self.relation_type_match in [None, AnyRelation]
+                or self.relation_type_match in rel.relation_type
+            ):
+                return True
+            return False
+
         def do(self, transform: _RelationTransformerBase) -> _RelationTransformerBase:
-            transform._set_relation_type_match(self.relation_type_match)
+            transform._set_matcher(self)
             return transform
 
     @classmethod

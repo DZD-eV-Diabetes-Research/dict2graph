@@ -19,7 +19,7 @@ class Relation(dict):
         if self._relation_type:
             return self._relation_type
         elif self.start_node is not None and self.end_node is not None:
-            return f"{self.start_node.primary_label}_HAS_{self.end_node.primary_label}"
+            return f"{'_'.join(self.start_node.labels)}_HAS_{'_'.join(self.end_node.labels)}"
         else:
             return "NON_NAMED_REL"
 

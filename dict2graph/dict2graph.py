@@ -29,16 +29,19 @@ from neo4j import Driver
 from graphio import NodeSet, RelationshipSet
 from dict2graph.node import Node
 from dict2graph.relation import Relation
-from dict2graph.transformers.generic_transformers import (
+from dict2graph.transformers._base import (
     _NodeTransformerBase,
     _RelationTransformerBase,
 )
+from dict2graph.transformers import Transformer
 
 
 class Dict2graph:
-    simple_list_item_data_property_name: str = "_list_item_data"
-    list_item_relation_index_property_name: str = "_index"
+    list_hub_labels: List[str] = ["CollectionHub"]
     list_hub_id_property_name: str = "id"
+    list_item_relation_index_property_name: str = "_index"
+
+    simple_list_item_data_property_name: str = "_list_item_data"
     root_node_labels: List[str] = ["Dict2GraphRoot"]
     root_node_default_id_propery_name = "id"
 
@@ -60,6 +63,10 @@ class Dict2graph:
             raise ValueError(
                 f"Expected transformer of subclass '{_NodeTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_relation_transformation()` instead of `add_node_transformation`?"
             )
+        elif transformator.matcher.__class__ != Transformer.NodeTransformerMatcher:
+            raise ValueError(
+                f"Expected transformer matcher of class '{Transformer.NodeTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a relationship matcher instead of a node matcher (`match_node()` vs. `match_rel()`) while using `Dict2graph.add_node_transformation()`?"
+            )
         else:
             self.node_transformators.append(transformator)
 
@@ -73,6 +80,10 @@ class Dict2graph:
         elif not issubclass(transformator.__class__, _RelationTransformerBase):
             raise ValueError(
                 f"Expected transformer of subclass '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_node_transformation()` instead of `add_relation_transformation`?"
+            )
+        elif transformator.matcher.__class__ != Transformer.RelTransformerMatcher:
+            raise ValueError(
+                f"Expected transformer matcher of class '{Transformer.RelTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a node matcher instead of a relationship matcher (`match_rel()` vs. `match_node()`) while using `Dict2graph.add_relation_transformation()`?"
             )
         else:
             self.relation_transformators.append(transformator)
@@ -214,7 +225,9 @@ class Dict2graph:
             node.parent_node = list_root_hub_node
             self._rel_cache.append(r)
 
-        list_root_hub_node[self.list_hub_id_property_name] = hash(frozenset(child_ids))
+        list_root_hub_node[
+            self.list_hub_id_property_name
+        ] = list_root_hub_node.get_hash(include_children_properties=True)
         list_root_hub_node.merge_property_keys = [self.list_hub_id_property_name]
 
         return list_root_hub_node
@@ -233,21 +246,22 @@ class Dict2graph:
             return False
 
     def _get_list_root_hub_node_labels(self, labels: List[str]) -> str:
-        return ["CollectionHub"] + list(labels)
+        return self.list_hub_labels + list(labels)
 
     def _add_node(self, node: Node):
         node_set: NodeSet = self._get_or_create_nodeSet(node)
         node_set.add_node(node)
 
     def _get_or_create_nodeSet(self, node: Node) -> NodeSet:
-        if node.labels not in self._nodeSets:
-            self._nodeSets[node.labels] = NodeSet(
+        node_type_fingerprint = frozenset(node.labels)
+        if node_type_fingerprint not in self._nodeSets:
+            self._nodeSets[node_type_fingerprint] = NodeSet(
                 labels=node.labels,
                 merge_keys=node.merge_property_keys
                 if node.merge_property_keys
                 else list(node.keys()),
             )
-        return self._nodeSets[node.labels]
+        return self._nodeSets[node_type_fingerprint]
 
     def _add_rel(self, relation: Relation):
         rel_set: RelationshipSet = self._get_or_create_relSet(relation)
@@ -259,9 +273,9 @@ class Dict2graph:
 
     def _get_or_create_relSet(self, relation: Relation) -> RelationshipSet:
         rel_id = (
-            relation.start_node.labels,
+            frozenset(relation.start_node.labels),
             relation.relation_type,
-            relation.end_node.labels,
+            frozenset(relation.end_node.labels),
         )
 
         if rel_id not in self._relSets:

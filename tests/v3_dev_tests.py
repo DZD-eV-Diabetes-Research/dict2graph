@@ -28,7 +28,7 @@ json2 = {"Article": "dummes json"}
 d2g = Dict2graph()
 d2g.add_node_transformation(Transformer.match_node().do(NodeTrans.CapitalizeLabels()))
 # d2g.add_node_transformation(Transformer.match_node().do(NodeTrans.BlankListHubNodes()))
-d2g.add_relation_transformation(
+d2g.add_node_transformation(
     Transformer.match_rel().do(RelTrans.UppercaseRelationType())
 )
 d2g.parse(json, "test")

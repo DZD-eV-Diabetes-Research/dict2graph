@@ -10,12 +10,12 @@ class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
         self.source_property_name = source_property_name
         self.target_property_name = target_property_name
 
-    def transform(self, obj: Dict):
+    def _transform(self, obj: Dict):
         if self.source_property_name in obj:
             obj[self.target_property_name] = obj.pop(self.source_property_name)
 
     def transform_node(self, node: Node):
-        self.transform(node)
+        self._transform(node)
 
     def transform_rel(self, rel: Relation):
-        self.transform(rel)
+        self._transform(rel)

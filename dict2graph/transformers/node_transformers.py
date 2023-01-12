@@ -10,12 +10,7 @@ import typing
 
 class CapitalizeLabels(_NodeTransformerBase):
     def transform_node(self, node: Node):
-        node.labels = frozenset([label.capitalize() for label in node.labels])
-        node.primary_label = (
-            node.primary_label.capitalize()
-            if node.primary_label
-            else node.primary_label
-        )
+        node.labels = [label.capitalize() for label in node.labels]
 
 
 class OverrideLabel(_NodeTransformerBase):

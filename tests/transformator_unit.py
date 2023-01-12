@@ -1,6 +1,7 @@
 import os, sys
 from neo4j import GraphDatabase, Driver, Result, Transaction
 import json
+from deepdiff import DeepDiff
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
@@ -19,7 +20,13 @@ def get_all_neo4j_data(driver: Driver) -> Result:
             return session.execute_read(read_data)
 
     def read_data(tx: Transaction):
-        query = "MATCH (n) OPTIONAL MATCH (n)-[r]-(m) RETURN labels(n) as labels, n as props, type(r) as relation, labels(m) as neighbour_labels;"
+        query = """
+            MATCH (n) 
+            with n
+            OPTIONAL MATCH p=(n)-[r]->(m)
+            with n, collect(p) as outgoing_rels
+            return labels(n) as labels, properties(n) as props, [o_rel IN outgoing_rels | {rel_type:type(relationships(o_rel)[0]),rel_props:properties(relationships(o_rel)[0]),rel_target_node:{labels:labels(nodes(o_rel)[1]),props:properties(nodes(o_rel)[1])}}]  as outgoing_rels
+            """
         result = tx.run(query)
         return result.data()
 
@@ -33,13 +40,13 @@ def wipe_all_neo4j_data(driver: Driver):
 
     def read_data(tx: Transaction):
         query = "MATCH (n) detach delete n"
-        result = tx.run(query)
+        tx.run(query)
 
     run_delete(driver)
 
 
 # NodeTrans.CapitalizeLabels
-def CapitalizeLabels():
+def test_CapitalizeLabels():
     wipe_all_neo4j_data(DRIVER)
     data = {
         "article": {
@@ -50,44 +57,90 @@ def CapitalizeLabels():
     d2g.add_node_transformation(
         Transformer.match_node().do(NodeTrans.CapitalizeLabels())
     )
-    d2g.parse(data, "est")
+    d2g.parse(data)
     d2g.create(DRIVER)
     result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
     # mind the uppercase "A" in article. thats what we are going here for.
     expected_res: dict = [
         {
             "labels": ["Article"],
             "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
-            "relations": None,
-            "neighbour_labels": None,
+            "outgoing_rels": [],
         }
     ]
     assert expected_res == result
 
 
-# you are here:
-# todo: maybe switch to self geenrated josn object like `MATCH (n) OPTIONAL MATCH (n)-[r]-() RETURN {labels:labels(n) ,propeties:n, rels:r} as d`
-d = [
-    {
-        "labels": ["Article"],
-        "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
-        "relations": (
-            {},
-            "Est_HAS_Article",
-            {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
-        ),
-        "neighbour_labels": ["Est"],
-    },
-    {
-        "labels": ["Est"],
-        "props": {"id": "8937743809b504bf824bd50989cc6ce3"},
-        "relations": (
-            {"id": "8937743809b504bf824bd50989cc6ce3"},
-            "Est_HAS_Article",
-            {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
-        ),
-        "neighbour_labels": ["Article"],
-    },
-]
+# NodeTrans.CapitalizeLabels
+def test_OverridePropertyName():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "article": {
+            "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+            "authors": [{"name": "Amina"}, {"name": "Urho"}],
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("article").do(
+            NodeTrans.OverridePropertyName("title", "topic")
+        )
+    )
+    d2g.add_relation_transformation(
+        Transformer.match_rel("CollectionHub_authors_HAS_authors").do(
+            NodeTrans.OverridePropertyName("_index", "rank")
+        )
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    print(json.dumps(result, indent=2))
+    # mind the uppercase "A" in article. thats what we are going here for.
+    expected_res: dict = [
+        {
+            "labels": ["CollectionHub", "authors"],
+            "props": {"id": "d751713988987e9331980363e24189ce"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"rank": 1},
+                    "rel_type": "CollectionHub_authors_HAS_authors",
+                    "rel_target_node": {
+                        "labels": ["authors"],
+                        "props": {"name": "Urho"},
+                    },
+                },
+                {
+                    "rel_props": {"rank": 0},
+                    "rel_type": "CollectionHub_authors_HAS_authors",
+                    "rel_target_node": {
+                        "labels": ["authors"],
+                        "props": {"name": "Amina"},
+                    },
+                },
+            ],
+        },
+        {"labels": ["authors"], "props": {"name": "Amina"}, "outgoing_rels": []},
+        {"labels": ["authors"], "props": {"name": "Urho"}, "outgoing_rels": []},
+        {
+            "labels": ["article"],
+            "props": {"topic": "Science Behind The Cyberpunks-Genre Awesomeness"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_CollectionHub_authors",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "authors"],
+                        "props": {"id": "d751713988987e9331980363e24189ce"},
+                    },
+                }
+            ],
+        },
+    ]
 
-CapitalizeLabels()
+    print("DIFF:\n", DeepDiff(expected_res, result))
+    assert expected_res == result
+
+
+test_CapitalizeLabels()
+test_OverridePropertyName()

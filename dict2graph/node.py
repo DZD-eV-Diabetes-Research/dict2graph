@@ -12,15 +12,14 @@ if TYPE_CHECKING:
 class Node(dict):
     def __init__(
         self,
-        labels: FrozenSet[str],
+        labels: List[str],
         source_data: Union[Dict, List, str, int],
         parent_node: Node,
         **kwargs,
     ):
         if isinstance(labels, str):
             labels = [labels]
-        self.labels = frozenset(labels) if labels else frozenset()
-        self.primary_label: str = labels[0] if self.labels else None
+        self._labels: List[str] = labels
         self.parent_node: Node = parent_node
         self.source_data: Dict = source_data
         self._merge_property_keys: List[str] = None
@@ -29,18 +28,6 @@ class Node(dict):
         self.is_list_collection_hub: bool = False
         self.is_root_node: bool = False
         self.deleted = False
-
-    @property
-    def merge_property_keys(self) -> List[str]:
-        return (
-            self._merge_property_keys
-            if self._merge_property_keys
-            else list(self.keys())
-        )
-
-    @merge_property_keys.setter
-    def merge_property_keys(self, primary_props: List[str]):
-        self._merge_property_keys = primary_props
 
     @property
     def id(self):
@@ -53,6 +40,42 @@ class Node(dict):
                     "utf-8",
                 ),
             ).hexdigest()
+
+    @property
+    def labels(self):
+        return self._labels
+
+    @labels.setter
+    def labels(self, val: List[str]):
+        if isinstance(val, list):
+            self._labels = val
+        else:
+            raise ValueError(f"Labels must be provided as list, got {val}")
+
+    @property
+    def primary_label(self):
+        return self._labels[0] if self.labels else None
+
+    @primary_label.setter
+    def primary_label(self, val: str):
+        try:
+            self._labels.insert(0, self._labels.pop(self._labels.index(val)))
+        except ValueError:
+            raise ValueError(
+                f"Can not set primary label. {val} is not a label of node {self}"
+            )
+
+    @property
+    def merge_property_keys(self) -> List[str]:
+        return (
+            self._merge_property_keys
+            if self._merge_property_keys
+            else list(self.keys())
+        )
+
+    @merge_property_keys.setter
+    def merge_property_keys(self, primary_props: List[str]):
+        self._merge_property_keys = primary_props
 
     def get_hash(
         self,
