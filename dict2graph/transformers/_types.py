@@ -9,6 +9,7 @@ class NodeTrans:
     OverrideLabel = _nodetrans.OverrideLabel
     CapitalizeLabels = _nodetrans.CapitalizeLabels
     BlankListHubNodes = _nodetrans.PopListHubNodes
+    SetMergeProperties = _nodetrans.SetMergeProperties
 
 
 class RelTrans:

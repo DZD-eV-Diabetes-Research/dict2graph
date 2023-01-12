@@ -95,7 +95,7 @@ def test_OverridePropertyName():
     d2g.parse(data)
     d2g.create(DRIVER)
     result = get_all_neo4j_data(DRIVER)
-    print(json.dumps(result, indent=2))
+    # print(json.dumps(result, indent=2))
     # mind the uppercase "A" in article. thats what we are going here for.
     expected_res: dict = [
         {
@@ -138,9 +138,75 @@ def test_OverridePropertyName():
         },
     ]
 
-    print("DIFF:\n", DeepDiff(expected_res, result))
+    assert DeepDiff(expected_res, result, ignore_order=True) == {}
+
+
+def test_OverrideLabel():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "article": {
+            "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("article").do(NodeTrans.OverrideLabel("book"))
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+    # mind the uppercase "A" in article. thats what we are going here for.
+    expected_res: dict = [
+        {
+            "labels": ["book"],
+            "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
+            "outgoing_rels": [],
+        }
+    ]
     assert expected_res == result
 
 
+def test_SetMergeProperties():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "books": [
+            {
+                "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+                "condition": "good",
+            },
+            {
+                "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+                "condition": "bad",
+            },
+            {
+                "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+                "condition": "good",
+            },
+        ]
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("article").do(
+            NodeTrans.SetMergeProperties(props=["title"])
+        )
+    )
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    print(json.dumps(result, indent=2))
+    # mind the uppercase "A" in article. thats what we are going here for.
+    expected_res: dict = [
+        {
+            "labels": ["book"],
+            "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert expected_res == result
+
+
+test_OverrideLabel()
 test_CapitalizeLabels()
 test_OverridePropertyName()
+test_SetMergeProperties()

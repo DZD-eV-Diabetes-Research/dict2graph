@@ -92,8 +92,8 @@ class Dict2graph:
         if root_node_labels is None:
             if len(data.keys()) == 1:
                 # we only have one key and therefore only one Node on the top-/root-level. We dont need a root Node to connect the toplevels nodes.
-                root_node_labels = list(data.keys())[0]
-                data = data[root_node_labels]
+                root_node_labels = [list(data.keys())[0]]
+                data = data[root_node_labels[0]]
             else:
                 root_node_labels = [self.root_node_labels]
         elif isinstance(root_node_labels, str):
@@ -246,7 +246,7 @@ class Dict2graph:
             return False
 
     def _get_list_root_hub_node_labels(self, labels: List[str]) -> str:
-        return self.list_hub_labels + list(labels)
+        return self.list_hub_labels + labels
 
     def _add_node(self, node: Node):
         node_set: NodeSet = self._get_or_create_nodeSet(node)

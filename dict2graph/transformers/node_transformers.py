@@ -26,7 +26,7 @@ class OverrideLabel(_NodeTransformerBase):
 
     def transform_node(self, node: Node):
         node.labels = [
-            self.value if self.label_match in [label, None, AnyLabel] else label
+            self.value if self.matcher.label_match in [label, None, AnyLabel] else label
             for label in node.labels
         ]
 
@@ -37,6 +37,7 @@ class SetMergeProperties(_NodeTransformerBase):
 
     def transform_node(self, node: Node):
         node.merge_property_keys = self.props
+        print("NODE", node, node.merge_property_keys)
 
 
 class PopListHubNodes(_NodeTransformerBase):
