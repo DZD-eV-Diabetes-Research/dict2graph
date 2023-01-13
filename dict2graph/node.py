@@ -79,19 +79,27 @@ class Node(dict):
 
     def get_hash(
         self,
+        include_properties: List[str] = None,
         include_merge_properties: bool = True,
         include_other_properties: bool = True,
         include_parent_properties: bool = False,
         include_children_properties: bool = False,
         include_children_data: bool = False,
     ) -> str:
+        if include_properties is None:
+            include_properties = []
+
         hash_source_values = []
+        if include_properties:
+            hash_source_values.extend(
+                [{key: val} for key, val in self.items() if key in include_properties]
+            )
         if include_merge_properties:
             hash_source_values.extend(
                 [
                     {key: val}
                     for key, val in self.items()
-                    if key in self.merge_property_keys
+                    if key in self.merge_property_keys + include_properties
                 ]
             )
         if include_other_properties:
@@ -99,7 +107,7 @@ class Node(dict):
                 [
                     {key: val}
                     for key, val in self.items()
-                    if key not in self.merge_property_keys
+                    if key not in self.merge_property_keys + include_properties
                 ]
             )
         if include_parent_properties and self.parent_node is not None:
