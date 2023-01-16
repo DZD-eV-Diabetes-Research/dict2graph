@@ -8,10 +8,12 @@ class NodeTrans:
     OverridePropertyName = _gentrans.OverridePropertyName
     TypeCastProperty = _gentrans.TypeCastProperty
     OverrideLabel = _nodetrans.OverrideLabel
+    RemoveLabel = _nodetrans.RemoveLabel
     CapitalizeLabels = _nodetrans.CapitalizeLabels
-    BlankListHubNodes = _nodetrans.PopListHubNodes
+    PopListHubNodes = _nodetrans.PopListHubNodes
     SetMergeProperties = _nodetrans.SetMergeProperties
     CreateNewMergePropertyFromHash = _nodetrans.CreateNewMergePropertyFromHash
+    RemoveEmptyListRootNodes = _nodetrans.RemoveEmptyListRootNodes
 
 
 class RelTrans:

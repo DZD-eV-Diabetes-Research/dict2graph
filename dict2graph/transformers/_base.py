@@ -2,6 +2,9 @@ from typing import TYPE_CHECKING, Callable, Union, Dict, Type, Any, Tuple, Liter
 from dict2graph.node import Node
 from dict2graph.relation import Relation
 
+if TYPE_CHECKING:
+    from dict2graph import Dict2graph
+
 
 class AnyLabel:
     pass
@@ -20,6 +23,7 @@ class _NodeTransformerBase:
 
     def _set_matcher(self, matcher: "Transformer.NodeTransformerMatcher"):
         self.matcher = matcher
+        self.d2g: "Dict2graph" = None
 
     def _run_node_match_and_transform(self, node: Node):
         if (self.matcher._match(node)) and self.custom_node_match(node):
@@ -63,11 +67,15 @@ class _RelationTransformerBase:
 
 class Transformer:
     class NodeTransformerMatcher:
-        def _set_node_matcher(self, label_match):
-            self.label_match = label_match
+        def _set_node_matcher(self, label_match: Union[str, List[str], AnyLabel]):
+            if isinstance(label_match, str):
+                label_match = [label_match]
+            self.label_match: Union[List[str], AnyLabel] = label_match
 
         def _match(self, node: Node) -> bool:
-            if self.label_match in [None, AnyLabel] or self.label_match in node.labels:
+            if self.label_match == AnyLabel or set(self.label_match).issubset(
+                set(node.labels)
+            ):
                 return True
             return False
 
@@ -94,7 +102,7 @@ class Transformer:
     @classmethod
     def match_node(
         cls,
-        label: Union[str, AnyLabel] = AnyLabel,
+        label: Union[str, List[str], AnyLabel] = AnyLabel,
     ) -> NodeTransformerMatcher:
         tm = Transformer.NodeTransformerMatcher()
         tm._set_node_matcher(

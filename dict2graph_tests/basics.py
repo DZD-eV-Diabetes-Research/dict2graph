@@ -89,14 +89,14 @@ def test_create_wrapped_list_graph():
     # print(json.dumps(result, indent=2))
     expected_res: dict = [
         {
-            "labels": ["CollectionHub", "CollectionHubpupils"],
+            "labels": ["CollectionHub", "pupils"],
             "props": {"id": "15ae1bf7a577ae4c5e429418639cc81d"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_index": 2},
-                    "rel_type": "CollectionHub_CollectionHubpupils_HAS_pupils",
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "pupils_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils"],
+                        "labels": ["pupils", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 147,
@@ -105,10 +105,10 @@ def test_create_wrapped_list_graph():
                     },
                 },
                 {
-                    "rel_props": {"_index": 1},
-                    "rel_type": "CollectionHub_CollectionHubpupils_HAS_pupils",
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "pupils_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils"],
+                        "labels": ["pupils", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 123,
@@ -117,10 +117,10 @@ def test_create_wrapped_list_graph():
                     },
                 },
                 {
-                    "rel_props": {"_index": 0},
-                    "rel_type": "CollectionHub_CollectionHubpupils_HAS_pupils",
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "pupils_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils"],
+                        "labels": ["pupils", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
@@ -131,17 +131,17 @@ def test_create_wrapped_list_graph():
             ],
         },
         {
-            "labels": ["pupils"],
+            "labels": ["pupils", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["pupils"],
+            "labels": ["pupils", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["pupils"],
+            "labels": ["pupils", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 147, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -165,26 +165,14 @@ def test_create_list_of_obj_graph():
 
     expected_res: dict = [
         {
-            "labels": ["CollectionHub", "CollectionHubpersons"],
+            "labels": ["CollectionHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_index": 1},
-                    "rel_type": "CollectionHub_CollectionHubpersons_HAS_person",
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "persons_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person"],
-                        "props": {
-                            "firstname": "Wolfgang",
-                            "age": 123,
-                            "lastname": "Pauli",
-                        },
-                    },
-                },
-                {
-                    "rel_props": {"_index": 0},
-                    "rel_type": "CollectionHub_CollectionHubpersons_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person"],
+                        "labels": ["person", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
@@ -192,15 +180,27 @@ def test_create_list_of_obj_graph():
                         },
                     },
                 },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "persons_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "CollectionItem"],
+                        "props": {
+                            "firstname": "Wolfgang",
+                            "age": 123,
+                            "lastname": "Pauli",
+                        },
+                    },
+                },
             ],
         },
         {
-            "labels": ["person"],
+            "labels": ["person", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["person"],
+            "labels": ["person", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -221,26 +221,14 @@ def test_create_root_list_graph():
     # print(json.dumps(result, indent=2))
     expected_res: dict = [
         {
-            "labels": ["CollectionHub", "CollectionHubpersons"],
+            "labels": ["CollectionHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_index": 0},
-                    "rel_type": "CollectionHub_CollectionHubpersons_HAS_person",
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "persons_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person"],
-                        "props": {
-                            "firstname": "Wolfgang",
-                            "age": 34,
-                            "lastname": "Pauli",
-                        },
-                    },
-                },
-                {
-                    "rel_props": {"_index": 1},
-                    "rel_type": "CollectionHub_CollectionHubpersons_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person"],
+                        "labels": ["person", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 123,
@@ -248,15 +236,27 @@ def test_create_root_list_graph():
                         },
                     },
                 },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "persons_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "CollectionItem"],
+                        "props": {
+                            "firstname": "Wolfgang",
+                            "age": 34,
+                            "lastname": "Pauli",
+                        },
+                    },
+                },
             ],
         },
         {
-            "labels": ["person"],
+            "labels": ["person", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["person"],
+            "labels": ["person", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -283,9 +283,39 @@ def test_create_mixed_list_graph():
     result = get_all_neo4j_data(DRIVER)
     # print(json.dumps(result, indent=2))
     expected_res: dict = [
+        {
+            "labels": ["CollectionHub", "Stuff"],
+            "props": {"id": "a8679369cb299d6b0f645e4e6ce6c510"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "Stuff_HAS_Stuff",
+                    "rel_target_node": {
+                        "labels": ["Stuff", "CollectionItem"],
+                        "props": {"somekey1": "yooo", "somekey2": "nooo"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Stuff_HAS_box",
+                    "rel_target_node": {
+                        "labels": ["box", "CollectionItem"],
+                        "props": {"shape": "boxy", "color": "brown"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Stuff_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "CollectionItem"],
+                        "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
+                    },
+                },
+            ],
+        },
         {"labels": ["child"], "props": {"name": "Anne"}, "outgoing_rels": []},
         {
-            "labels": ["person"],
+            "labels": ["person", "CollectionItem"],
             "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
             "outgoing_rels": [
                 {
@@ -296,46 +326,93 @@ def test_create_mixed_list_graph():
             ],
         },
         {
-            "labels": ["box"],
+            "labels": ["box", "CollectionItem"],
             "props": {"shape": "boxy", "color": "brown"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["Stuff"],
+            "labels": ["Stuff", "CollectionItem"],
             "props": {"somekey1": "yooo", "somekey2": "nooo"},
             "outgoing_rels": [],
         },
+    ]
+    assert_result(result, expected_res)
+
+
+def test_nested_obj():
+    wipe_all_neo4j_data(DRIVER)
+    data = {"name": "Holden", "stationed": {"ship": {"name": "Zheng Fei"}}}
+    d2g = Dict2graph()
+    d2g.parse(data, "Person")
+    d2g.create(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
         {
-            "labels": ["CollectionHub", "CollectionHubStuff"],
-            "props": {"id": "a8679369cb299d6b0f645e4e6ce6c510"},
+            "labels": ["Person"],
+            "props": {"name": "Holden"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_index": 2},
-                    "rel_type": "CollectionHub_CollectionHubStuff_HAS_Stuff",
+                    "rel_props": {},
+                    "rel_type": "stationed",
                     "rel_target_node": {
-                        "labels": ["Stuff"],
-                        "props": {"somekey1": "yooo", "somekey2": "nooo"},
+                        "labels": ["ship"],
+                        "props": {"name": "Zheng Fei"},
                     },
-                },
-                {
-                    "rel_props": {"_index": 1},
-                    "rel_type": "CollectionHub_CollectionHubStuff_HAS_box",
-                    "rel_target_node": {
-                        "labels": ["box"],
-                        "props": {"shape": "boxy", "color": "brown"},
-                    },
-                },
-                {
-                    "rel_props": {"_index": 0},
-                    "rel_type": "CollectionHub_CollectionHubStuff_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person"],
-                        "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
-                    },
-                },
+                }
             ],
         },
     ]
+    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
+    assert_result(result, expected_res)
+
+
+def test_nested_obj_2():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "Person": "Holden",
+        "Ship": {"Engine": {"type": "Epstein Drive"}, "name": "Zheng Fei"},
+    }
+    d2g = Dict2graph()
+    d2g.parse(data, "Person")
+    d2g.create(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {"labels": ["Engine"], "props": {"type": "Epstein Drive"}, "outgoing_rels": []},
+        {
+            "labels": ["Ship"],
+            "props": {"name": "Zheng Fei"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Ship_HAS_Engine",
+                    "rel_target_node": {
+                        "labels": ["Engine"],
+                        "props": {"type": "Epstein Drive"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Person"],
+            "props": {"Person": "Holden"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Person_HAS_Ship",
+                    "rel_target_node": {
+                        "labels": ["Ship"],
+                        "props": {"name": "Zheng Fei"},
+                    },
+                }
+            ],
+        },
+    ]
+    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
     assert_result(result, expected_res)
 
 
@@ -345,3 +422,5 @@ test_create_wrapped_list_graph()
 test_create_list_of_obj_graph()
 test_create_root_list_graph()
 test_create_mixed_list_graph()
+test_nested_obj()
+test_nested_obj_2()
