@@ -14,6 +14,8 @@ class NodeTrans:
     SetMergeProperties = _nodetrans.SetMergeProperties
     CreateNewMergePropertyFromHash = _nodetrans.CreateNewMergePropertyFromHash
     RemoveEmptyListRootNodes = _nodetrans.RemoveEmptyListRootNodes
+    CreateHubbing = _nodetrans.CreateHubbing
+    RemoveListItemLabels = _nodetrans.RemoveListItemLabels
 
 
 class RelTrans:

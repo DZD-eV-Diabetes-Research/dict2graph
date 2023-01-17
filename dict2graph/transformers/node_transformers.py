@@ -1,4 +1,15 @@
-from typing import TYPE_CHECKING, Callable, Union, Dict, Type, Any, Tuple, Literal, List
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Union,
+    Dict,
+    Type,
+    Any,
+    Tuple,
+    Literal,
+    List,
+    Generator,
+)
 from dict2graph.node import Node
 from dict2graph.relation import Relation
 from dict2graph.transformers._base import (
@@ -6,6 +17,7 @@ from dict2graph.transformers._base import (
     AnyLabel,
 )
 import typing
+import hashlib
 
 
 class CapitalizeLabels(_NodeTransformerBase):
@@ -137,6 +149,16 @@ class RemoveEmptyListRootNodes(_NodeTransformerBase):
         node.deleted = True
 
 
+class RemoveListItemLabels(_NodeTransformerBase):
+    def custom_node_match(self, node: Node) -> bool:
+        return node.is_list_collection_item
+
+    def transform_node(self, node: Node):
+        node.labels = [
+            l for l in node.labels if l not in self.d2g.list_item_additional_labels
+        ]
+
+
 class CreateHubbing(_NodeTransformerBase):
     def __init__(
         self,
@@ -152,30 +174,49 @@ class CreateHubbing(_NodeTransformerBase):
 
     def custom_node_match(self, node: Node) -> bool:
         # walk the node tree to check if this subtree needs to be hubbed.
-        # if all follow_nodes_labels exists in the right order we will hub
-        current_node = node
-        for f_label in self.follow_nodes_labels:
-            label_exists_in_chain = False
-            for rel in current_node.outgoing_relations:
-                if f_label in rel.end_node.labels:
-                    label_exists_in_chain = True
-                    current_node = rel.end_node
-            if not label_exists_in_chain:
-                return False
-        return True
+        # if all follow_nodes_labels exists in the right order, according follow_nodes_labels, to we will hub
+        return len(
+            list(self._walk_follow_nodes(node, self.follow_nodes_labels))
+        ) >= len(self.follow_nodes_labels)
 
     def transform_node(self, node: Node):
         # Todo: you are here. maybe start from scratch today!
         hub = Node(labels=self.hub_labels, source_data={}, parent_node=node)
-        current_node = node
-        fill_nodes = []
-        end_node = None
-        for f_label in self.follow_nodes_labels:
-            # get all relations to a matching node
-            for rel in current_node.outgoing_relations:
-                if f_label in rel.end_node.labels:
-                    rel.start_node = hub
-                    fill_nodes.append(rel.start_node)
-                    if node is current_node:
-                        pass
-                    current_node = rel.end_node
+        start_node: Node = node
+        fill_nodes: List[Node] = []
+        end_node: Node = None
+        for follow_node, follow_rel in self._walk_follow_nodes(
+            node, follow_nodes_labels=self.follow_nodes_labels
+        ):
+            end_node = follow_node
+            fill_nodes.append(follow_node)
+            follow_rel.start_node = hub
+        fill_nodes.remove(end_node)
+        hash_sources = []
+        if self.merge_property_mode.upper() == "EDGE":
+            hash_sources.append(start_node.get_hash())
+            hash_sources.append(end_node.get_hash())
+
+        elif self.merge_property_mode.upper() == "LEAD":
+            hash_sources.extend([n.get_hash() for n in fill_nodes])
+        hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
+            "".join(hash_sources).encode("utf-8")
+        ).hexdigest()
+        self.d2g._node_cache.append(hub)
+        self.d2g._rel_cache.append(Relation(start_node=node, end_node=hub))
+
+    def _walk_follow_nodes(
+        self, node: Node, follow_nodes_labels: List[str]
+    ) -> Generator[Tuple[Node, Relation], None, None]:
+        if len(follow_nodes_labels) == 0:
+            return
+        for o_rel in [r for r in node.outgoing_relations if not r.deleted]:
+
+            for end_node_label in o_rel.end_node.labels:
+                if end_node_label in follow_nodes_labels[0]:
+                    yield o_rel.end_node, o_rel
+                    for n, r in self._walk_follow_nodes(
+                        o_rel.end_node,
+                        [l for l in follow_nodes_labels if l != end_node_label],
+                    ):
+                        yield n, r

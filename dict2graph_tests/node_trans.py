@@ -777,6 +777,61 @@ def test_PopListHubNodes():
     assert_result(result, expected_res)
 
 
+def test_CreateHubbing():
+    wipe_all_neo4j_data(DRIVER)
+    data = {"space": {"ship": ["Agatha King", "Okimbo"]}}
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.CreateHubbing()),
+    )
+
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"_list_item_data": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"_list_item_data": "Okimbo"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["space"],
+            "props": {"id": "ad342afd0fac115aeafa89c68d89f1be"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "space_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"_list_item_data": "Agatha King"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "space_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"_list_item_data": "Okimbo"},
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_res)
+
+
+def test_RemoveListItemLabels():
+    print("TODO test_RemoveListItemLabels", test_RemoveListItemLabels)
+
+
 test_OverrideLabel()
 test_RemoveLabel()
 test_CapitalizeLabels()
@@ -788,3 +843,4 @@ test_CreateNewMergePropertyFromHash_advanced()
 test_RemoveEmptyListRootNodes()
 test_TypeCastProperty()
 test_PopListHubNodes()
+test_RemoveListItemLabels()

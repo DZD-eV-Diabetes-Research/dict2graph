@@ -8,4 +8,4 @@ if __name__ == "__main__":
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 
-from dict2graph_tests import basics, node_trans, rel_trans
+from dict2graph_tests import basics, node_trans, rel_trans, integration_tests

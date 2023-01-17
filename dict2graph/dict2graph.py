@@ -355,22 +355,22 @@ class Dict2graph:
         return self._relSets[rel_id]
 
     def _flush_cache(self):
+        self._run_transformations()
         for node in self._node_cache:
-            self._run_node_transformations(node)
             if not node.deleted:
                 self._add_node(node)
         for rel in self._rel_cache:
-            self._run_rel_transformations(rel)
             if not rel.deleted:
                 self._add_rel(rel)
 
-    def _run_node_transformations(self, node: Node) -> Node:
+    def _run_transformations(self):
         for trans in self.node_transformators:
-            trans._run_node_match_and_transform(node)
 
-    def _run_rel_transformations(self, rel: Relation):
+            for node in self._node_cache:
+                trans._run_node_match_and_transform(node)
         for trans in self.relation_transformators:
-            trans._run_rel_match_and_transform(rel)
+            for rel in self._rel_cache:
+                trans._run_rel_match_and_transform(rel)
 
 
 class Dict2graph_old(object):
@@ -774,6 +774,64 @@ class Dict2graph_old(object):
                     return True
         return False
 
+    def _get_hub_node_label_name(self, member_label_name):
+        label = self.config_str_collection_hub_label.format(
+            LIST_MEMBER_LABEL=member_label_name
+        )
+        if label in self.config_dict_label_override:
+            label = self.config_dict_label_override[label]
+        return label
+
+    def _create_collection_hub_node(self, member_label_name, data_dict):
+        hub_node_label = self._get_hub_node_label_name(member_label_name)
+        if (
+            (
+                # allowlist mode: only create hub when hub name ist listed in config_list_allowlist_collection_hubs
+                self.config_list_allowlist_collection_hubs
+                and hub_node_label in self.config_list_allowlist_collection_hubs
+            )
+            or (
+                # blocklist mode: only create hub when name is not in config_list_blocklist_collection_hubs
+                self.config_list_blocklist_collection_hubs
+                and hub_node_label not in self.config_list_blocklist_collection_hubs
+            )
+        ) or (
+            # open mode: always create a collection hub
+            not self.config_list_blocklist_collection_hubs
+            and not self.config_list_allowlist_collection_hubs
+        ):
+            hub_node = Dict2graph.Node(
+                d2g=self,
+                source_data_dict_attribute_name=hub_node_label,
+                parent_node=None,
+                subordinate_data=None,
+                id=self._hash_alg(json.dumps(data_dict).encode()).hexdigest(),
+            )
+            hub_node._is_collectionhub = True
+            hub_node.__primarykeys__ = ["id"]
+            for lbl in self.config_list_collection_hub_extra_labels:
+                hub_node.add_label(lbl)
+            if self.config_bool_collection_hub_attach_list_members_label:
+                hub_node.add_label(member_label_name)
+            return hub_node
+
+    def _flatten_dict(self, d, sep="-"):
+        obj = collections.OrderedDict()
+
+        def recurse(t, parent_key=""):
+            if isinstance(t, list):
+                for i in range(len(t)):
+                    recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
+            elif isinstance(t, dict):
+                for k, v in t.items():
+                    recurse(v, parent_key + sep + k if parent_key else k)
+            else:
+                obj[parent_key] = t
+
+        recurse(d)
+
+        return obj
+
     def _create_relation(
         self, node: "Dict2graph.Node", child_node: "Dict2graph.Node", relation_props={}
     ):
@@ -966,64 +1024,6 @@ class Dict2graph_old(object):
             if property_name in self.config_dict_property_name_override[label]:
                 return self.config_dict_property_name_override[label][property_name]
         return property_name
-
-    def _get_hub_node_label_name(self, member_label_name):
-        label = self.config_str_collection_hub_label.format(
-            LIST_MEMBER_LABEL=member_label_name
-        )
-        if label in self.config_dict_label_override:
-            label = self.config_dict_label_override[label]
-        return label
-
-    def _create_collection_hub_node(self, member_label_name, data_dict):
-        hub_node_label = self._get_hub_node_label_name(member_label_name)
-        if (
-            (
-                # allowlist mode: only create hub when hub name ist listed in config_list_allowlist_collection_hubs
-                self.config_list_allowlist_collection_hubs
-                and hub_node_label in self.config_list_allowlist_collection_hubs
-            )
-            or (
-                # blocklist mode: only create hub when name is not in config_list_blocklist_collection_hubs
-                self.config_list_blocklist_collection_hubs
-                and hub_node_label not in self.config_list_blocklist_collection_hubs
-            )
-        ) or (
-            # open mode: always create a collection hub
-            not self.config_list_blocklist_collection_hubs
-            and not self.config_list_allowlist_collection_hubs
-        ):
-            hub_node = Dict2graph.Node(
-                d2g=self,
-                source_data_dict_attribute_name=hub_node_label,
-                parent_node=None,
-                subordinate_data=None,
-                id=self._hash_alg(json.dumps(data_dict).encode()).hexdigest(),
-            )
-            hub_node._is_collectionhub = True
-            hub_node.__primarykeys__ = ["id"]
-            for lbl in self.config_list_collection_hub_extra_labels:
-                hub_node.add_label(lbl)
-            if self.config_bool_collection_hub_attach_list_members_label:
-                hub_node.add_label(member_label_name)
-            return hub_node
-
-    def _flatten_dict(self, d, sep="-"):
-        obj = collections.OrderedDict()
-
-        def recurse(t, parent_key=""):
-            if isinstance(t, list):
-                for i in range(len(t)):
-                    recurse(t[i], parent_key + sep + str(i) if parent_key else str(i))
-            elif isinstance(t, dict):
-                for k, v in t.items():
-                    recurse(v, parent_key + sep + k if parent_key else k)
-            else:
-                obj[parent_key] = t
-
-        recurse(d)
-
-        return obj
 
     def _fold_json_attrs(self, key, val):
 

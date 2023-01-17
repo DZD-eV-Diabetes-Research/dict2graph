@@ -416,6 +416,170 @@ def test_nested_obj_2():
     assert_result(result, expected_res)
 
 
+def test_merge_two_dicts():
+    wipe_all_neo4j_data(DRIVER)
+    dic1 = {
+        "Article": {
+            "title": "Science Behind The Cyberpunk-Genres Awesomeness",
+            "Authors": [
+                {
+                    "firstName": "Mike",
+                    "lastName": "Pondsmith",
+                    "affiliation": [{"name": "University 1"}],
+                },
+            ],
+        }
+    }
+
+    dic2 = {
+        "Article": {
+            "title": "Transhumanism in Computergames",
+            "Authors": [
+                {
+                    "firstName": "Mike",
+                    "lastName": "Pondsmith",
+                    "affiliation": [{"name": "University 1"}, {"name": "University 2"}],
+                },
+            ],
+        }
+    }
+    d2g = Dict2graph()
+    d2g.parse(dic1)
+    d2g.parse(dic2)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {
+            "labels": ["CollectionHub", "Authors"],
+            "props": {"id": "a7a883e2547c5af03676543b2325ea96"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Article_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "Authors"],
+                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionHub", "Authors"],
+            "props": {"id": "b8f6cc9fa9ce70b36d1d7d4dbc57d0f9"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Article_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "Authors"],
+                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionHub", "affiliation"],
+            "props": {"id": "44de0fb70ce9cd28873b3ba6142dd159"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation", "CollectionItem"],
+                        "props": {"name": "University 1"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionHub", "affiliation"],
+            "props": {"id": "19f20f7210d4d743bdaf83b1b541d8a7"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation", "CollectionItem"],
+                        "props": {"name": "University 2"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation", "CollectionItem"],
+                        "props": {"name": "University 1"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["affiliation", "CollectionItem"],
+            "props": {"name": "University 1"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["affiliation", "CollectionItem"],
+            "props": {"name": "University 2"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionItem", "Authors"],
+            "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "affiliation"],
+                        "props": {"id": "44de0fb70ce9cd28873b3ba6142dd159"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "affiliation"],
+                        "props": {"id": "19f20f7210d4d743bdaf83b1b541d8a7"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Article"],
+            "props": {"title": "Science Behind The Cyberpunk-Genres Awesomeness"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Article_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "Authors"],
+                        "props": {"id": "a7a883e2547c5af03676543b2325ea96"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Article"],
+            "props": {"title": "Transhumanism in Computergames"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Article_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "Authors"],
+                        "props": {"id": "b8f6cc9fa9ce70b36d1d7d4dbc57d0f9"},
+                    },
+                }
+            ],
+        },
+    ]
+    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
+    assert_result(result, expected_res)
+
+
 test_create_simple_obj()
 test_create_simple_graph()
 test_create_wrapped_list_graph()
@@ -424,3 +588,4 @@ test_create_root_list_graph()
 test_create_mixed_list_graph()
 test_nested_obj()
 test_nested_obj_2()
+test_merge_two_dicts()
