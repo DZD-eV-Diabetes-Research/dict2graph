@@ -829,7 +829,111 @@ def test_CreateHubbing():
 
 
 def test_RemoveListItemLabels():
-    print("TODO test_RemoveListItemLabels", test_RemoveListItemLabels)
+    wipe_all_neo4j_data(DRIVER)
+    data = {"space": ["Agatha King", "Okimbo"]}
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.RemoveListItemLabels()),
+    )
+
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {
+            "labels": ["CollectionHub", "space"],
+            "props": {"id": "57325cd8fe8c533ae589a42a18ea1f31"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "space_HAS_space",
+                    "rel_target_node": {
+                        "labels": ["space"],
+                        "props": {"_list_item_data": "Okimbo"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "space_HAS_space",
+                    "rel_target_node": {
+                        "labels": ["space"],
+                        "props": {"_list_item_data": "Agatha King"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["space"],
+            "props": {"_list_item_data": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["space"],
+            "props": {"_list_item_data": "Okimbo"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_res)
+
+
+def test_OutsourcePropertiesToNewNode():
+    wipe_all_neo4j_data(DRIVER)
+    data = {"ship": {"name": "Agatha King", "navy": "United Nations Navy"}}
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("ship").do(
+            NodeTrans.OutsourcePropertiesToNewNode(
+                property_keys=["navy"],
+                new_node_labels=["Party"],
+                relation_type="MEMBERSHIP",
+            )
+        ),
+    )
+
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_data(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_res: dict = [
+        {
+            "labels": ["CollectionHub", "space"],
+            "props": {"id": "57325cd8fe8c533ae589a42a18ea1f31"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "space_HAS_space",
+                    "rel_target_node": {
+                        "labels": ["space"],
+                        "props": {"_list_item_data": "Okimbo"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "space_HAS_space",
+                    "rel_target_node": {
+                        "labels": ["space"],
+                        "props": {"_list_item_data": "Agatha King"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["space"],
+            "props": {"_list_item_data": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["space"],
+            "props": {"_list_item_data": "Okimbo"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_res)
 
 
 test_OverrideLabel()
@@ -844,3 +948,4 @@ test_RemoveEmptyListRootNodes()
 test_TypeCastProperty()
 test_PopListHubNodes()
 test_RemoveListItemLabels()
+test_OutsourcePropertiesToNewNode()

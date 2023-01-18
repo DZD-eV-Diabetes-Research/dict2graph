@@ -314,9 +314,9 @@ class Dict2graph:
     def _set_list_item_node_labels(self, node: Node) -> str:
         node.labels = node.labels + self.list_item_additional_labels
 
-    def _add_node(self, node: Node):
-        node_set: NodeSet = self._get_or_create_nodeSet(node)
-        node_set.add_node(node)
+    def _manifest_node_from_cache(self, cached_node: Node):
+        node_set: NodeSet = self._get_or_create_nodeSet(cached_node)
+        node_set.add_node(cached_node)
 
     def _get_or_create_nodeSet(self, node: Node) -> NodeSet:
         node_type_fingerprint = frozenset(node.labels)
@@ -329,12 +329,12 @@ class Dict2graph:
             )
         return self._nodeSets[node_type_fingerprint]
 
-    def _add_rel(self, relation: Relation):
-        rel_set: RelationshipSet = self._get_or_create_relSet(relation)
+    def _manifest_rel_from_cache(self, cached_relation: Relation):
+        rel_set: RelationshipSet = self._get_or_create_relSet(cached_relation)
         rel_set.add_relationship(
-            start_node_properties=relation.start_node,
-            end_node_properties=relation.end_node,
-            properties=relation,
+            start_node_properties=cached_relation.start_node,
+            end_node_properties=cached_relation.end_node,
+            properties=cached_relation,
         )
 
     def _get_or_create_relSet(self, relation: Relation) -> RelationshipSet:
@@ -358,10 +358,10 @@ class Dict2graph:
         self._run_transformations()
         for node in self._node_cache:
             if not node.deleted:
-                self._add_node(node)
+                self._manifest_node_from_cache(node)
         for rel in self._rel_cache:
             if not rel.deleted:
-                self._add_rel(rel)
+                self._manifest_rel_from_cache(rel)
 
     def _run_transformations(self):
         for trans in self.node_transformators:

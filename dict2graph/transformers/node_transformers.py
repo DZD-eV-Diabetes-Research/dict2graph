@@ -159,6 +159,37 @@ class RemoveListItemLabels(_NodeTransformerBase):
         ]
 
 
+class OutsourcePropertiesToNewNode(_NodeTransformerBase):
+    def __init__(
+        self,
+        property_keys: List[str],
+        new_node_labels: List[str],
+        relation_type: str = None,
+        skip_if_keys_empty: bool = True,
+    ):
+        self.property_keys = property_keys
+        self.new_node_labels = new_node_labels
+        self.relation_type = relation_type
+        self.skip_if_keys_empty = skip_if_keys_empty
+
+    def transform_node(self, node: Node):
+        outsourced_props_node: Node = Node(
+            labels=self.new_node_labels, source_data={}, parent_node=node
+        )
+        for key in self.property_keys:
+
+            if key in node:
+                print(key)
+                outsourced_props_node[key] = node.pop(key)
+        if not outsourced_props_node and self.skip_if_keys_empty:
+            return
+        print(outsourced_props_node)
+        self.d2g._node_cache.append(node)
+        self.d2g._rel_cache.append(
+            Relation(node, outsourced_props_node, relation_type=self.relation_type)
+        )
+
+
 class CreateHubbing(_NodeTransformerBase):
     def __init__(
         self,

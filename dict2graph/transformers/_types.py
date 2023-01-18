@@ -16,6 +16,7 @@ class NodeTrans:
     RemoveEmptyListRootNodes = _nodetrans.RemoveEmptyListRootNodes
     CreateHubbing = _nodetrans.CreateHubbing
     RemoveListItemLabels = _nodetrans.RemoveListItemLabels
+    OutsourcePropertiesToNewNode = _nodetrans.OutsourcePropertiesToNewNode
 
 
 class RelTrans:
