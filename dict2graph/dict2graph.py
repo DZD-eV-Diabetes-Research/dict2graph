@@ -113,9 +113,8 @@ class Dict2graph:
                     type(data_obj).__name__
                 )
             )
-        if self._is_empty(data_obj):
-            return None
         if isinstance(data_obj, dict):
+
             root_node = self._parse_traverse_dict_fragment(
                 labels=root_node_labels, data=data_obj, parent_node=None
             )
@@ -152,12 +151,10 @@ class Dict2graph:
     def _parse_traverse_dict_fragment(
         self, data: Dict, parent_node: Node, labels: List[str] = None
     ) -> Node:
-        if self._is_empty(data):
-            return None
+
         new_node = Node(labels=labels, source_data=data, parent_node=parent_node)
         new_child_nodes: List[Node] = []
         new_rels: List[Relation] = []
-
         for key, val in data.items():
             if self._is_basic_attribute_type(val):
                 # value is a simple type. attach as property to node
@@ -165,6 +162,7 @@ class Dict2graph:
             else:
                 # value is dict or list in itself and therefore one or multiple child nodes
                 r = None
+                n = None
                 if isinstance(val, dict):
                     if self._is_named_obj(val):
                         n = self._parse_traverse_dict_fragment(
@@ -189,7 +187,6 @@ class Dict2graph:
                             end_node=n,
                         )
                     new_rels.append(r)
-
         self._node_cache.append(new_node)
         self._rel_cache.extend(new_rels)
         return new_node
@@ -246,6 +243,8 @@ class Dict2graph:
         child_ids: List[str] = []
 
         for index, node in enumerate(new_list_item_nodes):
+            if node is None:
+                continue
             self._set_list_item_node_labels(node)
             node.is_list_collection_item = True
             child_ids.append(node.id)
@@ -367,7 +366,6 @@ class Dict2graph:
         for trans in self.node_transformators:
 
             for node in self._node_cache:
-                print("TRANSFORM",node)
                 trans._run_node_match_and_transform(node)
         for trans in self.relation_transformators:
             for rel in self._rel_cache:

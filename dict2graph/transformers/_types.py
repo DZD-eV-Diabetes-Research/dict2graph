@@ -7,6 +7,7 @@ import typing
 class NodeTrans:
     OverridePropertyName = _gentrans.OverridePropertyName
     TypeCastProperty = _gentrans.TypeCastProperty
+    RemoveProperty = _gentrans.RemoveProperty
     OverrideLabel = _nodetrans.OverrideLabel
     RemoveLabel = _nodetrans.RemoveLabel
     CapitalizeLabels = _nodetrans.CapitalizeLabels
@@ -17,10 +18,13 @@ class NodeTrans:
     CreateHubbing = _nodetrans.CreateHubbing
     RemoveListItemLabels = _nodetrans.RemoveListItemLabels
     OutsourcePropertiesToNewNode = _nodetrans.OutsourcePropertiesToNewNode
+    RemoveNodesWithNoProps = _nodetrans.RemoveNodesWithNoProps
+    RemoveNodesWithOnlyEmptyProps = _nodetrans.RemoveNodesWithOnlyEmptyProps
 
 
 class RelTrans:
     OverridePropertyName = _gentrans.OverridePropertyName
     TypeCastProperty = _gentrans.TypeCastProperty
+    RemoveProperty = _gentrans.RemoveProperty
     UppercaseRelationType = _reltrans.UppercaseRelationType
     OverrideReliationType = _reltrans.OverrideReliationType

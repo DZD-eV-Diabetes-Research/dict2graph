@@ -51,3 +51,24 @@ class TypeCastProperty(_RelationTransformerBase, _NodeTransformerBase):
 
     def transform_rel(self, rel: Relation):
         self._transform(rel)
+
+
+class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
+    def __init__(self, properties: Union[str, List[str]]):
+        if isinstance(properties, str):
+            properties = [properties]
+        self.properties = properties
+
+    def custom_node_match(self, node: Node) -> bool:
+        # check if node keys and defined properties have an overlap
+        return not set(self.properties).isdisjoint(set(node.keys()))
+
+    def transform_node(self, node: Node):
+        self._transform(node)
+
+    def transform_rel(self, rel: Relation):
+        self._transform(rel)
+
+    def _transform(self, node: Node):
+        for prop in self.properties:
+            node.pop(prop, None)

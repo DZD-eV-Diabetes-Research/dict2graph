@@ -249,3 +249,15 @@ class CreateHubbing(_NodeTransformerBase):
                         [l for l in follow_nodes_labels if l != end_node_label],
                     ):
                         yield n, r
+
+
+class RemoveNodesWithNoProps(_NodeTransformerBase):
+    def transform_node(self, node: Node):
+        if len(node.keys()) == 0:
+            node.deleted = True
+
+
+class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
+    def transform_node(self, node: Node):
+        if set(node.values()) in [set([None]), set([""]), set([None, ""])]:
+            node.deleted = True

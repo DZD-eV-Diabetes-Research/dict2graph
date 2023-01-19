@@ -13,7 +13,7 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from dict2graph_tests._test_tools import (
     wipe_all_neo4j_data,
     DRIVER,
-    get_all_neo4j_data,
+    get_all_neo4j_nodes_with_rels,
     assert_result,
 )
 
@@ -52,10 +52,10 @@ def test_merge_two_dicts_and_remove_list_hubs():
     d2g.parse(dic1)
     d2g.parse(dic2)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["affiliation", "CollectionItem"],
             "props": {"name": "University 1"},
@@ -117,8 +117,8 @@ def test_merge_two_dicts_and_remove_list_hubs():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_hubbing_edge():
@@ -165,10 +165,10 @@ def test_hubbing_edge():
     d2g.parse(dic1)
     d2g.parse(dic2)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["affiliation"],
             "props": {"name": "University 1"},
@@ -265,8 +265,8 @@ def test_hubbing_edge():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 # test_merge_two_dicts_and_remove_list_hubs()

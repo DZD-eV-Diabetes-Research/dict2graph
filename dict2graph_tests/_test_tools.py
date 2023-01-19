@@ -14,7 +14,7 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 DRIVER = GraphDatabase.driver("neo4j://localhost")
 
 
-def get_all_neo4j_data(driver: Driver) -> Result:
+def get_all_neo4j_nodes_with_rels(driver: Driver) -> Result:
     def run_read(driver: Driver):
         with driver.session() as session:
             return session.execute_read(read_data)

@@ -13,7 +13,7 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from dict2graph_tests._test_tools import (
     wipe_all_neo4j_data,
     DRIVER,
-    get_all_neo4j_data,
+    get_all_neo4j_nodes_with_rels,
     assert_result,
 )
 
@@ -32,17 +32,17 @@ def test_CapitalizeLabels():
     )
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
     # mind the uppercase "A" in article. thats what we are going here for.
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["Article"],
             "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 # NodeTrans.CapitalizeLabels
@@ -67,10 +67,10 @@ def test_OverridePropertyName():
     )
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "author"],
             "props": {"id": "03217453e0f378672a54ae6ba365b2ed"},
@@ -118,8 +118,8 @@ def test_OverridePropertyName():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_OverrideLabel():
@@ -136,17 +136,17 @@ def test_OverrideLabel():
     )
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["book"],
             "props": {"title": "Science Behind The Cyberpunks-Genre Awesomeness"},
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_RemoveLabel():
@@ -166,10 +166,10 @@ def test_RemoveLabel():
     )
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub"],
             "props": {"id": "bb43cd7a2e84200db2862749cda5aa68"},
@@ -230,7 +230,72 @@ def test_RemoveLabel():
             ],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
+
+
+def test_RemoveProperty():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "Ship": {
+            "name": "Agatha King",
+            "souls": 3,
+            "class": "Truman-class",
+            "note": "asdadfsdfwfe",
+        },
+        "Body": {"name": "Mars", "souls": "9billion", "class": "Planet"},
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        [
+            Transformer.match_node(["Ship"]).do(
+                NodeTrans.RemoveProperty(["souls", "note"])
+            ),
+            Transformer.match_node("Body").do(
+                NodeTrans.RemoveProperty(["souls", "nonexists"])
+            ),
+        ]
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Ship"],
+            "props": {"name": "Agatha King", "class": "Truman-class"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Body"],
+            "props": {"name": "Mars", "class": "Planet"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Dict2GraphRoot"],
+            "props": {"id": "4c7eebf9de1843dbde015f1091a6a0bb"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Dict2GraphRoot_HAS_Body",
+                    "rel_target_node": {
+                        "labels": ["Body"],
+                        "props": {"name": "Mars", "class": "Planet"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Dict2GraphRoot_HAS_Ship",
+                    "rel_target_node": {
+                        "labels": ["Ship"],
+                        "props": {"name": "Agatha King", "class": "Truman-class"},
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
 
 
 def test_SetMergeProperties():
@@ -259,10 +324,10 @@ def test_SetMergeProperties():
     )
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "books"],
             "props": {"id": "c4a300f8cf40fff66920094208ab5386"},
@@ -289,7 +354,7 @@ def test_SetMergeProperties():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_TypeCastProperty():
@@ -308,17 +373,17 @@ def test_TypeCastProperty():
     )
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["article"],
             "props": {"relevant": "No", "good": True, "in_stock_no": 23},
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_CreateNewMergePropertyFromHash_simple():
@@ -340,10 +405,10 @@ def test_CreateNewMergePropertyFromHash_simple():
     )
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Dict2GraphRoot"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
@@ -374,7 +439,7 @@ def test_CreateNewMergePropertyFromHash_simple():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_CreateNewMergePropertyFromHash_advanced():
@@ -404,10 +469,10 @@ def test_CreateNewMergePropertyFromHash_advanced():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Dict2GraphRoot"],
             "props": {"id": "70250fe04440555565cf29422be7cf19"},
@@ -499,7 +564,7 @@ def test_CreateNewMergePropertyFromHash_advanced():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_RemoveEmptyListRootNodes():
@@ -526,10 +591,10 @@ def test_RemoveEmptyListRootNodes():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Dict2GraphRoot"],
             "props": {"id": "5597176a73757989202a3cfca96bc8c7"},
@@ -604,7 +669,7 @@ def test_RemoveEmptyListRootNodes():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_BlankListHubNodes():
@@ -618,10 +683,10 @@ def test_BlankListHubNodes():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Dict2GraphRoot"],
             "props": {"id": "5597176a73757989202a3cfca96bc8c7"},
@@ -696,7 +761,7 @@ def test_BlankListHubNodes():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_TypeCastProperty():
@@ -713,17 +778,17 @@ def test_TypeCastProperty():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["Dict2GraphRoot"],
             "props": {"name": "Julie Mao", "dead": True, "age": 22},
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_PopListHubNodes():
@@ -737,10 +802,10 @@ def test_PopListHubNodes():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionItem", "ship"],
             "props": {"_list_item_data": "Agatha King"},
@@ -774,7 +839,7 @@ def test_PopListHubNodes():
             ],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_CreateHubbing():
@@ -788,10 +853,10 @@ def test_CreateHubbing():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionItem", "ship"],
             "props": {"_list_item_data": "Agatha King"},
@@ -825,7 +890,7 @@ def test_CreateHubbing():
             ],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_RemoveListItemLabels():
@@ -839,10 +904,10 @@ def test_RemoveListItemLabels():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "space"],
             "props": {"id": "57325cd8fe8c533ae589a42a18ea1f31"},
@@ -876,7 +941,7 @@ def test_RemoveListItemLabels():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_OutsourcePropertiesToNewNode():
@@ -896,48 +961,122 @@ def test_OutsourcePropertiesToNewNode():
 
     d2g.parse(data)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "space"],
-            "props": {"id": "57325cd8fe8c533ae589a42a18ea1f31"},
+            "labels": ["ship"],
+            "props": {"name": "Agatha King"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "space_HAS_space",
+                    "rel_props": {},
+                    "rel_type": "MEMBERSHIP",
                     "rel_target_node": {
-                        "labels": ["space"],
-                        "props": {"_list_item_data": "Okimbo"},
+                        "labels": ["Party"],
+                        "props": {"navy": "United Nations Navy"},
                     },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "space_HAS_space",
-                    "rel_target_node": {
-                        "labels": ["space"],
-                        "props": {"_list_item_data": "Agatha King"},
-                    },
-                },
+                }
             ],
         },
         {
-            "labels": ["space"],
-            "props": {"_list_item_data": "Agatha King"},
-            "outgoing_rels": [],
-        },
-        {
-            "labels": ["space"],
-            "props": {"_list_item_data": "Okimbo"},
+            "labels": ["Party"],
+            "props": {"navy": "United Nations Navy"},
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
+
+
+def test_RemoveNodesWithOnlyEmptyProps():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+            {"name": "", "navy": None},
+        ]
+    }
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.RemoveNodesWithOnlyEmptyProps()),
+    )
+
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "2061e61739236751d14ae01dfe54023a"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_RemoveNodesWithNoProps():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+            {},
+        ]
+    }
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.RemoveNodesWithNoProps()),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "be18eceea6105854d14dab4ea36cbf41"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
 
 
 test_OverrideLabel()
 test_RemoveLabel()
+test_RemoveProperty()
 test_CapitalizeLabels()
 test_OverridePropertyName()
 test_SetMergeProperties()
@@ -949,3 +1088,5 @@ test_TypeCastProperty()
 test_PopListHubNodes()
 test_RemoveListItemLabels()
 test_OutsourcePropertiesToNewNode()
+test_RemoveNodesWithOnlyEmptyProps()
+test_RemoveNodesWithNoProps()

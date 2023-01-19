@@ -11,7 +11,7 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from dict2graph_tests._test_tools import (
     wipe_all_neo4j_data,
     DRIVER,
-    get_all_neo4j_data,
+    get_all_neo4j_nodes_with_rels,
     assert_result,
 )
 
@@ -23,17 +23,17 @@ def test_create_simple_obj():
     d2g = Dict2graph()
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["person"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_create_simple_graph():
@@ -50,10 +50,10 @@ def test_create_simple_graph():
     d2g = Dict2graph()
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["affiliation"], "props": {"name": "CERN"}, "outgoing_rels": []},
         {
             "labels": ["person"],
@@ -70,7 +70,7 @@ def test_create_simple_graph():
             ],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_create_wrapped_list_graph():
@@ -85,9 +85,9 @@ def test_create_wrapped_list_graph():
     d2g = Dict2graph()
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "pupils"],
             "props": {"id": "15ae1bf7a577ae4c5e429418639cc81d"},
@@ -146,7 +146,7 @@ def test_create_wrapped_list_graph():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_create_list_of_obj_graph():
@@ -160,10 +160,10 @@ def test_create_list_of_obj_graph():
     d2g = Dict2graph()
     d2g.parse(data)
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
@@ -205,7 +205,7 @@ def test_create_list_of_obj_graph():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_create_root_list_graph():
@@ -217,9 +217,9 @@ def test_create_root_list_graph():
     d2g = Dict2graph()
     d2g.parse(data, "persons")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
@@ -261,7 +261,7 @@ def test_create_root_list_graph():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_create_mixed_list_graph():
@@ -280,9 +280,9 @@ def test_create_mixed_list_graph():
     d2g = Dict2graph()
     d2g.parse(data, "Stuff")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Stuff"],
             "props": {"id": "a8679369cb299d6b0f645e4e6ce6c510"},
@@ -336,7 +336,7 @@ def test_create_mixed_list_graph():
             "outgoing_rels": [],
         },
     ]
-    assert_result(result, expected_res)
+    assert_result(result, expected_result_nodes)
 
 
 def test_nested_obj():
@@ -345,10 +345,10 @@ def test_nested_obj():
     d2g = Dict2graph()
     d2g.parse(data, "Person")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
         {
             "labels": ["Person"],
@@ -365,8 +365,8 @@ def test_nested_obj():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_nested_obj_2():
@@ -378,10 +378,10 @@ def test_nested_obj_2():
     d2g = Dict2graph()
     d2g.parse(data, "Person")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["Engine"], "props": {"type": "Epstein Drive"}, "outgoing_rels": []},
         {
             "labels": ["Ship"],
@@ -412,8 +412,8 @@ def test_nested_obj_2():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_merge_two_dicts():
@@ -447,10 +447,10 @@ def test_merge_two_dicts():
     d2g.parse(dic1)
     d2g.parse(dic2)
     d2g.merge(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Authors"],
             "props": {"id": "a7a883e2547c5af03676543b2325ea96"},
@@ -576,8 +576,113 @@ def test_merge_two_dicts():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
+
+
+def test_empty_obj01():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+            {},
+        ]
+    }
+    d2g = Dict2graph()
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "be18eceea6105854d14dab4ea36cbf41"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {"labels": ["CollectionItem", "ship"], "props": {}, "outgoing_rels": []},
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_empty_obj02():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "nothing": {},
+    }
+    d2g = Dict2graph()
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["nothing"],
+            "props": {"id": "d751713988987e9331980363e24189ce"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_error_case_list_01():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+            {"name": "", "navy": None},
+        ]
+    }
+    d2g = Dict2graph()
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"name": ""},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "2061e61739236751d14ae01dfe54023a"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
 
 
 test_create_simple_obj()
@@ -589,3 +694,6 @@ test_create_mixed_list_graph()
 test_nested_obj()
 test_nested_obj_2()
 test_merge_two_dicts()
+test_empty_obj01()
+test_empty_obj02()
+test_error_case_list_01()

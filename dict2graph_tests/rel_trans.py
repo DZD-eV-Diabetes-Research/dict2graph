@@ -13,7 +13,7 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from dict2graph_tests._test_tools import (
     wipe_all_neo4j_data,
     DRIVER,
-    get_all_neo4j_data,
+    get_all_neo4j_nodes_with_rels,
     assert_result,
 )
 
@@ -29,10 +29,10 @@ def test_OverridePropertyName():
     )
     d2g.parse(data, "Ship")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {
             "labels": ["CollectionHub", "Ship"],
             "props": {"id": "04e92e89a48c92e734fb6008c4206a62"},
@@ -79,8 +79,8 @@ def test_OverridePropertyName():
             "outgoing_rels": [],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_OverrideReliationType():
@@ -94,10 +94,10 @@ def test_OverrideReliationType():
     )
     d2g.parse(data, "Person")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
         {
             "labels": ["Person"],
@@ -114,8 +114,8 @@ def test_OverrideReliationType():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 def test_UppercaseRelationType():
@@ -127,10 +127,10 @@ def test_UppercaseRelationType():
     )
     d2g.parse(data, "Person")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
         {
             "labels": ["Person"],
@@ -147,8 +147,8 @@ def test_UppercaseRelationType():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
 
 
 test_OverridePropertyName()
@@ -170,10 +170,10 @@ def test_TypeCastProperty():
     )
     d2g.parse(data, "Asteroid")
     d2g.create(DRIVER)
-    result = get_all_neo4j_data(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
-    expected_res: dict = [
+    expected_result_nodes: dict = [
         {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
         {
             "labels": ["Person"],
@@ -190,5 +190,5 @@ def test_TypeCastProperty():
             ],
         },
     ]
-    # print("DIFF:", DeepDiff(expected_res, result, ignore_order=True))
-    assert_result(result, expected_res)
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
