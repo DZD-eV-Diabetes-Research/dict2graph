@@ -367,6 +367,7 @@ class Dict2graph:
         for trans in self.node_transformators:
 
             for node in self._node_cache:
+                print("TRANSFORM",node)
                 trans._run_node_match_and_transform(node)
         for trans in self.relation_transformators:
             for rel in self._rel_cache:

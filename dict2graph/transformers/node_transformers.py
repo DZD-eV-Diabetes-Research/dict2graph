@@ -179,12 +179,10 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
         for key in self.property_keys:
 
             if key in node:
-                print(key)
                 outsourced_props_node[key] = node.pop(key)
         if not outsourced_props_node and self.skip_if_keys_empty:
             return
-        print(outsourced_props_node)
-        self.d2g._node_cache.append(node)
+        self.d2g._node_cache.append(outsourced_props_node)
         self.d2g._rel_cache.append(
             Relation(node, outsourced_props_node, relation_type=self.relation_type)
         )
