@@ -10,6 +10,7 @@ class NodeTrans:
     RemoveProperty = _gentrans.RemoveProperty
     OverrideLabel = _nodetrans.OverrideLabel
     RemoveLabel = _nodetrans.RemoveLabel
+    AddLabel = _nodetrans.AddLabel
     CapitalizeLabels = _nodetrans.CapitalizeLabels
     PopListHubNodes = _nodetrans.PopListHubNodes
     SetMergeProperties = _nodetrans.SetMergeProperties

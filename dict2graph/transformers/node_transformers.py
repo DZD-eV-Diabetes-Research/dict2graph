@@ -74,6 +74,16 @@ class RemoveLabel(_NodeTransformerBase):
             node.labels = [l for l in node.labels if l != self.target_label]
 
 
+class AddLabel(_NodeTransformerBase):
+    def __init__(self, labels: Union[str, List[str]]):
+        if isinstance(labels, str):
+            labels = [labels]
+        self.new_labels = labels
+
+    def transform_node(self, node: Node):
+        node.labels = node.labels + self.new_labels
+
+
 class SetMergeProperties(_NodeTransformerBase):
     def __init__(self, props: List[str]):
         self.props = props

@@ -1074,6 +1074,93 @@ def test_RemoveNodesWithNoProps():
     assert_result(result, expected_result_nodes)
 
 
+def test_match_has_one_label_of():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+        ]
+    }
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node(has_one_label_of=["ship", "totalyOther"]).do(
+            NodeTrans.AddLabel("Matched")
+        ),
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "ship", "Matched"],
+            "props": {"id": "aad38ebe6134bfcc251e86f8b70a0134"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship", "Matched"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship", "Matched"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_match_has_not_one_label_of():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "ship": [
+            {"name": "Agatha King", "navy": "United Nations Navy"},
+        ]
+    }
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node(
+            has_one_label_of=["ship", "totalyOther"],
+            has_none_label_of=["CollectionHub"],
+        ).do(NodeTrans.AddLabel("Matched")),
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "aad38ebe6134bfcc251e86f8b70a0134"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship", "Matched"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship", "Matched"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 test_OverrideLabel()
 test_RemoveLabel()
 test_RemoveProperty()
@@ -1090,3 +1177,5 @@ test_RemoveListItemLabels()
 test_OutsourcePropertiesToNewNode()
 test_RemoveNodesWithOnlyEmptyProps()
 test_RemoveNodesWithNoProps()
+test_match_has_one_label_of()
+test_match_has_not_one_label_of()

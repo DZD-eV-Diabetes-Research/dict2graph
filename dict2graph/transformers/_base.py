@@ -75,16 +75,33 @@ class _RelationTransformerBase:
 
 class Transformer:
     class NodeTransformerMatcher:
-        def _set_node_matcher(self, label_match: Union[str, List[str], AnyLabel]):
+        def _set_node_matcher(
+            self,
+            label_match: Union[str, List[str], AnyLabel],
+            has_one_label_of: List[str] = None,
+            has_none_label_of: List[str] = None,
+        ):
             if isinstance(label_match, str):
                 label_match = [label_match]
             self.label_match: Union[List[str], AnyLabel] = label_match
 
+            self.has_one_label_of = has_one_label_of
+            self.has_none_label_of = has_none_label_of
+
         def _match(self, node: Node) -> bool:
+            if self.has_none_label_of is not None and not set(
+                self.has_none_label_of
+            ).isdisjoint(node.labels):
+                return False
+            if self.has_one_label_of is not None and not set(
+                self.has_one_label_of
+            ).isdisjoint(set(node.labels)):
+                return True
             if self.label_match == AnyLabel or set(self.label_match).issubset(
                 set(node.labels)
             ):
                 return True
+
             return False
 
         def do(self, transform: _NodeTransformerBase) -> _NodeTransformerBase:
@@ -110,11 +127,15 @@ class Transformer:
     @classmethod
     def match_node(
         cls,
-        label: Union[str, List[str], AnyLabel] = AnyLabel,
+        has_labels: Union[str, List[str], AnyLabel] = AnyLabel,
+        has_one_label_of: List[str] = None,
+        has_none_label_of: List[str] = None,
     ) -> NodeTransformerMatcher:
         tm = Transformer.NodeTransformerMatcher()
         tm._set_node_matcher(
-            label_match=label,
+            label_match=has_labels,
+            has_one_label_of=has_one_label_of,
+            has_none_label_of=has_none_label_of,
         )
         return tm
 
