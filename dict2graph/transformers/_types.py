@@ -21,6 +21,12 @@ class NodeTrans:
     OutsourcePropertiesToNewNode = _nodetrans.OutsourcePropertiesToNewNode
     RemoveNodesWithNoProps = _nodetrans.RemoveNodesWithNoProps
     RemoveNodesWithOnlyEmptyProps = _nodetrans.RemoveNodesWithOnlyEmptyProps
+    RemoveNode = _nodetrans.RemoveNode
+    RemoveNodesWithNoProps = _nodetrans.RemoveNodesWithNoProps
+    RemoveNodesWithOnlyEmptyProps = _nodetrans.RemoveNodesWithOnlyEmptyProps
+    PopNode = _nodetrans.PopNode
+    MergeChildNodes = _nodetrans.MergeChildNodes
+    OutsourcePropertiesToRelationship = _nodetrans.OutsourcePropertiesToRelationship
 
 
 class RelTrans:
@@ -29,3 +35,4 @@ class RelTrans:
     RemoveProperty = _gentrans.RemoveProperty
     UppercaseRelationType = _reltrans.UppercaseRelationType
     OverrideReliationType = _reltrans.OverrideReliationType
+    FlipNodes = _reltrans.FlipNodes

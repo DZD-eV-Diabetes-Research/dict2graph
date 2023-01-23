@@ -12,10 +12,7 @@ from typing import (
 )
 from dict2graph.node import Node
 from dict2graph.relation import Relation
-from dict2graph.transformers._base import (
-    _NodeTransformerBase,
-    AnyLabel,
-)
+from dict2graph.transformers._base import _NodeTransformerBase, AnyLabel, AnyRelation
 import typing
 import hashlib
 
@@ -198,6 +195,29 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
         )
 
 
+class OutsourcePropertiesToRelationship(_NodeTransformerBase):
+    def __init__(
+        self,
+        property_keys: List[str],
+        relation_type: str = None,
+        skip_if_keys_empty: bool = True,
+        keep_prop_if_relation_does_not_exist: bool = True,
+    ):
+        self.property_keys = property_keys
+        self.relation_type = relation_type
+        self.skip_if_keys_empty = skip_if_keys_empty
+        self.keep_prop_if_relation_does_not_exist = keep_prop_if_relation_does_not_exist
+
+    def transform_node(self, node: Node):
+        for rel in node.relations:
+            if rel.relation_type == self.relation_type:
+                for prop in self.property_keys:
+                    if prop in node:
+                        rel[prop] = node.pop(prop)
+        if not self.keep_prop_if_relation_does_not_exist:
+            [node.pop(prop) for prop in self.property_keys]
+
+
 class CreateHubbing(_NodeTransformerBase):
     def __init__(
         self,
@@ -261,13 +281,124 @@ class CreateHubbing(_NodeTransformerBase):
                         yield n, r
 
 
-class RemoveNodesWithNoProps(_NodeTransformerBase):
+class RemoveNode(_NodeTransformerBase):
+    def __init__(self, remove_children: bool = False):
+        self.remove_children = remove_children
+
     def transform_node(self, node: Node):
-        if len(node.keys()) == 0:
+        node.deleted = True
+        for o_rel in node.outgoing_relations:
+            o_rel.deleted = True
+            if self.remove_children:
+                self.transform_node(o_rel.end_node)
+
+
+class RemoveNodesWithNoProps(_NodeTransformerBase):
+    def __init__(self, only_if_no_child_nodes: bool = True):
+        self.only_if_no_child_nodes = only_if_no_child_nodes
+
+    def transform_node(self, node: Node):
+        if len(node.keys()) == 0 and (
+            not self.only_if_no_child_nodes or len(node.outgoing_relations) == 0
+        ):
             node.deleted = True
+            for o_rel in node.outgoing_relations:
+                o_rel.deleted = True
 
 
 class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
-    def transform_node(self, node: Node):
+    def __init__(self, only_if_no_child_nodes: bool = True):
+        self.only_if_no_child_nodes = only_if_no_child_nodes
+
+    def transform_node(
+        self,
+        node: Node,
+    ):
         if set(node.values()) in [set([None]), set([""]), set([None, ""])]:
-            node.deleted = True
+            if not self.only_if_no_child_nodes or len(node.outgoing_relations) == 0:
+                node.deleted = True
+                for o_rel in node.outgoing_relations:
+                    o_rel.deleted = True
+
+
+class PopNode(_NodeTransformerBase):
+    def transform_node(self, node: Node):
+        for i_rel in node.incoming_relations:
+            for o_rel in node.outgoing_relations:
+                i_rel.end_node = o_rel.end_node
+        node.deleted
+
+
+class MergeChildNodes(_NodeTransformerBase):
+    def __init__(
+        self,
+        child_labels: Union[str, AnyLabel] = AnyLabel,
+        child_relation_type: Union[str, AnyRelation] = AnyRelation,
+        overwrite_existing_props: bool = True,
+        prefix_merged_props_with_primary_label_of_child: bool = False,
+        prefix_merged_props_with_hash_of_child: bool = False,
+        include_relation_props: bool = True,
+    ):
+        self.child_labels = child_labels
+        self.child_relation_type = child_relation_type
+        self.overwrite_existing_props = overwrite_existing_props
+        self.prefix_merged_props_with_primary_label = (
+            prefix_merged_props_with_primary_label_of_child
+        )
+        self.prefix_merged_props_with_hash_of_child = (
+            prefix_merged_props_with_hash_of_child
+        )
+        self.include_relation_props = include_relation_props
+
+    def transform_node(self, node: Node):
+        for outgoing_rel in node.outgoing_relations:
+            child_node = outgoing_rel.end_node
+            if not (
+                self.child_labels == AnyLabel
+                or set(self.child_labels).issubset(set(child_node.labels))
+            ):
+                continue
+            if not (
+                self.child_relation_type == AnyRelation
+                or outgoing_rel.relation_type == self.child_relation_type
+            ):
+                continue
+            if self.include_relation_props:
+                self._merge_props(target_node=node, obj=outgoing_rel)
+
+            self._merge_props(target_node=node, obj=child_node)
+            for outgoing_child_rel in child_node.outgoing_relations:
+                outgoing_child_rel.start_node = node
+            for incoming_child_rel in child_node.incoming_relations:
+                if incoming_child_rel.start_node != node:
+                    incoming_child_rel.start_node = node
+                else:
+                    incoming_child_rel.deleted = True
+            child_node.deleted = True
+
+    def _merge_props(
+        self,
+        target_node: Node,
+        obj: Union[Node, Relation],
+    ):
+
+        for key, val in obj.items():
+            result_key = key
+            if self.prefix_merged_props_with_primary_label:
+                prefix = (
+                    obj.primary_label if isinstance(obj, Node) else obj.relation_type
+                )
+                result_key = f"{prefix}_{result_key}"
+            if self.prefix_merged_props_with_hash_of_child and isinstance(obj, Node):
+                result_key = f"{obj.get_hash()}_{result_key}"
+            if key in target_node and not self.overwrite_existing_props:
+                max_index = max(
+                    [
+                        k.split("_")[-1]
+                        for k in list(target_node.keys())
+                        if k.startswith(key) and k.split("_")[-1].isnumeric()
+                    ],
+                    default="-1",
+                )
+                result_key = f"{result_key}_{int(max_index)+1}"
+            target_node[result_key] = val

@@ -1161,6 +1161,294 @@ def test_match_has_not_one_label_of():
     assert_result(result, expected_result_nodes)
 
 
+def test_RemoveNode():
+    wipe_all_neo4j_data(DRIVER)
+    data = [
+        {"ship": {"name": "Agatha King", "navy": "United Nations Navy"}},
+        {"planet": {"name": "Earth", "objs": [{"house": {"rooms": 4}}]}},
+    ]
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("planet").do(NodeTrans.RemoveNode()),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "Dict2GraphRoot"],
+            "props": {"id": "fac642ec1dfb4de1a3f0d4d4841c0ee0"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionHub", "objs"],
+            "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "planet_HAS_house",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "house"],
+                        "props": {"rooms": 4},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "house"],
+            "props": {"rooms": 4},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_RemoveNode_with_children():
+    wipe_all_neo4j_data(DRIVER)
+    data = [
+        {"ship": {"name": "Agatha King", "navy": "United Nations Navy"}},
+        {"planet": {"name": "Earth", "objs": [{"house": {"rooms": 4}}]}},
+    ]
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("planet").do(NodeTrans.RemoveNode(remove_children=True)),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "Dict2GraphRoot"],
+            "props": {"id": "fac642ec1dfb4de1a3f0d4d4841c0ee0"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_PopNode():
+    wipe_all_neo4j_data(DRIVER)
+    data = [
+        {"ship": {"name": "Agatha King", "navy": "United Nations Navy"}},
+        {"planet": {"name": "Earth", "objs": [{"house": {"rooms": 4}}]}},
+    ]
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("planet").do(NodeTrans.PopNode()),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["CollectionHub", "Dict2GraphRoot"],
+            "props": {"id": "fac642ec1dfb4de1a3f0d4d4841c0ee0"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Dict2GraphRoot_HAS_objs",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "objs"],
+                        "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionHub", "objs"],
+            "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "planet_HAS_house",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "house"],
+                        "props": {"rooms": 4},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "house"],
+            "props": {"rooms": 4},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["CollectionItem", "planet"],
+            "props": {"name": "Earth"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "planet_HAS_objs",
+                    "rel_target_node": {
+                        "labels": ["CollectionHub", "objs"],
+                        "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_MergeChildNodes():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "Human": {
+            "name": "Drummer",
+            "first_name": "Camina",
+            "misc": {
+                "alive": True,
+                "gender": "Female",
+                "Wife": {"Human": {"name": "Oksana"}},
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("Human").do(NodeTrans.MergeChildNodes()),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {"labels": ["Human"], "props": {"name": "Oksana"}, "outgoing_rels": []},
+        {
+            "labels": ["Human"],
+            "props": {
+                "gender": "Female",
+                "alive": True,
+                "name": "Drummer",
+                "first_name": "Camina",
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Wife",
+                    "rel_target_node": {
+                        "labels": ["Human"],
+                        "props": {"name": "Oksana"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_OutsourcePropertiesToRelationship():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "episode": {
+            "season": 3,
+            "number": 2,
+            "appearances": {
+                "Human": {
+                    "name": "Drummer",
+                    "first_name": "Camina",
+                    "main_character": False,
+                }
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_node("Human").do(
+            NodeTrans.OutsourcePropertiesToRelationship(
+                property_keys=["main_character"], relation_type="appearances"
+            )
+        ),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Human"],
+            "props": {"name": "Drummer", "first_name": "Camina"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["episode"],
+            "props": {"number": 2, "season": 3},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"main_character": False},
+                    "rel_type": "appearances",
+                    "rel_target_node": {
+                        "labels": ["Human"],
+                        "props": {"name": "Drummer", "first_name": "Camina"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 test_OverrideLabel()
 test_RemoveLabel()
 test_RemoveProperty()
@@ -1179,3 +1467,8 @@ test_RemoveNodesWithOnlyEmptyProps()
 test_RemoveNodesWithNoProps()
 test_match_has_one_label_of()
 test_match_has_not_one_label_of()
+test_RemoveNode()
+test_RemoveNode_with_children()
+test_PopNode()
+test_MergeChildNodes()
+test_OutsourcePropertiesToRelationship()

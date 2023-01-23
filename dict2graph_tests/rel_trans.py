@@ -151,10 +151,87 @@ def test_UppercaseRelationType():
     assert_result(result, expected_result_nodes)
 
 
+def test_FlipNodes():
+    wipe_all_neo4j_data(DRIVER)
+    data = data = {
+        "Article": {
+            "title": "Surviving blackouts in space with soda lime",
+            "Journal": {
+                "name": "Space Ranger",
+                "JournalIssue": {"year": 2056, "number": 23},
+                "ISSN": {"type": "electronic", "id": "7.2973525693"},
+            },
+        }
+    }
+    d2g = Dict2graph()
+
+    d2g.add_relation_transformation(
+        Transformer.match_rel("Journal_HAS_JournalIssue").do(RelTrans.FlipNodes())
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Journal"],
+            "props": {"name": "Space Ranger"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Journal_HAS_ISSN",
+                    "rel_target_node": {
+                        "labels": ["ISSN"],
+                        "props": {"id": "7.2973525693", "type": "electronic"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Article"],
+            "props": {"title": "Surviving blackouts in space with soda lime"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Article_HAS_JournalIssue",
+                    "rel_target_node": {
+                        "labels": ["JournalIssue"],
+                        "props": {"number": 23, "year": 2056},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["JournalIssue"],
+            "props": {"number": 23, "year": 2056},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "JournalIssue_HAS_Journal",
+                    "rel_target_node": {
+                        "labels": ["Journal"],
+                        "props": {"name": "Space Ranger"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["ISSN"],
+            "props": {"id": "7.2973525693", "type": "electronic"},
+            "outgoing_rels": [],
+        },
+    ]
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
+
+
 test_OverridePropertyName()
 test_OverrideReliationType()
 # todo: test_TypeCastProperty()
 test_UppercaseRelationType()
+test_FlipNodes()
 
 
 def test_TypeCastProperty():

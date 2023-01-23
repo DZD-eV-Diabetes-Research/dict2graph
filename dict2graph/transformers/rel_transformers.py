@@ -22,6 +22,11 @@ class OverrideReliationType(_RelationTransformerBase):
 class FlipNodes(_RelationTransformerBase):
     def transform_rel(self, rel: Relation):
         start_node = rel.start_node
+        end_node = rel.end_node
+        for inc_rel in start_node.incoming_relations:
+            inc_rel.end_node = end_node
+        for out_rel in end_node.outgoing_relations:
+            out_rel.start_node = start_node
         rel.start_node = rel.end_node
         rel.end_node = start_node
 
