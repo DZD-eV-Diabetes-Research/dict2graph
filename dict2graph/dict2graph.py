@@ -18,8 +18,6 @@ import json
 import hashlib
 import collections
 from typing import Callable, Union
-import datetime
-import uuid
 import graphio
 from collections import defaultdict
 from typing import List, Dict, Tuple, Literal
@@ -45,9 +43,20 @@ class Dict2graph:
 
     simple_list_item_data_property_name: str = "_list_item_data"
     root_node_default_labels: List[str] = ["Dict2GraphRoot"]
-    root_node_default_id_propery_name = "id"
+    root_node_default_id_property_name = "id"
 
-    def __init__(self):
+    empty_node_default_id_property_name = "id"
+
+    def __init__(
+        self,
+        create_ids_for_empty_nodes: bool = True,
+        interpret_single_props_as_labels: bool = True,
+    ):
+        self.create_ids_for_empty_nodes = create_ids_for_empty_nodes
+
+        # Todo: "interpret_single_props_as_labels" should be a regualr NodeTransformer instead of a class param
+        self.interpret_single_props_as_labels = interpret_single_props_as_labels
+
         self._node_cache: List[Node] = []
         self._rel_cache: List[Relation] = []
         self._nodeSets: Dict[Tuple, NodeSet] = {}
@@ -142,16 +151,15 @@ class Dict2graph:
     def _prepare_root_node(self, node: Node):
         node.is_root_node = True
         if len(node.keys()) == 0:
-            node[self.root_node_default_id_propery_name] = node.get_hash(
+            node[self.root_node_default_id_property_name] = node.get_hash(
                 include_children_data=True
             )
 
-            node.merge_property_keys = [self.root_node_default_id_propery_name]
+            node.merge_property_keys = [self.root_node_default_id_property_name]
 
     def _parse_traverse_dict_fragment(
         self, data: Dict, parent_node: Node, labels: List[str] = None
     ) -> Node:
-
         new_node = Node(labels=labels, source_data=data, parent_node=parent_node)
         new_child_nodes: List[Node] = []
         new_rels: List[Relation] = []
@@ -179,7 +187,7 @@ class Dict2graph:
                     n = self._parse_traverse_list_fragment(
                         labels=[key], data=val, parent_node=new_node
                     )
-                if n:
+                if n is not None:
                     new_child_nodes.append(n)
                     if r is None:
                         r = Relation(
@@ -230,9 +238,6 @@ class Dict2graph:
                     )
                 )
             elif isinstance(obj, list):
-                m: Node = self._parse_traverse_list_fragment(
-                    labels=labels, data=obj, parent_node=list_root_hub_node
-                )
                 new_list_item_nodes.append(
                     self._parse_traverse_list_fragment(
                         labels=labels, data=obj, parent_node=list_root_hub_node
@@ -248,14 +253,15 @@ class Dict2graph:
             self._set_list_item_node_labels(node)
             node.is_list_collection_item = True
             child_ids.append(node.id)
-
             r = Relation(
                 start_node=list_root_hub_node,
                 end_node=node,
             )
+
             r[self.list_item_relation_index_property_name] = index
             node.parent_node = list_root_hub_node
             self._rel_cache.append(r)
+            #
 
         list_root_hub_node[
             self.list_hub_id_property_name
@@ -290,6 +296,8 @@ class Dict2graph:
         # {"person":{"name":"tom","lastname":"schilling"}} -> we know its a person
         # {"name":"tom","lastname":"schilling"} -> Could be a person or a lama
         # {"client":{"name":"tom","lastname":"schilling"},"cert":"yes"} -> -> Could be a person or a computer
+        if not self.interpret_single_props_as_labels:
+            return False
         if (
             isinstance(data, dict)
             and len(data.keys()) == 1
@@ -315,6 +323,11 @@ class Dict2graph:
 
     def _manifest_node_from_cache(self, cached_node: Node):
         node_set: NodeSet = self._get_or_create_nodeSet(cached_node)
+        if self.create_ids_for_empty_nodes and cached_node.id is None:
+            cached_node[
+                self.empty_node_default_id_property_name
+            ] = cached_node.get_hash(include_children_data=True)
+            cached_node.merge_property_keys = [self.empty_node_default_id_property_name]
         node_set.add_node(cached_node)
 
     def _get_or_create_nodeSet(self, node: Node) -> NodeSet:
@@ -339,8 +352,10 @@ class Dict2graph:
     def _get_or_create_relSet(self, relation: Relation) -> RelationshipSet:
         rel_id = (
             frozenset(relation.start_node.labels),
+            frozenset(relation.start_node.merge_property_keys),
             relation.relation_type,
             frozenset(relation.end_node.labels),
+            frozenset(relation.end_node.merge_property_keys),
         )
 
         if rel_id not in self._relSets:
@@ -360,6 +375,7 @@ class Dict2graph:
                 self._manifest_node_from_cache(node)
         for rel in self._rel_cache:
             if not rel.deleted:
+
                 self._manifest_rel_from_cache(rel)
 
     def _run_transformations(self):

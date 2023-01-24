@@ -93,20 +93,8 @@ def test_create_wrapped_list_graph():
             "props": {"id": "15ae1bf7a577ae4c5e429418639cc81d"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 2},
-                    "rel_type": "pupils_HAS_pupils",
-                    "rel_target_node": {
-                        "labels": ["pupils", "CollectionItem"],
-                        "props": {
-                            "firstname": "Wolfgang",
-                            "age": 147,
-                            "lastname": "Pauli",
-                        },
-                    },
-                },
-                {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "pupils_HAS_pupils",
+                    "rel_type": "pupils_COLLECTION_HAS_pupils",
                     "rel_target_node": {
                         "labels": ["pupils", "CollectionItem"],
                         "props": {
@@ -117,8 +105,20 @@ def test_create_wrapped_list_graph():
                     },
                 },
                 {
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "pupils_COLLECTION_HAS_pupils",
+                    "rel_target_node": {
+                        "labels": ["pupils", "CollectionItem"],
+                        "props": {
+                            "firstname": "Wolfgang",
+                            "age": 147,
+                            "lastname": "Pauli",
+                        },
+                    },
+                },
+                {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "pupils_HAS_pupils",
+                    "rel_type": "pupils_COLLECTION_HAS_pupils",
                     "rel_target_node": {
                         "labels": ["pupils", "CollectionItem"],
                         "props": {
@@ -170,7 +170,7 @@ def test_create_list_of_obj_graph():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "persons_HAS_person",
+                    "rel_type": "persons_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {
@@ -182,7 +182,7 @@ def test_create_list_of_obj_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "persons_HAS_person",
+                    "rel_type": "persons_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {
@@ -225,25 +225,25 @@ def test_create_root_list_graph():
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "persons_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
-                        "props": {
-                            "firstname": "Wolfgang",
-                            "age": 123,
-                            "lastname": "Pauli",
-                        },
-                    },
-                },
-                {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "persons_HAS_person",
+                    "rel_type": "persons_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
+                            "lastname": "Pauli",
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "persons_COLLECTION_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "CollectionItem"],
+                        "props": {
+                            "firstname": "Wolfgang",
+                            "age": 123,
                             "lastname": "Pauli",
                         },
                     },
@@ -289,7 +289,7 @@ def test_create_mixed_list_graph():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 2},
-                    "rel_type": "Stuff_HAS_Stuff",
+                    "rel_type": "Stuff_COLLECTION_HAS_Stuff",
                     "rel_target_node": {
                         "labels": ["Stuff", "CollectionItem"],
                         "props": {"somekey1": "yooo", "somekey2": "nooo"},
@@ -297,7 +297,7 @@ def test_create_mixed_list_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Stuff_HAS_box",
+                    "rel_type": "Stuff_COLLECTION_HAS_box",
                     "rel_target_node": {
                         "labels": ["box", "CollectionItem"],
                         "props": {"shape": "boxy", "color": "brown"},
@@ -305,7 +305,7 @@ def test_create_mixed_list_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Stuff_HAS_person",
+                    "rel_type": "Stuff_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
@@ -457,7 +457,7 @@ def test_merge_two_dicts():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Article_HAS_Authors",
+                    "rel_type": "Authors_COLLECTION_HAS_Authors",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
@@ -471,7 +471,7 @@ def test_merge_two_dicts():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Article_HAS_Authors",
+                    "rel_type": "Authors_COLLECTION_HAS_Authors",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
@@ -485,7 +485,7 @@ def test_merge_two_dicts():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
                     "rel_target_node": {
                         "labels": ["affiliation", "CollectionItem"],
                         "props": {"name": "University 1"},
@@ -499,7 +499,7 @@ def test_merge_two_dicts():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
                     "rel_target_node": {
                         "labels": ["affiliation", "CollectionItem"],
                         "props": {"name": "University 2"},
@@ -507,7 +507,7 @@ def test_merge_two_dicts():
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_HAS_affiliation",
+                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
                     "rel_target_node": {
                         "labels": ["affiliation", "CollectionItem"],
                         "props": {"name": "University 1"},
@@ -601,13 +601,21 @@ def test_empty_obj01():
             "props": {"id": "be18eceea6105854d14dab4ea36cbf41"},
             "outgoing_rels": [
                 {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"id": "d751713988987e9331980363e24189ce"},
+                    },
+                },
+                {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
+                    "rel_type": "ship_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
                     },
-                }
+                },
             ],
         },
         {
@@ -615,7 +623,11 @@ def test_empty_obj01():
             "props": {"navy": "United Nations Navy", "name": "Agatha King"},
             "outgoing_rels": [],
         },
-        {"labels": ["CollectionItem", "ship"], "props": {}, "outgoing_rels": []},
+        {
+            "labels": ["CollectionItem", "ship"],
+            "props": {"id": "d751713988987e9331980363e24189ce"},
+            "outgoing_rels": [],
+        },
     ]
     assert_result(result, expected_result_nodes)
 
@@ -658,6 +670,28 @@ def test_error_case_list_01():
     # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
     expected_result_nodes: dict = [
         {
+            "labels": ["CollectionHub", "ship"],
+            "props": {"id": "2061e61739236751d14ae01dfe54023a"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"name": ""},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "ship"],
+                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                },
+            ],
+        },
+        {
             "labels": ["CollectionItem", "ship"],
             "props": {"navy": "United Nations Navy", "name": "Agatha King"},
             "outgoing_rels": [],
@@ -666,20 +700,6 @@ def test_error_case_list_01():
             "labels": ["CollectionItem", "ship"],
             "props": {"name": ""},
             "outgoing_rels": [],
-        },
-        {
-            "labels": ["CollectionHub", "ship"],
-            "props": {"id": "2061e61739236751d14ae01dfe54023a"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
-                    "rel_target_node": {
-                        "labels": ["CollectionItem", "ship"],
-                        "props": {"navy": "United Nations Navy", "name": "Agatha King"},
-                    },
-                }
-            ],
         },
     ]
     assert_result(result, expected_result_nodes)

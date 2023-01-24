@@ -34,6 +34,8 @@ class Node(dict):
     def id(self):
         if self.merge_property_keys and len(self.merge_property_keys) == 1:
             return self[self.merge_property_keys[0]]
+        elif len(self.keys()) == 0:
+            return None
         else:
             return hashlib.md5(
                 bytes(

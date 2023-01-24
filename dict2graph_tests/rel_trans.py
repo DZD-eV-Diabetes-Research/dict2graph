@@ -23,7 +23,7 @@ def test_OverridePropertyName():
     data = [{"name": "Thomas Prince"}, {"name": "Zheng Fei"}, {"name": "Montenegro"}]
     d2g = Dict2graph()
     d2g.add_relation_transformation(
-        Transformer.match_rel("Ship_HAS_Ship").do(
+        Transformer.match_rel("Ship_COLLECTION_HAS_Ship").do(
             RelTrans.OverridePropertyName("_list_item_index", "size_rank")
         )
     )
@@ -38,16 +38,8 @@ def test_OverridePropertyName():
             "props": {"id": "04e92e89a48c92e734fb6008c4206a62"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"size_rank": 2},
-                    "rel_type": "Ship_HAS_Ship",
-                    "rel_target_node": {
-                        "labels": ["CollectionItem", "Ship"],
-                        "props": {"name": "Montenegro"},
-                    },
-                },
-                {
                     "rel_props": {"size_rank": 1},
-                    "rel_type": "Ship_HAS_Ship",
+                    "rel_type": "Ship_COLLECTION_HAS_Ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "Ship"],
                         "props": {"name": "Zheng Fei"},
@@ -55,10 +47,18 @@ def test_OverridePropertyName():
                 },
                 {
                     "rel_props": {"size_rank": 0},
-                    "rel_type": "Ship_HAS_Ship",
+                    "rel_type": "Ship_COLLECTION_HAS_Ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "Ship"],
                         "props": {"name": "Thomas Prince"},
+                    },
+                },
+                {
+                    "rel_props": {"size_rank": 2},
+                    "rel_type": "Ship_COLLECTION_HAS_Ship",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "Ship"],
+                        "props": {"name": "Montenegro"},
                     },
                 },
             ],

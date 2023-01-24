@@ -61,7 +61,7 @@ def test_OverridePropertyName():
         )
     )
     d2g.add_relation_transformation(
-        Transformer.match_rel("article_HAS_author").do(
+        Transformer.match_rel("author_COLLECTION_HAS_author").do(
             NodeTrans.OverridePropertyName("_list_item_index", "rank")
         )
     )
@@ -77,7 +77,7 @@ def test_OverridePropertyName():
             "outgoing_rels": [
                 {
                     "rel_props": {"rank": 1},
-                    "rel_type": "article_HAS_author",
+                    "rel_type": "author_COLLECTION_HAS_author",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "author"],
                         "props": {"name": "Urho"},
@@ -85,7 +85,7 @@ def test_OverridePropertyName():
                 },
                 {
                     "rel_props": {"rank": 0},
-                    "rel_type": "article_HAS_author",
+                    "rel_type": "author_COLLECTION_HAS_author",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "author"],
                         "props": {"name": "Amina"},
@@ -171,41 +171,6 @@ def test_RemoveLabel():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub"],
-            "props": {"id": "bb43cd7a2e84200db2862749cda5aa68"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Ship_HAS_souls",
-                    "rel_target_node": {
-                        "labels": ["CollectionItem", "souls"],
-                        "props": {"_list_item_data": "Souther"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Ship_HAS_souls",
-                    "rel_target_node": {
-                        "labels": ["CollectionItem", "souls"],
-                        "props": {"_list_item_data": "Nguyễn"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 2},
-                    "rel_type": "Ship_HAS_souls",
-                    "rel_target_node": {
-                        "labels": ["CollectionItem", "souls"],
-                        "props": {"_list_item_data": "Ghazi"},
-                    },
-                },
-            ],
-        },
-        {
-            "labels": ["CollectionItem", "souls"],
-            "props": {"_list_item_data": "Souther"},
-            "outgoing_rels": [],
-        },
-        {
             "labels": ["CollectionItem", "souls"],
             "props": {"_list_item_data": "Nguyễn"},
             "outgoing_rels": [],
@@ -228,6 +193,41 @@ def test_RemoveLabel():
                     },
                 }
             ],
+        },
+        {
+            "labels": ["CollectionHub"],
+            "props": {"id": "bb43cd7a2e84200db2862749cda5aa68"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "CollectionHub_COLLECTION_HAS_souls",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "souls"],
+                        "props": {"_list_item_data": "Nguyễn"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "CollectionHub_COLLECTION_HAS_souls",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "souls"],
+                        "props": {"_list_item_data": "Souther"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "CollectionHub_COLLECTION_HAS_souls",
+                    "rel_target_node": {
+                        "labels": ["CollectionItem", "souls"],
+                        "props": {"_list_item_data": "Ghazi"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["CollectionItem", "souls"],
+            "props": {"_list_item_data": "Souther"},
+            "outgoing_rels": [],
         },
     ]
     assert_result(result, expected_result_nodes)
@@ -334,7 +334,7 @@ def test_SetMergeProperties():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 2},
-                    "rel_type": "books_HAS_books",
+                    "rel_type": "books_COLLECTION_HAS_books",
                     "rel_target_node": {
                         "labels": ["books", "CollectionItem"],
                         "props": {
@@ -415,7 +415,7 @@ def test_CreateNewMergePropertyFromHash_simple():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {
@@ -478,25 +478,25 @@ def test_CreateNewMergePropertyFromHash_advanced():
             "props": {"id": "70250fe04440555565cf29422be7cf19"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
-                        "props": {
-                            "firstname": "Wolfgang",
-                            "_id": "3fd35b0354104b98b46ec13b8003c033",
-                            "lastname": "Pauli",
-                        },
-                    },
-                },
-                {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "_id": "0f4e57ef332dd2f42783f08f0554d17e",
+                            "lastname": "Pauli",
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "CollectionItem"],
+                        "props": {
+                            "firstname": "Wolfgang",
+                            "_id": "3fd35b0354104b98b46ec13b8003c033",
                             "lastname": "Pauli",
                         },
                     },
@@ -514,7 +514,7 @@ def test_CreateNewMergePropertyFromHash_advanced():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "person_HAS_children",
+                    "rel_type": "children_COLLECTION_HAS_children",
                     "rel_target_node": {
                         "labels": ["children", "CollectionItem"],
                         "props": {"name": "Elfride"},
@@ -601,7 +601,7 @@ def test_RemoveEmptyListRootNodes():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {"firstname": "Walther"},
@@ -609,7 +609,7 @@ def test_RemoveEmptyListRootNodes():
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_person",
                     "rel_target_node": {
                         "labels": ["person", "CollectionItem"],
                         "props": {"firstname": "Wolfgang"},
@@ -641,19 +641,19 @@ def test_RemoveEmptyListRootNodes():
             "props": {"id": "b6e98eb4e995daa53f19cfda9a916e17"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "person_HAS_children",
-                    "rel_target_node": {
-                        "labels": ["children", "CollectionItem"],
-                        "props": {"name": "Kid2"},
-                    },
-                },
-                {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "person_HAS_children",
+                    "rel_type": "children_COLLECTION_HAS_children",
                     "rel_target_node": {
                         "labels": ["children", "CollectionItem"],
                         "props": {"name": "Elfride"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "children_COLLECTION_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "CollectionItem"],
+                        "props": {"name": "Kid2"},
                     },
                 },
             ],
@@ -914,7 +914,7 @@ def test_RemoveListItemLabels():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "space_HAS_space",
+                    "rel_type": "space_COLLECTION_HAS_space",
                     "rel_target_node": {
                         "labels": ["space"],
                         "props": {"_list_item_data": "Okimbo"},
@@ -922,7 +922,7 @@ def test_RemoveListItemLabels():
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "space_HAS_space",
+                    "rel_type": "space_COLLECTION_HAS_space",
                     "rel_target_node": {
                         "labels": ["space"],
                         "props": {"_list_item_data": "Agatha King"},
@@ -1014,7 +1014,7 @@ def test_RemoveNodesWithOnlyEmptyProps():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
+                    "rel_type": "ship_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1057,7 +1057,7 @@ def test_RemoveNodesWithNoProps():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
+                    "rel_type": "ship_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1100,7 +1100,7 @@ def test_match_has_one_label_of():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
+                    "rel_type": "ship_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship", "Matched"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1144,7 +1144,7 @@ def test_match_has_not_one_label_of():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_HAS_ship",
+                    "rel_type": "ship_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship", "Matched"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1185,7 +1185,7 @@ def test_RemoveNode():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1204,7 +1204,7 @@ def test_RemoveNode():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "planet_HAS_house",
+                    "rel_type": "objs_COLLECTION_HAS_house",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "house"],
                         "props": {"rooms": 4},
@@ -1245,7 +1245,7 @@ def test_RemoveNode_with_children():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1286,7 +1286,7 @@ def test_PopNode():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_HAS_objs",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_objs",
                     "rel_target_node": {
                         "labels": ["CollectionHub", "objs"],
                         "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
@@ -1294,7 +1294,7 @@ def test_PopNode():
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_ship",
+                    "rel_type": "Dict2GraphRoot_COLLECTION_HAS_ship",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
@@ -1313,7 +1313,7 @@ def test_PopNode():
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "planet_HAS_house",
+                    "rel_type": "objs_COLLECTION_HAS_house",
                     "rel_target_node": {
                         "labels": ["CollectionItem", "house"],
                         "props": {"rooms": 4},

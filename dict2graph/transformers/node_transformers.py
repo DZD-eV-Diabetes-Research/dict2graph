@@ -302,7 +302,7 @@ class RemoveNodesWithNoProps(_NodeTransformerBase):
             not self.only_if_no_child_nodes or len(node.outgoing_relations) == 0
         ):
             node.deleted = True
-            for o_rel in node.outgoing_relations:
+            for o_rel in node.relations:
                 o_rel.deleted = True
 
 
