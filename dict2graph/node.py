@@ -143,12 +143,12 @@ class Node(dict):
 
     @property
     def relations(self) -> List[Relation]:
-        self._relations = [rel for rel in self._relations if not rel.deleted]
+
         return self._relations
 
     @relations.setter
     def relations(self, relations: List[Relation]):
-        self._relations = relations
+        self._relations = [rel for rel in relations if not rel.deleted]
 
     @property
     def outgoing_relations(self) -> List[Relation]:
