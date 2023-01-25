@@ -71,7 +71,7 @@ Lets show a simple example.
 ### Load a dict
 
 ```python
-from dict2graph import Dict2graph
+from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from neo4j import GraphDatabase, Driver
 NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
 
@@ -99,7 +99,7 @@ So we need to make some adjustments to improve the visual graph represenation of
 This is where `dict2graph.Transformers` come into play.
 
 ```python
-from dict2graph import Dict2graph
+from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from py2neo import Graph
 
 data = {
