@@ -14,9 +14,9 @@ stages:
   services:
     - name: neo4j:4.4
       alias: neo4j
-      variables:
-        NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
-        NEO4J_AUTH: none
+  variables:
+    NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
+    NEO4J_AUTH: none
 
 test:
   stage: test
