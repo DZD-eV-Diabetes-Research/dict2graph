@@ -58,7 +58,7 @@ g = GraphDatabase.driver("neo4j://localhost")
 data_dict = data
 d2g = Dict2graph()
 d2g._debug = True
-d2g.config_list_allowlist_collection_hubs = ["None"]
+d2g.config_list_allowlist_list_hubs = ["None"]
 d2g.config_dict_hubbing = {
     "PubMedArticle": [
         {

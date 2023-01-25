@@ -1,0 +1,29 @@
+site_name: dict2graph Docs
+site_dir: public
+nav:
+  - Start: "index.md"
+  - Basics:
+      - "Introduction": "basics.md"
+      - "Examples": "examples.md"
+  - Transformers:
+      - "Filtering": "match_content_to_transform.md"
+      - "Transforming": "use_transformers.md"
+      - "Available Transformers": "list_transformer.md"
+      - "Bring your own Transformer": "diy_transformer.md"
+theme:
+  name: material
+#  features:
+#    - toc.integrate
+plugins:
+  - autorefs
+  - mkdocstrings
+  - render_swagger
+markdown_extensions:
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - toc:
+      permalink: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

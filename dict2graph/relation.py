@@ -21,10 +21,10 @@ class Relation(dict):
             return self._relation_type
         elif self.start_node is not None and self.end_node is not None:
             if (
-                self.start_node.is_list_collection_hub
+                self.start_node.is_list_list_hub
                 # and not self.start_node.is_root_node
             ):
-                return f"{self.start_node.primary_label}_COLLECTION_HAS_{self.end_node.primary_label}"
+                return f"{self.start_node.primary_label}_LIST_HAS_{self.end_node.primary_label}"
             else:
                 return (
                     f"{self.start_node.primary_label}_HAS_{self.end_node.primary_label}"

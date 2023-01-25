@@ -1,7 +1,4 @@
 import os, sys
-from neo4j import GraphDatabase, Driver, Result, Transaction
-import json
-from deepdiff import DeepDiff
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
@@ -23,7 +20,7 @@ def test_OverridePropertyName():
     data = [{"name": "Thomas Prince"}, {"name": "Zheng Fei"}, {"name": "Montenegro"}]
     d2g = Dict2graph()
     d2g.add_relation_transformation(
-        Transformer.match_rel("Ship_COLLECTION_HAS_Ship").do(
+        Transformer.match_rel("Ship_LIST_HAS_Ship").do(
             RelTrans.OverridePropertyName("_list_item_index", "size_rank")
         )
     )
@@ -34,47 +31,47 @@ def test_OverridePropertyName():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "Ship"],
+            "labels": ["ListHub", "Ship"],
             "props": {"id": "04e92e89a48c92e734fb6008c4206a62"},
             "outgoing_rels": [
                 {
                     "rel_props": {"size_rank": 1},
-                    "rel_type": "Ship_COLLECTION_HAS_Ship",
+                    "rel_type": "Ship_LIST_HAS_Ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Ship"],
+                        "labels": ["ListItem", "Ship"],
                         "props": {"name": "Zheng Fei"},
                     },
                 },
                 {
                     "rel_props": {"size_rank": 0},
-                    "rel_type": "Ship_COLLECTION_HAS_Ship",
+                    "rel_type": "Ship_LIST_HAS_Ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Ship"],
+                        "labels": ["ListItem", "Ship"],
                         "props": {"name": "Thomas Prince"},
                     },
                 },
                 {
                     "rel_props": {"size_rank": 2},
-                    "rel_type": "Ship_COLLECTION_HAS_Ship",
+                    "rel_type": "Ship_LIST_HAS_Ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Ship"],
+                        "labels": ["ListItem", "Ship"],
                         "props": {"name": "Montenegro"},
                     },
                 },
             ],
         },
         {
-            "labels": ["CollectionItem", "Ship"],
+            "labels": ["ListItem", "Ship"],
             "props": {"name": "Thomas Prince"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "Ship"],
+            "labels": ["ListItem", "Ship"],
             "props": {"name": "Zheng Fei"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "Ship"],
+            "labels": ["ListItem", "Ship"],
             "props": {"name": "Montenegro"},
             "outgoing_rels": [],
         },

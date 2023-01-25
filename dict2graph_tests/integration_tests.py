@@ -1,7 +1,4 @@
 import os, sys
-from neo4j import GraphDatabase, Driver, Result, Transaction
-import json
-from deepdiff import DeepDiff
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
@@ -57,24 +54,24 @@ def test_merge_two_dicts_and_remove_list_hubs():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["affiliation", "CollectionItem"],
+            "labels": ["affiliation", "ListItem"],
             "props": {"name": "University 1"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["affiliation", "CollectionItem"],
+            "labels": ["affiliation", "ListItem"],
             "props": {"name": "University 2"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "Authors"],
+            "labels": ["ListItem", "Authors"],
             "props": {"firstName": "Mike", "lastName": "Pondsmith"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
                     "rel_type": "Authors_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["affiliation", "CollectionItem"],
+                        "labels": ["affiliation", "ListItem"],
                         "props": {"name": "University 1"},
                     },
                 },
@@ -82,7 +79,7 @@ def test_merge_two_dicts_and_remove_list_hubs():
                     "rel_props": {"_list_item_index": 1},
                     "rel_type": "Authors_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["affiliation", "CollectionItem"],
+                        "labels": ["affiliation", "ListItem"],
                         "props": {"name": "University 2"},
                     },
                 },
@@ -96,7 +93,7 @@ def test_merge_two_dicts_and_remove_list_hubs():
                     "rel_props": {"_list_item_index": 0},
                     "rel_type": "Article_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Authors"],
+                        "labels": ["ListItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
                     },
                 }
@@ -110,7 +107,7 @@ def test_merge_two_dicts_and_remove_list_hubs():
                     "rel_props": {"_list_item_index": 0},
                     "rel_type": "Article_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Authors"],
+                        "labels": ["ListItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
                     },
                 }
@@ -292,21 +289,21 @@ def test_pubmed_article_base_test():
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionHub", "PublicationType"],
+            "labels": ["ListHub", "PublicationType"],
             "props": {"id": "7aa3fd5ff651c125c73af3f384babf5d"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "PublicationType_COLLECTION_HAS_PublicationType",
+                    "rel_type": "PublicationType_LIST_HAS_PublicationType",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "PublicationType"],
+                        "labels": ["ListItem", "PublicationType"],
                         "props": {"UI": "D016428", "text": "Journal Article"},
                     },
                 }
             ],
         },
         {
-            "labels": ["CollectionItem", "PublicationType"],
+            "labels": ["ListItem", "PublicationType"],
             "props": {"UI": "D016428", "text": "Journal Article"},
             "outgoing_rels": [],
         },
@@ -318,7 +315,7 @@ def test_pubmed_article_base_test():
                     "rel_props": {},
                     "rel_type": "PublicationTypeList_HAS_PublicationType",
                     "rel_target_node": {
-                        "labels": ["CollectionHub", "PublicationType"],
+                        "labels": ["ListHub", "PublicationType"],
                         "props": {"id": "7aa3fd5ff651c125c73af3f384babf5d"},
                     },
                 }

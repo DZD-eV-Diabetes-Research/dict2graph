@@ -1,24 +1,70 @@
 image: python:3
 
 stages:
-  - deploy
+  - test
+  - deploy-to-pypi
+  - build-and-deploy-docs
 
-cache:
-  paths:
-    - .cache/pip
-    - venv/
-before_script:
-  - python -V # Print out python version for debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-deploy-job:
-  stage: deploy
+.prepare-python:
+  before_script:
+    - python -V # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+  services:
+    - name: neo4j:4.4
+      alias: neo4j
+      variables:
+        NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
+        NEO4J_AUTH: none
+
+test:
+  stage: test
+  extends: .prepare-python
+  image: python:3
+
+  script:
+    - python3 --version
+    - python3 -m pip install .[tests]
+    - python3 dict2graph_tests/main.py
+
+deploy-to-pypi:
+  stage: deploy-to-pypi
+  extends: .prepare-python
   only:
     - tags
+  needs:
+    - test
   script:
-    - pip install .
-    - python setup.py sdist bdist_wheel
-    - pip install twine
+    - python3 -m pip install .
+    - python3 setup.py sdist bdist_wheel
+    - python3 -m pip install twine
     #- TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
     - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
+
+pages:
+  stage: build-and-deploy-docs
+  needs:
+    - test
+  rules:
+    # run if manual schedule with variable DOC_BUILD_ONLY is started or when a tag is released
+    - if: $DOC_BUILD_ONLY == "1"
+    - if: $CI_COMMIT_TAG
+  script:
+    - python3 -m pip install .[docs]
+    # build docs localy
+    - ./make_docs.sh
+    # clone the remote github repo, which will be the target of the doc files
+    - git config --global user.email "dzdconnect@helmholtz-muenchen.de"
+    - git config --global user.name "Docs Pipeline"
+    - git clone https://github.com/dzd-ev/dict2graph-docs dict2graph-docs
+    - cd dict2graph-docs
+    - shopt -s extglob
+    # Wipe the repo besided license file and git config
+    - rm -r !(LICENSE|.git)
+    # Copy local build documentation into the github repo and commit/push to github. Github will build the pages automagic
+    - cp -r ../public/* .
+    - git add --all
+    - git commit -m ${CI_COMMIT_TAG:-manual_schedule}
+    - git remote set-url origin https://dzd-ev:$GITHUB_DZDEV_ACCESS_TOKEN@github.com/dzd-ev/dict2graph-docs
+    - git push origin main

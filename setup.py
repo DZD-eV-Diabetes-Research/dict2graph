@@ -16,9 +16,18 @@ setup(
     packages=["dict2graph"],
     install_requires=[
         "py2neo",
+        "neo4j",
         "graphio",
-        "linetimer",
     ],
+    extras_require={
+        "tests": ["deepdiff"],
+        "docs": [
+            "mkdocs",
+            "mkdocstrings[python]",
+            "mkdocs-autorefs",
+            "mkdocs-material",
+        ],
+    },
     python_requires=">=3.9",
     zip_safe=False,
     include_package_data=True,
@@ -31,4 +40,3 @@ setup(
     },
     setup_requires=["setuptools_scm"],
 )
-# req for tests deepdiff

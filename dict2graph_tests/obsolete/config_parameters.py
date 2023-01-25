@@ -31,7 +31,7 @@ class TestConfigParameters(unittest.TestCase):
         }
         g.run("Match (n) DETACH DELETE n")
         d2g = Dict2graph()
-        d2g.config_list_allowlist_collection_hubs = ["None"]
+        d2g.config_list_allowlist_list_hubs = ["None"]
         d2g.config_list_deconstruction_limit_nodes = ["Person"]
         d2g.config_dict_primarykey_attr_by_label = {"Person": "name"}
         d2g.parse(json)
@@ -59,7 +59,11 @@ class TestConfigParameters(unittest.TestCase):
 
     def test_config_dict_json_attr_to_reltype_instead_of_label(self):
         json = {
-            "Person": {"name": "Ben", "daughters": ["Kielyr"], "sons": ["Bodevan"],}
+            "Person": {
+                "name": "Ben",
+                "daughters": ["Kielyr"],
+                "sons": ["Bodevan"],
+            }
         }
         d2g = Dict2graph()
         d2g.config_dict_attr_name_to_reltype_instead_of_label = {
@@ -125,7 +129,7 @@ class TestConfigParameters(unittest.TestCase):
             }
 
             d2g = Dict2graph()
-            d2g.config_list_allowlist_collection_hubs = ["None"]
+            d2g.config_list_allowlist_list_hubs = ["None"]
             d2g.config_dict_node_prop_to_rel_prop = {
                 "PERSON_HAS_CHILD": {"to": ["type"]}
             }

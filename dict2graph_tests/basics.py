@@ -89,14 +89,14 @@ def test_create_wrapped_list_graph():
     # print(json.dumps(result, indent=2))
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "pupils"],
+            "labels": ["ListHub", "pupils"],
             "props": {"id": "15ae1bf7a577ae4c5e429418639cc81d"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "pupils_COLLECTION_HAS_pupils",
+                    "rel_type": "pupils_LIST_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils", "CollectionItem"],
+                        "labels": ["pupils", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 123,
@@ -106,9 +106,9 @@ def test_create_wrapped_list_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 2},
-                    "rel_type": "pupils_COLLECTION_HAS_pupils",
+                    "rel_type": "pupils_LIST_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils", "CollectionItem"],
+                        "labels": ["pupils", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 147,
@@ -118,9 +118,9 @@ def test_create_wrapped_list_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "pupils_COLLECTION_HAS_pupils",
+                    "rel_type": "pupils_LIST_HAS_pupils",
                     "rel_target_node": {
-                        "labels": ["pupils", "CollectionItem"],
+                        "labels": ["pupils", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
@@ -131,17 +131,17 @@ def test_create_wrapped_list_graph():
             ],
         },
         {
-            "labels": ["pupils", "CollectionItem"],
+            "labels": ["pupils", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["pupils", "CollectionItem"],
+            "labels": ["pupils", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["pupils", "CollectionItem"],
+            "labels": ["pupils", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 147, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -165,14 +165,14 @@ def test_create_list_of_obj_graph():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "persons"],
+            "labels": ["ListHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "persons_COLLECTION_HAS_person",
+                    "rel_type": "persons_LIST_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
+                        "labels": ["person", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
@@ -182,9 +182,9 @@ def test_create_list_of_obj_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "persons_COLLECTION_HAS_person",
+                    "rel_type": "persons_LIST_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
+                        "labels": ["person", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 123,
@@ -195,12 +195,12 @@ def test_create_list_of_obj_graph():
             ],
         },
         {
-            "labels": ["person", "CollectionItem"],
+            "labels": ["person", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["person", "CollectionItem"],
+            "labels": ["person", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -221,14 +221,14 @@ def test_create_root_list_graph():
     # print(json.dumps(result, indent=2))
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "persons"],
+            "labels": ["ListHub", "persons"],
             "props": {"id": "5cf48f5b18ab1bf7f29a9e98aa753a19"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "persons_COLLECTION_HAS_person",
+                    "rel_type": "persons_LIST_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
+                        "labels": ["person", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 34,
@@ -238,9 +238,9 @@ def test_create_root_list_graph():
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "persons_COLLECTION_HAS_person",
+                    "rel_type": "persons_LIST_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
+                        "labels": ["person", "ListItem"],
                         "props": {
                             "firstname": "Wolfgang",
                             "age": 123,
@@ -251,12 +251,12 @@ def test_create_root_list_graph():
             ],
         },
         {
-            "labels": ["person", "CollectionItem"],
+            "labels": ["person", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 34, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["person", "CollectionItem"],
+            "labels": ["person", "ListItem"],
             "props": {"firstname": "Wolfgang", "age": 123, "lastname": "Pauli"},
             "outgoing_rels": [],
         },
@@ -284,30 +284,30 @@ def test_create_mixed_list_graph():
     # print(json.dumps(result, indent=2))
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "Stuff"],
+            "labels": ["ListHub", "Stuff"],
             "props": {"id": "a8679369cb299d6b0f645e4e6ce6c510"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 2},
-                    "rel_type": "Stuff_COLLECTION_HAS_Stuff",
+                    "rel_type": "Stuff_LIST_HAS_Stuff",
                     "rel_target_node": {
-                        "labels": ["Stuff", "CollectionItem"],
+                        "labels": ["Stuff", "ListItem"],
                         "props": {"somekey1": "yooo", "somekey2": "nooo"},
                     },
                 },
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Stuff_COLLECTION_HAS_box",
+                    "rel_type": "Stuff_LIST_HAS_box",
                     "rel_target_node": {
-                        "labels": ["box", "CollectionItem"],
+                        "labels": ["box", "ListItem"],
                         "props": {"shape": "boxy", "color": "brown"},
                     },
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Stuff_COLLECTION_HAS_person",
+                    "rel_type": "Stuff_LIST_HAS_person",
                     "rel_target_node": {
-                        "labels": ["person", "CollectionItem"],
+                        "labels": ["person", "ListItem"],
                         "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
                     },
                 },
@@ -315,7 +315,7 @@ def test_create_mixed_list_graph():
         },
         {"labels": ["child"], "props": {"name": "Anne"}, "outgoing_rels": []},
         {
-            "labels": ["person", "CollectionItem"],
+            "labels": ["person", "ListItem"],
             "props": {"firstname": "Wolfgang", "lastname": "Pauli"},
             "outgoing_rels": [
                 {
@@ -326,12 +326,12 @@ def test_create_mixed_list_graph():
             ],
         },
         {
-            "labels": ["box", "CollectionItem"],
+            "labels": ["box", "ListItem"],
             "props": {"shape": "boxy", "color": "brown"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["Stuff", "CollectionItem"],
+            "labels": ["Stuff", "ListItem"],
             "props": {"somekey1": "yooo", "somekey2": "nooo"},
             "outgoing_rels": [],
         },
@@ -452,88 +452,88 @@ def test_merge_two_dicts():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "Authors"],
+            "labels": ["ListHub", "Authors"],
             "props": {"id": "a7a883e2547c5af03676543b2325ea96"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_COLLECTION_HAS_Authors",
+                    "rel_type": "Authors_LIST_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Authors"],
+                        "labels": ["ListItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
                     },
                 }
             ],
         },
         {
-            "labels": ["CollectionHub", "Authors"],
+            "labels": ["ListHub", "Authors"],
             "props": {"id": "b8f6cc9fa9ce70b36d1d7d4dbc57d0f9"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_COLLECTION_HAS_Authors",
+                    "rel_type": "Authors_LIST_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "Authors"],
+                        "labels": ["ListItem", "Authors"],
                         "props": {"firstName": "Mike", "lastName": "Pondsmith"},
                     },
                 }
             ],
         },
         {
-            "labels": ["CollectionHub", "affiliation"],
+            "labels": ["ListHub", "affiliation"],
             "props": {"id": "44de0fb70ce9cd28873b3ba6142dd159"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
+                    "rel_type": "affiliation_LIST_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["affiliation", "CollectionItem"],
+                        "labels": ["affiliation", "ListItem"],
                         "props": {"name": "University 1"},
                     },
                 }
             ],
         },
         {
-            "labels": ["CollectionHub", "affiliation"],
+            "labels": ["ListHub", "affiliation"],
             "props": {"id": "19f20f7210d4d743bdaf83b1b541d8a7"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
+                    "rel_type": "affiliation_LIST_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["affiliation", "CollectionItem"],
+                        "labels": ["affiliation", "ListItem"],
                         "props": {"name": "University 2"},
                     },
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "affiliation_COLLECTION_HAS_affiliation",
+                    "rel_type": "affiliation_LIST_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["affiliation", "CollectionItem"],
+                        "labels": ["affiliation", "ListItem"],
                         "props": {"name": "University 1"},
                     },
                 },
             ],
         },
         {
-            "labels": ["affiliation", "CollectionItem"],
+            "labels": ["affiliation", "ListItem"],
             "props": {"name": "University 1"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["affiliation", "CollectionItem"],
+            "labels": ["affiliation", "ListItem"],
             "props": {"name": "University 2"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "Authors"],
+            "labels": ["ListItem", "Authors"],
             "props": {"firstName": "Mike", "lastName": "Pondsmith"},
             "outgoing_rels": [
                 {
                     "rel_props": {},
                     "rel_type": "Authors_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["CollectionHub", "affiliation"],
+                        "labels": ["ListHub", "affiliation"],
                         "props": {"id": "44de0fb70ce9cd28873b3ba6142dd159"},
                     },
                 },
@@ -541,7 +541,7 @@ def test_merge_two_dicts():
                     "rel_props": {},
                     "rel_type": "Authors_HAS_affiliation",
                     "rel_target_node": {
-                        "labels": ["CollectionHub", "affiliation"],
+                        "labels": ["ListHub", "affiliation"],
                         "props": {"id": "19f20f7210d4d743bdaf83b1b541d8a7"},
                     },
                 },
@@ -555,7 +555,7 @@ def test_merge_two_dicts():
                     "rel_props": {},
                     "rel_type": "Article_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionHub", "Authors"],
+                        "labels": ["ListHub", "Authors"],
                         "props": {"id": "a7a883e2547c5af03676543b2325ea96"},
                     },
                 }
@@ -569,7 +569,7 @@ def test_merge_two_dicts():
                     "rel_props": {},
                     "rel_type": "Article_HAS_Authors",
                     "rel_target_node": {
-                        "labels": ["CollectionHub", "Authors"],
+                        "labels": ["ListHub", "Authors"],
                         "props": {"id": "b8f6cc9fa9ce70b36d1d7d4dbc57d0f9"},
                     },
                 }
@@ -597,34 +597,34 @@ def test_empty_obj01():
     # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "ship"],
+            "labels": ["ListHub", "ship"],
             "props": {"id": "be18eceea6105854d14dab4ea36cbf41"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_type": "ship_LIST_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "ship"],
+                        "labels": ["ListItem", "ship"],
                         "props": {"id": "d751713988987e9331980363e24189ce"},
                     },
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_type": "ship_LIST_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "ship"],
+                        "labels": ["ListItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
                     },
                 },
             ],
         },
         {
-            "labels": ["CollectionItem", "ship"],
+            "labels": ["ListItem", "ship"],
             "props": {"navy": "United Nations Navy", "name": "Agatha King"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "ship"],
+            "labels": ["ListItem", "ship"],
             "props": {"id": "d751713988987e9331980363e24189ce"},
             "outgoing_rels": [],
         },
@@ -670,34 +670,34 @@ def test_error_case_list_01():
     # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
     expected_result_nodes: dict = [
         {
-            "labels": ["CollectionHub", "ship"],
+            "labels": ["ListHub", "ship"],
             "props": {"id": "2061e61739236751d14ae01dfe54023a"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 1},
-                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_type": "ship_LIST_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "ship"],
+                        "labels": ["ListItem", "ship"],
                         "props": {"name": ""},
                     },
                 },
                 {
                     "rel_props": {"_list_item_index": 0},
-                    "rel_type": "ship_COLLECTION_HAS_ship",
+                    "rel_type": "ship_LIST_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["CollectionItem", "ship"],
+                        "labels": ["ListItem", "ship"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
                     },
                 },
             ],
         },
         {
-            "labels": ["CollectionItem", "ship"],
+            "labels": ["ListItem", "ship"],
             "props": {"navy": "United Nations Navy", "name": "Agatha King"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["CollectionItem", "ship"],
+            "labels": ["ListItem", "ship"],
             "props": {"name": ""},
             "outgoing_rels": [],
         },

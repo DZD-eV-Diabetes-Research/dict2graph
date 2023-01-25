@@ -36,8 +36,8 @@ from dict2graph.transformers import Transformer
 
 class Dict2graph:
     # Replacement strings {ITEM_PRIMARY_LABEL} and {ITEM_LABELs} are available
-    list_hub_additional_labels: List[str] = ["CollectionHub"]
-    list_item_additional_labels: List[str] = ["CollectionItem"]
+    list_hub_additional_labels: List[str] = ["ListHub"]
+    list_item_additional_labels: List[str] = ["ListItem"]
     list_hub_id_property_name: str = "id"
     list_item_relation_index_property_name: str = "_list_item_index"
 
@@ -64,6 +64,24 @@ class Dict2graph:
         self.node_transformators: List[_NodeTransformerBase] = []
         self.relation_transformators: List[_RelationTransformerBase] = []
 
+    def add_transformation(
+        self,
+        transformator: Union[
+            _NodeTransformerBase,
+            _RelationTransformerBase,
+            List[Union[_NodeTransformerBase, _RelationTransformerBase]],
+        ],
+    ):
+        if isinstance(transformator, list):
+            for trans in transformator:
+                self.add_transformation(trans)
+
+        if issubclass(transformator.__class__, _NodeTransformerBase):
+            self.add_node_transformation(transformator)
+
+        if issubclass(transformator.__class__, _RelationTransformerBase):
+            self.add_relation_transformation(transformator)
+
     def add_node_transformation(
         self, transformator: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
     ):
@@ -87,6 +105,7 @@ class Dict2graph:
         self,
         transformator: Union[_RelationTransformerBase, List[_RelationTransformerBase]],
     ):
+
         if isinstance(transformator, list):
             for trans in transformator:
                 self.add_relation_transformation(trans)
@@ -212,7 +231,7 @@ class Dict2graph:
             parent_node=parent_node,
         )
         self._set_list_root_hub_node_labels(list_root_hub_node)
-        list_root_hub_node.is_list_collection_hub = True
+        list_root_hub_node.is_list_list_hub = True
         self._node_cache.append(list_root_hub_node)
         # parse nodes
         new_list_item_nodes: List[Node] = []
@@ -251,7 +270,7 @@ class Dict2graph:
             if node is None:
                 continue
             self._set_list_item_node_labels(node)
-            node.is_list_collection_item = True
+            node.is_list_list_item = True
             child_ids.append(node.id)
             r = Relation(
                 start_node=list_root_hub_node,
@@ -401,10 +420,10 @@ class Dict2graph_old(object):
         self.config_list_default_primarykeys: List[str] = ["id", "_id"]
         self.config_str_primarykey_generated_attr_name: str = "_id"
         self.config_dict_hubbing: Dict[str, Dict[str, Union[str, List[str]]]] = {}
-        self.config_str_collection_hub_label: str = "{LIST_MEMBER_LABEL}Collection"
-        self.config_list_collection_hub_extra_labels: List[str] = ["CollectionHub"]
-        self.config_bool_collection_hub_attach_list_members_label: bool = False
-        self.config_bool_collection_hub_only_when_len_min_2: bool = False
+        self.config_str_list_hub_label: str = "{LIST_MEMBER_LABEL}List"
+        self.config_list_list_hub_extra_labels: List[str] = ["ListHub"]
+        self.config_bool_list_hub_attach_list_members_label: bool = False
+        self.config_bool_list_hub_only_when_len_min_2: bool = False
         self.config_dict_in_between_node: Dict[str, Dict[str, str]] = {}
         self.config_dict_concat_list_attr: Dict[str, Dict[str, str]] = {}
 
@@ -433,12 +452,12 @@ class Dict2graph_old(object):
         self.config_dict_attr_name_to_reltype_instead_of_label: Dict[str, str] = {}
         self.config_dict_node_prop_to_rel_prop: Dict[str, Dict[str, List[str]]] = {}
 
-        self.config_list_allowlist_collection_hubs: List[str] = []
+        self.config_list_allowlist_list_hubs: List[str] = []
         self.config_list_allowlist_reltypes: List[str] = []
         self.config_list_allowlist_nodes: List[str] = []
         self.config_dict_allowlist_props: Dict[str, List[str]] = {}
 
-        self.config_list_blocklist_collection_hubs: List[str] = []
+        self.config_list_blocklist_list_hubs: List[str] = []
         self.config_list_blocklist_reltypes: List[str] = []
         self.config_list_blocklist_nodes: List[str] = []
         self.config_dict_blocklist_props: Dict[str, List[str]] = {}
@@ -475,11 +494,11 @@ class Dict2graph_old(object):
                 "Can not mix config_dict_allowlist_props and config_dict_blocklist_props. At least one must contain None or an empty list."
             )
         if (
-            self.config_list_allowlist_collection_hubs
-            and self.config_list_blocklist_collection_hubs
+            self.config_list_allowlist_list_hubs
+            and self.config_list_blocklist_list_hubs
         ):
             raise ValueError(
-                "Can not mix config_list_allowlist_collection_hubs and config_list_blocklist_collection_hubs. At least one must contain None or an empty list."
+                "Can not mix config_list_allowlist_list_hubs and config_list_blocklist_list_hubs. At least one must contain None or an empty list."
             )
         if self.config_dict_primarykey_generated_hashed_attrs_by_label:
             for (
@@ -790,30 +809,30 @@ class Dict2graph_old(object):
         return False
 
     def _get_hub_node_label_name(self, member_label_name):
-        label = self.config_str_collection_hub_label.format(
+        label = self.config_str_list_hub_label.format(
             LIST_MEMBER_LABEL=member_label_name
         )
         if label in self.config_dict_label_override:
             label = self.config_dict_label_override[label]
         return label
 
-    def _create_collection_hub_node(self, member_label_name, data_dict):
+    def _create_list_hub_node(self, member_label_name, data_dict):
         hub_node_label = self._get_hub_node_label_name(member_label_name)
         if (
             (
-                # allowlist mode: only create hub when hub name ist listed in config_list_allowlist_collection_hubs
-                self.config_list_allowlist_collection_hubs
-                and hub_node_label in self.config_list_allowlist_collection_hubs
+                # allowlist mode: only create hub when hub name ist listed in config_list_allowlist_list_hubs
+                self.config_list_allowlist_list_hubs
+                and hub_node_label in self.config_list_allowlist_list_hubs
             )
             or (
-                # blocklist mode: only create hub when name is not in config_list_blocklist_collection_hubs
-                self.config_list_blocklist_collection_hubs
-                and hub_node_label not in self.config_list_blocklist_collection_hubs
+                # blocklist mode: only create hub when name is not in config_list_blocklist_list_hubs
+                self.config_list_blocklist_list_hubs
+                and hub_node_label not in self.config_list_blocklist_list_hubs
             )
         ) or (
-            # open mode: always create a collection hub
-            not self.config_list_blocklist_collection_hubs
-            and not self.config_list_allowlist_collection_hubs
+            # open mode: always create a list hub
+            not self.config_list_blocklist_list_hubs
+            and not self.config_list_allowlist_list_hubs
         ):
             hub_node = Dict2graph.Node(
                 d2g=self,
@@ -822,11 +841,11 @@ class Dict2graph_old(object):
                 subordinate_data=None,
                 id=self._hash_alg(json.dumps(data_dict).encode()).hexdigest(),
             )
-            hub_node._is_collectionhub = True
+            hub_node._is_listhub = True
             hub_node.__primarykeys__ = ["id"]
-            for lbl in self.config_list_collection_hub_extra_labels:
+            for lbl in self.config_list_list_hub_extra_labels:
                 hub_node.add_label(lbl)
-            if self.config_bool_collection_hub_attach_list_members_label:
+            if self.config_bool_list_hub_attach_list_members_label:
                 hub_node.add_label(member_label_name)
             return hub_node
 
@@ -1143,22 +1162,19 @@ class Dict2graph_old(object):
 
         elif isinstance(data_dict, list):
 
-            if (
-                self.config_bool_collection_hub_only_when_len_min_2
-                and len(data_dict) == 1
-            ):
+            if self.config_bool_list_hub_only_when_len_min_2 and len(data_dict) == 1:
                 node = self._jsondict2subgraph(label_name, data_dict[0], parent_node)
 
             else:
-                # create collection hub for list children, if applicable
-                # the id of the new Collection/Hub Dict2graph, is based on the list content hashed
+                # create list hub for list children, if applicable
+                # the id of the new List/Hub Dict2graph, is based on the list content hashed
 
-                node_hub = self._create_collection_hub_node(
+                node_hub = self._create_list_hub_node(
                     member_label_name=node.__primarylabel__,
                     data_dict=data_dict,
                 )
                 if node_hub is not None:
-                    # if a collection hub was created we connect following list members to the collection hub
+                    # if a list hub was created we connect following list members to the list hub
                     node = node_hub
 
                 elif parent_node is not None:

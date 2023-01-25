@@ -5,12 +5,12 @@ import json
 
 if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(
-        os.path.realpath(os.path.join(
-            os.getcwd(), os.path.expanduser(__file__)))
+        os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
     )
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 from dict2graph import Dict2graph
+
 NEO4J_CONF = os.getenv("NEO4J", {})
 g = py2neo.Graph(**NEO4J_CONF)
 g.run("match (a) -[r] -> () delete a, r")
@@ -41,7 +41,7 @@ json2 = {
         ],
     }
 }
-d2g.config_list_allowlist_collection_hubs = ["NONE"]
+d2g.config_list_allowlist_list_hubs = ["NONE"]
 # hubbing config:
 d2g.config_dict_hubbing = {
     "Article": {
@@ -50,6 +50,6 @@ d2g.config_dict_hubbing = {
         "hub_id_from": "edge",
     }
 }
-#d2g.parse(json)
+# d2g.parse(json)
 d2g.parse(json2)
 d2g.merge(g)

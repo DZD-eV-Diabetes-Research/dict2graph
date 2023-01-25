@@ -91,7 +91,7 @@ class SetMergeProperties(_NodeTransformerBase):
 
 class PopListHubNodes(_NodeTransformerBase):
     def custom_node_match(self, node: Node) -> bool:
-        return node.is_list_collection_hub
+        return node.is_list_list_hub
 
     def transform_node(self, node: Node):
         new_list_item_nodes_parent = node.parent_node
@@ -148,7 +148,7 @@ class CreateNewMergePropertyFromHash(_NodeTransformerBase):
 
 class RemoveEmptyListRootNodes(_NodeTransformerBase):
     def custom_node_match(self, node: Node) -> bool:
-        return node.is_list_collection_hub and len(node.outgoing_relations) == 0
+        return node.is_list_list_hub and len(node.outgoing_relations) == 0
 
     def transform_node(self, node: Node):
         for rel in node.relations:
@@ -158,7 +158,7 @@ class RemoveEmptyListRootNodes(_NodeTransformerBase):
 
 class RemoveListItemLabels(_NodeTransformerBase):
     def custom_node_match(self, node: Node) -> bool:
-        return node.is_list_collection_item
+        return node.is_list_list_item
 
     def transform_node(self, node: Node):
         node.labels = [

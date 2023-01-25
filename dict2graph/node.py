@@ -25,8 +25,8 @@ class Node(dict):
         self._merge_property_keys: List[str] = None
         self.update(**kwargs)
         self.relations: List[Relation] = []
-        self.is_list_collection_hub: bool = False
-        self.is_list_collection_item: bool = False
+        self.is_list_list_hub: bool = False
+        self.is_list_list_item: bool = False
         self.is_root_node: bool = False
         self.deleted = False
 

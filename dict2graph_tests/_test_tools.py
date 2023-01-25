@@ -11,7 +11,7 @@ if __name__ == "__main__":
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
 from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 
-DRIVER = GraphDatabase.driver("neo4j://localhost")
+DRIVER = GraphDatabase.driver(os.getenv("NEO4J_URI", "neo4j://localhost"))
 
 
 def get_all_neo4j_nodes_with_rels(driver: Driver) -> Result:
