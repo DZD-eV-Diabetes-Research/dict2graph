@@ -117,4 +117,7 @@ d2g.create(DRIVER)
 ```
  Now thats look more like a graph we are used to, isn't it?
 
- There are a lot of more powerfull Transformators and you can even make your own transformator! Have a deeper look into the docs to learn more.
+![](dict2graph_docs/img/readme_basic_example_trans.png "Result example 1")
+
+ There are a lot of more powerfull `Transformators` and you can even make your own 🚀!  
+ Have a deeper look into the docs to learn more.
