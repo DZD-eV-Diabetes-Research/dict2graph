@@ -224,41 +224,46 @@ def test_FlipNodes():
     assert_result(result, expected_result_nodes)
 
 
-test_OverridePropertyName()
-test_OverrideReliationType()
-# todo: test_TypeCastProperty()
-test_UppercaseRelationType()
-test_FlipNodes()
-
-
 def test_TypeCastProperty():
     # TODO
     # we need node properties shifting to relation first
     wipe_all_neo4j_data(DRIVER)
-    data = {"name": "Pallas", "inhabitans": {"species": "human"}}
+    data = {
+        "name": "Pallas",
+        "inhabitans": {"species": "human", "stationed": "true"},
+    }
     d2g = Dict2graph()
-    d2g.add_relation_transformation(
-        Transformer.match_rel("stationed").do(
-            RelTrans.TypeCastProperty("is_active", bool)
+    d2g.add_node_transformation(
+        Transformer.match_node("inhabitans").do(
+            NodeTrans.OutsourcePropertiesToRelationship(
+                ["stationed"], "Asteroid_HAS_inhabitans"
+            )
         )
     )
+
+    d2g.add_relation_transformation(
+        Transformer.match_rel("Asteroid_HAS_inhabitans").do(
+            RelTrans.TypeCastProperty("stationed", bool)
+        )
+    )
+
     d2g.parse(data, "Asteroid")
     d2g.create(DRIVER)
     result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
     expected_result_nodes: dict = [
-        {"labels": ["ship"], "props": {"name": "Zheng Fei"}, "outgoing_rels": []},
+        {"labels": ["inhabitans"], "props": {"species": "human"}, "outgoing_rels": []},
         {
-            "labels": ["Person"],
-            "props": {"name": "Holden"},
+            "labels": ["Asteroid"],
+            "props": {"name": "Pallas"},
             "outgoing_rels": [
                 {
-                    "rel_props": {},
-                    "rel_type": "IS_STATIONED_AT",
+                    "rel_props": {"stationed": True},
+                    "rel_type": "Asteroid_HAS_inhabitans",
                     "rel_target_node": {
-                        "labels": ["ship"],
-                        "props": {"name": "Zheng Fei"},
+                        "labels": ["inhabitans"],
+                        "props": {"species": "human"},
                     },
                 }
             ],
@@ -266,3 +271,11 @@ def test_TypeCastProperty():
     ]
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
     assert_result(result, expected_result_nodes)
+
+
+if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
+    test_OverridePropertyName()
+    test_OverrideReliationType()
+    test_TypeCastProperty()
+    test_UppercaseRelationType()
+    test_FlipNodes()

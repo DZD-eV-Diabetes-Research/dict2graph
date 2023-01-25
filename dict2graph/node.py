@@ -24,7 +24,7 @@ class Node(dict):
         self.source_data: Dict = source_data
         self._merge_property_keys: List[str] = None
         self.update(**kwargs)
-        self.relations: List[Relation] = []
+        self._relations: List[Relation] = []
         self.is_list_list_hub: bool = False
         self.is_list_list_item: bool = False
         self.is_root_node: bool = False
@@ -140,6 +140,15 @@ class Node(dict):
                 "utf-8",
             ),
         ).hexdigest()
+
+    @property
+    def relations(self) -> List[Relation]:
+        self._relations = [rel for rel in self._relations if not rel.deleted]
+        return self._relations
+
+    @relations.setter
+    def relations(self, relations: List[Relation]):
+        self._relations = relations
 
     @property
     def outgoing_relations(self) -> List[Relation]:

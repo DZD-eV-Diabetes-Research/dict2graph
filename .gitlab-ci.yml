@@ -27,7 +27,7 @@ test:
   script:
     - python3 --version
     - python3 -m pip install .[tests]
-    - python3 dict2graph_tests/main.py
+    - python3 -m pytest dict2graph_tests/
 
 deploy-to-pypi:
   stage: deploy-to-pypi

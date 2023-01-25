@@ -101,28 +101,6 @@ def test_basic_start_example_transformed():
     result = get_all_neo4j_nodes_with_rels(DRIVER)
     expected_result_nodes: dict = [
         {
-            "labels": ["Entities", "Listhub"],
-            "props": {"id": "e9c915649e338a805eda93f4cff31d31"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Entities_LIST_HAS_Entities",
-                    "rel_target_node": {
-                        "labels": ["Entities", "Listitem"],
-                        "props": {"id": "Isabelle Eberhardt"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Entities_LIST_HAS_Entities",
-                    "rel_target_node": {
-                        "labels": ["Entities", "Listitem"],
-                        "props": {"id": "Slimène Ehnni"},
-                    },
-                },
-            ],
-        },
-        {
             "labels": ["Entities", "Listitem"],
             "props": {"id": "Isabelle Eberhardt"},
             "outgoing_rels": [],
@@ -137,18 +115,27 @@ def test_basic_start_example_transformed():
             "props": {"id": 1, "target": "El Oued"},
             "outgoing_rels": [
                 {
-                    "rel_props": {},
-                    "rel_type": "Action_HAS_Entities",
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ACTION_HAS_ENTITIES",
                     "rel_target_node": {
-                        "labels": ["Entities", "Listhub"],
-                        "props": {"id": "e9c915649e338a805eda93f4cff31d31"},
+                        "labels": ["Entities", "Listitem"],
+                        "props": {"id": "Isabelle Eberhardt"},
                     },
-                }
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "ACTION_HAS_ENTITIES",
+                    "rel_target_node": {
+                        "labels": ["Entities", "Listitem"],
+                        "props": {"id": "Slimène Ehnni"},
+                    },
+                },
             ],
         },
     ]
     assert_result(result, expected_result_nodes)
 
 
-test_basic_start_example()
-test_basic_start_example_transformed()
+if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
+    test_basic_start_example()
+    test_basic_start_example_transformed()

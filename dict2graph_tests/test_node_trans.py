@@ -668,13 +668,13 @@ def test_RemoveEmptyListRootNodes():
     assert_result(result, expected_result_nodes)
 
 
-def test_BlankListHubNodes():
+def test_PopListHubNodes_at_root():
     wipe_all_neo4j_data(DRIVER)
     data = ["Amos", "Avasarala", "Holden", "Nagata"]
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.BlankListHubNodes())
+        Transformer.match_node().do(NodeTrans.PopListHubNodes())
     )
 
     d2g.parse(data)
@@ -684,76 +684,23 @@ def test_BlankListHubNodes():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["ListHub", "Dict2GraphRoot"],
-            "props": {"id": "5597176a73757989202a3cfca96bc8c7"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person", "ListItem"],
-                        "props": {"firstname": "Walther"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_HAS_person",
-                    "rel_target_node": {
-                        "labels": ["person", "ListItem"],
-                        "props": {"firstname": "Wolfgang"},
-                    },
-                },
-            ],
-        },
-        {
-            "labels": ["person", "ListItem"],
-            "props": {"firstname": "Walther"},
+            "labels": ["Dict2GraphRoot", "ListItem"],
+            "props": {"_list_item_data": "Amos"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["person", "ListItem"],
-            "props": {"firstname": "Wolfgang"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "person_HAS_children",
-                    "rel_target_node": {
-                        "labels": ["ListHub", "children"],
-                        "props": {"id": "b6e98eb4e995daa53f19cfda9a916e17"},
-                    },
-                }
-            ],
-        },
-        {
-            "labels": ["ListHub", "children"],
-            "props": {"id": "b6e98eb4e995daa53f19cfda9a916e17"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "person_HAS_children",
-                    "rel_target_node": {
-                        "labels": ["children", "ListItem"],
-                        "props": {"name": "Kid2"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "person_HAS_children",
-                    "rel_target_node": {
-                        "labels": ["children", "ListItem"],
-                        "props": {"name": "Elfride"},
-                    },
-                },
-            ],
-        },
-        {
-            "labels": ["children", "ListItem"],
-            "props": {"name": "Elfride"},
+            "labels": ["Dict2GraphRoot", "ListItem"],
+            "props": {"_list_item_data": "Avasarala"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["children", "ListItem"],
-            "props": {"name": "Kid2"},
+            "labels": ["Dict2GraphRoot", "ListItem"],
+            "props": {"_list_item_data": "Holden"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Dict2GraphRoot", "ListItem"],
+            "props": {"_list_item_data": "Nagata"},
             "outgoing_rels": [],
         },
     ]
@@ -840,49 +787,68 @@ def test_PopListHubNodes():
 
 def test_CreateHubbing():
     wipe_all_neo4j_data(DRIVER)
-    data = {"space": {"ship": ["Agatha King", "Okimbo"]}}
+    data = {
+        "sector": {
+            "name": "C65",
+            "ship": {"name": "Agatha King", "captain": {"name": "Michael Souther"}},
+        }
+    }
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.CreateHubbing()),
+        Transformer.match_node("sector").do(
+            NodeTrans.CreateHubbing(
+                follow_nodes_labels=["ship", "captain"],
+                merge_property_mode="edge",
+                hub_labels=["Service"],
+            )
+        ),
     )
 
     d2g.parse(data)
     d2g.merge(DRIVER)
     result = get_all_neo4j_nodes_with_rels(DRIVER)
-    # print(json.dumps(result, indent=2))
-
     expected_result_nodes: dict = [
         {
-            "labels": ["ListItem", "ship"],
-            "props": {"_list_item_data": "Agatha King"},
-            "outgoing_rels": [],
-        },
-        {
-            "labels": ["ListItem", "ship"],
-            "props": {"_list_item_data": "Okimbo"},
-            "outgoing_rels": [],
-        },
-        {
-            "labels": ["space"],
-            "props": {"id": "ad342afd0fac115aeafa89c68d89f1be"},
+            "labels": ["Service"],
+            "props": {"id": "7ef579d44642059506a9f2b0ca928419"},
             "outgoing_rels": [
                 {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "space_HAS_ship",
+                    "rel_props": {},
+                    "rel_type": "Service_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["ListItem", "ship"],
-                        "props": {"_list_item_data": "Agatha King"},
+                        "labels": ["ship"],
+                        "props": {"name": "Agatha King"},
                     },
                 },
                 {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "space_HAS_ship",
+                    "rel_props": {},
+                    "rel_type": "Service_HAS_captain",
                     "rel_target_node": {
-                        "labels": ["ListItem", "ship"],
-                        "props": {"_list_item_data": "Okimbo"},
+                        "labels": ["captain"],
+                        "props": {"name": "Michael Souther"},
                     },
                 },
+            ],
+        },
+        {
+            "labels": ["captain"],
+            "props": {"name": "Michael Souther"},
+            "outgoing_rels": [],
+        },
+        {"labels": ["ship"], "props": {"name": "Agatha King"}, "outgoing_rels": []},
+        {
+            "labels": ["sector"],
+            "props": {"name": "C65"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "sector_HAS_Service",
+                    "rel_target_node": {
+                        "labels": ["Service"],
+                        "props": {"id": "7ef579d44642059506a9f2b0ca928419"},
+                    },
+                }
             ],
         },
     ]
@@ -1445,26 +1411,28 @@ def test_OutsourcePropertiesToRelationship():
     assert_result(result, expected_result_nodes)
 
 
-test_OverrideLabel()
-test_RemoveLabel()
-test_RemoveProperty()
-test_CapitalizeLabels()
-test_OverridePropertyName()
-test_SetMergeProperties()
-test_TypeCastProperty()
-test_CreateNewMergePropertyFromHash_simple()
-test_CreateNewMergePropertyFromHash_advanced()
-test_RemoveEmptyListRootNodes()
-test_TypeCastProperty()
-test_PopListHubNodes()
-test_RemoveListItemLabels()
-test_OutsourcePropertiesToNewNode()
-test_RemoveNodesWithOnlyEmptyProps()
-test_RemoveNodesWithNoProps()
-test_match_has_one_label_of()
-test_match_has_not_one_label_of()
-test_RemoveNode()
-test_RemoveNode_with_children()
-test_PopNode()
-test_MergeChildNodes()
-test_OutsourcePropertiesToRelationship()
+if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
+    test_OverrideLabel()
+    test_RemoveLabel()
+    test_RemoveProperty()
+    test_CapitalizeLabels()
+    test_OverridePropertyName()
+    test_SetMergeProperties()
+    test_TypeCastProperty()
+    test_CreateNewMergePropertyFromHash_simple()
+    test_CreateNewMergePropertyFromHash_advanced()
+    test_RemoveEmptyListRootNodes()
+    test_PopListHubNodes()
+    test_PopListHubNodes_at_root()
+    test_RemoveListItemLabels()
+    test_OutsourcePropertiesToNewNode()
+    test_RemoveNodesWithOnlyEmptyProps()
+    test_RemoveNodesWithNoProps()
+    test_match_has_one_label_of()
+    test_match_has_not_one_label_of()
+    test_RemoveNode()
+    test_RemoveNode_with_children()
+    test_PopNode()
+    test_MergeChildNodes()
+    test_OutsourcePropertiesToRelationship()
+    test_CreateHubbing()

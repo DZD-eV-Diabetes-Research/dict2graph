@@ -362,7 +362,7 @@ def test_pubmed_article_base_test():
     assert_result(result, expected_result_nodes)
 
 
-def test_pubmed_article():
+def wip_test_pubmed_article():
     wipe_all_neo4j_data(DRIVER)
     data = {
         "MedlineCitation": {
@@ -513,7 +513,8 @@ def test_pubmed_article():
     assert_result(result, expected_result_nodes)
 
 
-# test_merge_two_dicts_and_remove_list_hubs()
-test_hubbing_edge()
-test_pubmed_article_base_test()
-test_pubmed_article()
+if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
+    # test_merge_two_dicts_and_remove_list_hubs()
+    test_hubbing_edge()
+    test_pubmed_article_base_test()
+    wip_test_pubmed_article()

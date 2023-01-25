@@ -20,7 +20,7 @@ setup(
         "graphio",
     ],
     extras_require={
-        "tests": ["deepdiff"],
+        "tests": ["pytest", "deepdiff"],
         "docs": [
             "mkdocs",
             "mkdocstrings[python]",

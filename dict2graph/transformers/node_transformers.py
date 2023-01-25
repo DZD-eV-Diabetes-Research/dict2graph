@@ -96,7 +96,11 @@ class PopListHubNodes(_NodeTransformerBase):
     def transform_node(self, node: Node):
         new_list_item_nodes_parent = node.parent_node
         for list_item_rel in node.outgoing_relations:
-            list_item_rel.start_node = new_list_item_nodes_parent
+            if new_list_item_nodes_parent is not None:
+                list_item_rel.start_node = new_list_item_nodes_parent
+            else:
+                # we are at the root node level. the list will now without any parent.
+                list_item_rel.deleted
         for parent_rels in node.incoming_relations:
             parent_rels.deleted = True
         node.deleted = True
@@ -212,10 +216,12 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
         for rel in node.relations:
             if rel.relation_type == self.relation_type:
                 for prop in self.property_keys:
-                    if prop in node:
+                    if prop in node and (
+                        node[prop] not in ["", None] or not self.skip_if_keys_empty
+                    ):
                         rel[prop] = node.pop(prop)
         if not self.keep_prop_if_relation_does_not_exist:
-            [node.pop(prop) for prop in self.property_keys]
+            [node.pop(prop, None) for prop in self.property_keys]
 
 
 class CreateHubbing(_NodeTransformerBase):
@@ -225,6 +231,14 @@ class CreateHubbing(_NodeTransformerBase):
         merge_property_mode: Literal["lead", "edge"],
         hub_labels: List[str] = ["Hub"],
     ):
+        if len(follow_nodes_labels) <= 1:
+            raise ValueError(
+                f"At least chains of 3 node are needed for hubbing. Please provide min. 2 `follow_nodes_labels`. Got only {len(follow_nodes_labels)} labels"
+            )
+        if merge_property_mode.upper() not in ["LEAD", "EDGE"]:
+            raise ValueError(
+                f"Only 'lead' and 'edge' mode are supported. got '{merge_property_mode}'"
+            )
         self.follow_nodes_labels = follow_nodes_labels
         self.merge_property_mode = merge_property_mode
         if isinstance(hub_labels, str):
@@ -239,7 +253,7 @@ class CreateHubbing(_NodeTransformerBase):
         ) >= len(self.follow_nodes_labels)
 
     def transform_node(self, node: Node):
-        # Todo: you are here. maybe start from scratch today!
+
         hub = Node(labels=self.hub_labels, source_data={}, parent_node=node)
         start_node: Node = node
         fill_nodes: List[Node] = []

@@ -6,11 +6,11 @@ if __name__ == "__main__":
     )
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
-
+os.environ["DICT2GRAPH_RUN_ALL_TESTS"] = "true"
 from dict2graph_tests import (
-    basics,
-    node_trans,
-    rel_trans,
-    # integration_tests,
-    docs_cases,
+    test_basics,
+    test_docs_cases,
+    test_node_trans,
+    test_rel_trans,
+    test_integration_tests,
 )
