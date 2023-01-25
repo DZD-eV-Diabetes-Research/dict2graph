@@ -17,6 +17,7 @@ stages:
   variables:
     NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     NEO4J_AUTH: "none"
+    NEO4J_URI: "neo4j://neo4j"
 
 test:
   stage: test
