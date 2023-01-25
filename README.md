@@ -22,8 +22,9 @@ Transfer (json compatible) Python dicts into a Neo4j graph database with the hel
   - [About](#about)
   - [Content](#content)
   - [Install](#install)
-  - [What is dict2graph and basic usage concept](#what-is-dict2graph-and-basic-usage-concept)
-  - [What dict2graph is not intended for](#what-dict2graph-is-not-intended-for)
+  - [What is dict2graph](#what-is-dict2graph)
+    - [Recommended workflow](#recommended-workflow)
+  - [What dict2graph is **not**](#what-dict2graph-is-not)
   - [py2neo depcrecation warning](#py2neo-depcrecation-warning)
   - [Basic Usage Example](#basic-usage-example)
     - [Load a dict](#load-a-dict)
@@ -39,9 +40,11 @@ at the moment if dev:
 Later will be:
 
 `pip3 install dict2graph`
-## What is dict2graph and basic usage concept
+## What is dict2graph 
 
 With dict2graph you can transfer python dicts into a neo4j graph out of the box. If you are not happy with the structure of the result, dict2graph comes with a bunch of transformation tools.
+
+### Recommended workflow
 
 The recommended workflow is:
 
@@ -51,13 +54,15 @@ The recommended workflow is:
 - Wipe your neo4j test instance
 - Repeat the work flow with the changed dict2graph-transformators until your happy with the result
 
-## What dict2graph is not intended for
+## What dict2graph is **not**
 
-dict2graph can **not** be used for de-/serializing your dict into a graph database. There is no graph2dict functionality (nore is it planned to have one). The dict will be transformed to be suitable as a graph. On the way, certain informations can be lost. Reproducing the exact same dict from the graph is not possible in many cases.
+dict2graph can **not** be used for de-/serializing your dict into a graph database. There is no `graph2dict` functionality (nore is it planned to have one).  
+Your data/dict will be transformed to be more suitable in a graph represantation. On the way, certain informations can be lost. Reproducing the exact same dict from the graph is not possible in many cases.
 
 ## py2neo depcrecation warning
 
-In past version of dict2graph py2neo was the only way to connect to a Neo4j instance. This is now still supported but marked as deprecated. We recommend to switch to the official [Neo4j Python Driver](https://neo4j.com/docs/api/python-driver/current/). See # on how to applied it 
+In past versions of `dict2graph`, the awesome [`py2neo`](https://py2neo.org/2021.1/) library was the only way to connect to a Neo4j instance.  
+But (sadly) this lib is in a low-maintanance mode. For now it is still supported but marked as deprecated. We recommend to switch to the official [Neo4j Python Driver](https://neo4j.com/docs/api/python-driver/current/). 
 
 ## Basic Usage Example
 
