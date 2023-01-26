@@ -304,9 +304,127 @@ def test_basics_merge_example():
     assert_result(result, expected_result_nodes)
 
 
+def test_transformer_docs_RemoveLabel():
+    wipe_all_neo4j_data(DRIVER)
+    dic = {"person": [{"name": "Camina Drummer"}, {"name": "James Holden"}]}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.RemoveLabel("ListItem"))
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person", "ListHub"],
+            "props": {"id": "b848c3f039e28d0c9bc28202b3c079f2"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "person_LIST_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person"],
+                        "props": {"name": "Camina Drummer"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "person_LIST_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person"],
+                        "props": {"name": "James Holden"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["person"],
+            "props": {"name": "Camina Drummer"},
+            "outgoing_rels": [],
+        },
+        {"labels": ["person"], "props": {"name": "James Holden"}, "outgoing_rels": []},
+    ]
+
+    assert_result(result, expected_result_nodes)
+
+
+def test_transformer_docs_PopListHubNodes():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "bookshelf": {
+            "books": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                    "condition": "good",
+                },
+                {
+                    "title": "Goodhart's law - Better benchmark nothing, stupid!",
+                    "condition": "bad",
+                },
+            ]
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "condition": "good",
+                "title": "Fine-structure constant - God set our instance a fine environment variable",
+            },
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "condition": "bad",
+                "title": "Goodhart's law - Better benchmark nothing, stupid!",
+            },
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["bookshelf"],
+            "props": {"id": "1aa507ea0b53abae8f1f87c699de705c"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "condition": "bad",
+                            "title": "Goodhart's law - Better benchmark nothing, stupid!",
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "condition": "good",
+                            "title": "Fine-structure constant - God set our instance a fine environment variable",
+                        },
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_readme_start_example()
     test_readme_start_example_transformed()
     test_basics_start_example()
     test_basics_why_merge_example()
     test_basics_merge_example()
+    test_transformer_docs_RemoveLabel()
+    test_transformer_docs_PopListHubNodes()

@@ -18,17 +18,56 @@ import hashlib
 
 
 class CapitalizeLabels(_NodeTransformerBase):
+    """Uppercase the first char of a node Labels.
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina Drummer"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.CapitalizeLabels())
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{name:'Camina Drummer'})`
+    """
+
     def transform_node(self, node: Node):
         node.labels = [label.capitalize() for label in node.labels]
 
 
 class OverrideLabel(_NodeTransformerBase):
+    """Replace a node label with a new string    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina Drummer"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.OverrideLabel("Character"))
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Character{name:'Camina Drummer'})`
+    """
+
     def __init__(self, value: str, target_label: str = None):
         """_summary_
 
         Args:
-            value (str): The new label
-            target_label (str, optional): Optional set this if you dont want the labels from `match_node()` to be replaced. Defaults to None.
+            value (str): The new labels string.
+            target_label (str, optional): The label you want to be replaced.
+                If none, the labels defined in the `node_match()` function will be replaced.
+                Defaults to None.
 
         Raises:
             ValueError: _description_
@@ -50,11 +89,30 @@ class OverrideLabel(_NodeTransformerBase):
 
 
 class RemoveLabel(_NodeTransformerBase):
+    """Remove a certain label from nodes
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": [{"name": "Camina Drummer"},{"name":"James Holden"}]}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.RemoveLabel("ListItem"))
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in removing the `:ListItem` label from `:Person` nodes
+    """
+
     def __init__(self, target_label: str = None):
         """_summary_
 
         Args:
-            value (str): The new label
             target_label (str, optional): Optional set this if you dont want the labels from `match_node()` to be replaced. Defaults to None.
 
         Raises:
@@ -72,7 +130,32 @@ class RemoveLabel(_NodeTransformerBase):
 
 
 class AddLabel(_NodeTransformerBase):
+    """Add one or more new labels to nodes
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina Drummer"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.AddLabel("Character"))
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in a Neo4j node `(:person:Character{name:'Camina Drummer'})`
+    """
+
     def __init__(self, labels: Union[str, List[str]]):
+        """_summary_
+
+        Args:
+            labels (Union[str, List[str]]): A string or a list of strings that will be added as new labels to the matched nodes
+        """
         if isinstance(labels, str):
             labels = [labels]
         self.new_labels = labels
@@ -82,7 +165,41 @@ class AddLabel(_NodeTransformerBase):
 
 
 class SetMergeProperties(_NodeTransformerBase):
+    """Set the primary properties that will be taken into account when comparing nodes while merging them together.
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    data = {
+        "books": [
+            {
+                "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+            },
+            {
+                "title": "Science Behind The Cyberpunks-Genre Awesomeness",
+            }
+        ]
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node(["books", "ListItem"]).do(
+            NodeTrans.SetMergeProperties(props=["title"])
+        )
+    )
+    d2g.parse(data)
+    d2g.merge(NEO4J_DRIVER)
+    ```
+
+    Will result in one Node `(:book)` because we only compare by the property `title` when mergin nodes together.
+    """
+
     def __init__(self, props: List[str]):
+        """
+        Args:
+            props (List[str]): A list of property keys to take into account for merging.
+        """
         self.props = props
 
     def transform_node(self, node: Node):
@@ -90,6 +207,43 @@ class SetMergeProperties(_NodeTransformerBase):
 
 
 class PopListHubNodes(_NodeTransformerBase):
+    """When dict2grapg parses dict lists it create a hub node to attach all list items.
+    In most cases this is unnecessary and will make your graph model larger as it has to be.
+    `PopListHubNodes` will just remove these list hubs.
+
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    data = {
+        "bookshelf": {
+            "book": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                    "condition": "good",
+                },
+                {
+                    "title": "Goodhart's law - Better benchmark nothing, stupid!",
+                    "condition": "bad",
+                },
+            ]
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+    )
+    d2g.parse(data)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    This will result in a `(:bookshelf)`node directly connected to 2 `(:book)` nodes instead of a `:ListHub:book` node in between.
+
+    """
+
     def custom_node_match(self, node: Node) -> bool:
         return node.is_list_list_hub
 
@@ -107,6 +261,8 @@ class PopListHubNodes(_NodeTransformerBase):
 
 
 class CreateNewMergePropertyFromHash(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(
         self,
         hash_includes_properties: List[str] = None,
@@ -151,6 +307,8 @@ class CreateNewMergePropertyFromHash(_NodeTransformerBase):
 
 
 class RemoveEmptyListRootNodes(_NodeTransformerBase):
+    """_summary_"""
+
     def custom_node_match(self, node: Node) -> bool:
         return node.is_list_list_hub and len(node.outgoing_relations) == 0
 
@@ -161,6 +319,8 @@ class RemoveEmptyListRootNodes(_NodeTransformerBase):
 
 
 class RemoveListItemLabels(_NodeTransformerBase):
+    """_summary_"""
+
     def custom_node_match(self, node: Node) -> bool:
         return node.is_list_list_item
 
@@ -171,6 +331,8 @@ class RemoveListItemLabels(_NodeTransformerBase):
 
 
 class OutsourcePropertiesToNewNode(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(
         self,
         property_keys: List[str],
@@ -200,6 +362,8 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
 
 
 class OutsourcePropertiesToRelationship(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(
         self,
         property_keys: List[str],
@@ -225,6 +389,8 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
 
 
 class CreateHubbing(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(
         self,
         follow_nodes_labels: List[str],
@@ -296,6 +462,8 @@ class CreateHubbing(_NodeTransformerBase):
 
 
 class RemoveNode(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(self, remove_children: bool = False):
         self.remove_children = remove_children
 
@@ -308,6 +476,8 @@ class RemoveNode(_NodeTransformerBase):
 
 
 class RemoveNodesWithNoProps(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(self, only_if_no_child_nodes: bool = True):
         self.only_if_no_child_nodes = only_if_no_child_nodes
 
@@ -321,6 +491,8 @@ class RemoveNodesWithNoProps(_NodeTransformerBase):
 
 
 class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(self, only_if_no_child_nodes: bool = True):
         self.only_if_no_child_nodes = only_if_no_child_nodes
 
@@ -336,6 +508,8 @@ class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
 
 
 class PopNode(_NodeTransformerBase):
+    """_summary_"""
+
     def transform_node(self, node: Node):
         for i_rel in node.incoming_relations:
             for o_rel in node.outgoing_relations:
@@ -344,6 +518,8 @@ class PopNode(_NodeTransformerBase):
 
 
 class MergeChildNodes(_NodeTransformerBase):
+    """_summary_"""
+
     def __init__(
         self,
         child_labels: Union[str, AnyLabel] = AnyLabel,

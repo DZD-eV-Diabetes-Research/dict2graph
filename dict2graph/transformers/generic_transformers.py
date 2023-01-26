@@ -6,11 +6,27 @@ import typing
 
 
 class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
-    """Replace a property name/key with a new string of your choice."""
+    """Replace a property name/key with a new string of your choice.
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina Drummer"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.OverridePropertyName("name","fullname"))
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{fullname:'Camina Drummer'})`
+    """
 
     def __init__(self, source_property_name: str, target_property_name: str):
-        """_summary_
-
+        """
         Args:
             source_property_name (str): The property key you want to be replaced.
             target_property_name (str): The The new name of the property.
@@ -30,7 +46,32 @@ class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
 
 
 class TypeCastProperty(_RelationTransformerBase, _NodeTransformerBase):
+    """change the type of property values.
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina", "captain":"true", "age":"39"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation([
+        Transformer.match_node("person").do(NodeTrans.TypeCastProperty("captain",bool)),
+        Transformer.match_node("person").do(NodeTrans.TypeCastProperty("age",int)),
+    ])
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{name:'Camina',captain:true,age:27})`
+    """
+
     def __init__(self, property_name: str, target_type: Union[str, int, float, bool]):
+        """
+        Args:
+            property_name (str): The property key that should be changed
+            target_type (Union[str, int, float, bool]): The type that should result
+        """
         self.property_name = property_name
         self.target_type = target_type
 
@@ -62,7 +103,31 @@ class TypeCastProperty(_RelationTransformerBase, _NodeTransformerBase):
 
 
 class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
+    """Remove a property from a node
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina", "id":"sdf343"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.RemoveProperty(id))
+        )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{name:'Camina'})`. the `id` property will be thrown away.
+    """
+
     def __init__(self, properties: Union[str, List[str]]):
+        """_summary_
+
+        Args:
+            properties (Union[str, List[str]]): A property key or a list of property keys as strings that should be removed
+        """
         if isinstance(properties, str):
             properties = [properties]
         self.properties = properties

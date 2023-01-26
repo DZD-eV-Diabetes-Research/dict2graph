@@ -10,6 +10,8 @@ import typing
 
 
 class OverrideReliationType(_RelationTransformerBase):
+    """_summary_"""
+
     def __init__(self, value: str = None):
         if not value:
             raise ValueError(f"Value must be a string. Got '{value}'")
@@ -20,6 +22,8 @@ class OverrideReliationType(_RelationTransformerBase):
 
 
 class FlipNodes(_RelationTransformerBase):
+    """_summary_"""
+
     def transform_rel(self, rel: Relation):
         start_node = rel.start_node
         end_node = rel.end_node
@@ -32,5 +36,7 @@ class FlipNodes(_RelationTransformerBase):
 
 
 class UppercaseRelationType(_RelationTransformerBase):
+    """_summary_"""
+
     def transform_rel(self, rel: Relation):
         rel.relation_type = rel.relation_type.upper()
