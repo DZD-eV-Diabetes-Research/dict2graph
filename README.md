@@ -12,7 +12,7 @@ Transfer (json compatible) Python dicts into a Neo4j graph database with the hel
 
 **issue tracker**: https://git.connect.dzd-ev.de/dzdtools/pythonmodules/-/issues?label_name%5B%5D=DZDdict2graph
 
-**user docs**:
+**user docs**: https://dzd-ev.github.io/dict2graph-docs/
 
 **source code**: https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph
 
