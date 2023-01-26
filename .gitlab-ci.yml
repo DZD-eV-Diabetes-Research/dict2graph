@@ -60,6 +60,7 @@ pages:
     - git config --global user.name "Docs Pipeline"
     - git clone https://github.com/dzd-ev/dict2graph-docs dict2graph-docs
     - cd dict2graph-docs
+    - git pull origin
     - shopt -s extglob
     # Wipe the repo besided license file and git config
     - rm -r !(LICENSE|.git)
