@@ -19,7 +19,6 @@ theme:
 plugins:
   - autorefs
   - mkdocstrings
-  - render_swagger
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
   - pymdownx.highlight:
