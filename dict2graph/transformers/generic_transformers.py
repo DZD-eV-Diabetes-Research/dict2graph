@@ -6,7 +6,15 @@ import typing
 
 
 class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
+    """Replace a property name/key with a new string of your choice."""
+
     def __init__(self, source_property_name: str, target_property_name: str):
+        """_summary_
+
+        Args:
+            source_property_name (str): The property key you want to be replaced.
+            target_property_name (str): The The new name of the property.
+        """
         self.source_property_name = source_property_name
         self.target_property_name = target_property_name
 
