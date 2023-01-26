@@ -23,6 +23,8 @@ test:
   stage: test
   extends: .prepare-python
   image: python:3
+  rules:
+    - if: $DOC_BUILD_ONLY != "1"
 
   script:
     - python3 --version

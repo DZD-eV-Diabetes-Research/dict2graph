@@ -52,6 +52,18 @@ class Dict2graph:
         create_ids_for_empty_nodes: bool = True,
         interpret_single_props_as_labels: bool = True,
     ):
+        """Main class for dict2graph. Instance Dict2graph to get access to the API.
+        Usage:
+        ```python
+        from dict2graph import Dict2graph
+
+        d2g = Dict2Graph()
+        ```
+
+        Args:
+            create_ids_for_empty_nodes (bool, optional): When input dicts results in empty 'hub' nodes, this will create artificially key properties based on the child data. The key will be deterministic . Defaults to True.
+            interpret_single_props_as_labels (bool, optional): When having object with a single property like `{"animal":{"name":"dog"}}` `animal` will be interpreted as label. If set to false "animal" will result in an extra Node. Defaults to True.
+        """
         self.create_ids_for_empty_nodes = create_ids_for_empty_nodes
 
         # Todo: "interpret_single_props_as_labels" should be a regualr NodeTransformer instead of a class param
@@ -72,6 +84,22 @@ class Dict2graph:
             List[Union[_NodeTransformerBase, _RelationTransformerBase]],
         ],
     ):
+        """Add a [`Transformers`](dict2graph/use_transformers.md) to the Dict2Graph instance.
+        Transformers can re-model your graph befor writing it to a Neo4h database.
+        usage:
+        ```python
+        from dict2graph import Dict2graph, Transformer, NodeTrans
+
+        d2g = Dict2Graph()
+        d2g.add_transformation(
+            Transformer.match_node("article").do(NodeTrans.OverrideLabel("book"))
+        )
+        ```
+
+        Args:
+            transformator (Union[ _NodeTransformerBase, _RelationTransformerBase, List[Union[_NodeTransformerBase, _RelationTransformerBase]], ]): A list or single instance of a Transformer
+
+        """
         if isinstance(transformator, list):
             for trans in transformator:
                 self.add_transformation(trans)
@@ -394,8 +422,9 @@ class Dict2graph:
                 self._manifest_node_from_cache(node)
         for rel in self._rel_cache:
             if not rel.deleted:
-
                 self._manifest_rel_from_cache(rel)
+        self._node_cache = []
+        self._rel_cache = []
 
     def _run_transformations(self):
         for trans in self.node_transformators:

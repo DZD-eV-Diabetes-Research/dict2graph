@@ -668,6 +668,7 @@ def test_RemoveEmptyListRootNodes():
     assert_result(result, expected_result_nodes)
 
 
+
 def test_PopListHubNodes_at_root():
     wipe_all_neo4j_data(DRIVER)
     data = ["Amos", "Avasarala", "Holden", "Nagata"]

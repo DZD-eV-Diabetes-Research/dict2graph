@@ -143,7 +143,6 @@ class Node(dict):
 
     @property
     def relations(self) -> List[Relation]:
-
         return self._relations
 
     @relations.setter
@@ -163,7 +162,6 @@ class Node(dict):
         return [rel.end_node for rel in self.outgoing_relations]
 
     def __str__(self):
-
         return f"({':'.join(self.labels)}{super().__str__()})"
 
 

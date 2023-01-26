@@ -15,7 +15,7 @@ from dict2graph_tests._test_tools import (
 )
 
 
-def test_basic_start_example():
+def test_readme_start_example():
     wipe_all_neo4j_data(DRIVER)
     data = {
         "action": {
@@ -79,7 +79,7 @@ def test_basic_start_example():
     assert_result(result, expected_result_nodes)
 
 
-def test_basic_start_example_transformed():
+def test_readme_start_example_transformed():
     wipe_all_neo4j_data(DRIVER)
     data = {
         "Action": {
@@ -136,6 +136,177 @@ def test_basic_start_example_transformed():
     assert_result(result, expected_result_nodes)
 
 
+def test_basics_start_example():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "person": {
+            "firstname": "Rudolf",
+            "lastname": "Manga Bell",
+            "age": 41,
+            "affiliation": {"name": "Duálá"},
+        }
+    }
+    d2g = Dict2graph()
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {"labels": ["affiliation"], "props": {"name": "Duálá"}, "outgoing_rels": []},
+        {
+            "labels": ["person"],
+            "props": {"firstname": "Rudolf", "age": 41, "lastname": "Manga Bell"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "Duálá"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_basics_why_merge_example():
+    wipe_all_neo4j_data(DRIVER)
+    data_1 = {
+        "person": {
+            "firstname": "Rudolf",
+            "lastname": "Manga Bell",
+            "age": 41,
+            "affiliation": {"name": "Duálá"},
+        }
+    }
+    data_2 = {
+        "person": {
+            "firstname": "Rudolf",
+            "lastname": "Manga Bell",
+            "age": 41,
+            "mission": {"name": "resistance leader"},
+        }
+    }
+    d2g = Dict2graph()
+    d2g.parse(data_1)
+    d2g.parse(data_2)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {"labels": ["affiliation"], "props": {"name": "Duálá"}, "outgoing_rels": []},
+        {
+            "labels": ["person"],
+            "props": {"firstname": "Rudolf", "age": 41, "lastname": "Manga Bell"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_mission",
+                    "rel_target_node": {
+                        "labels": ["mission"],
+                        "props": {"name": "resistance leader"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "Duálá"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["person"],
+            "props": {"firstname": "Rudolf", "age": 41, "lastname": "Manga Bell"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_mission",
+                    "rel_target_node": {
+                        "labels": ["mission"],
+                        "props": {"name": "resistance leader"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "Duálá"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["mission"],
+            "props": {"name": "resistance leader"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_basics_merge_example():
+    wipe_all_neo4j_data(DRIVER)
+    data_1 = {
+        "person": {
+            "firstname": "Rudolf",
+            "lastname": "Manga Bell",
+            "age": 41,
+            "affiliation": {"name": "Duálá"},
+        }
+    }
+    data_2 = {
+        "person": {
+            "firstname": "Rudolf",
+            "lastname": "Manga Bell",
+            "age": 41,
+            "mission": {"name": "resistance leader"},
+        }
+    }
+    d2g = Dict2graph()
+    d2g.parse(data_1)
+    d2g.parse(data_2)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {"labels": ["affiliation"], "props": {"name": "Duálá"}, "outgoing_rels": []},
+        {
+            "labels": ["person"],
+            "props": {"firstname": "Rudolf", "age": 41, "lastname": "Manga Bell"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_mission",
+                    "rel_target_node": {
+                        "labels": ["mission"],
+                        "props": {"name": "resistance leader"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "Duálá"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["mission"],
+            "props": {"name": "resistance leader"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
-    test_basic_start_example()
-    test_basic_start_example_transformed()
+    test_readme_start_example()
+    test_readme_start_example_transformed()
+    test_basics_start_example()
+    test_basics_why_merge_example()
+    test_basics_merge_example()
