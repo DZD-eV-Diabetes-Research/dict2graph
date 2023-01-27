@@ -169,7 +169,7 @@ For that we need to create so called `Transformer`s
 
 Lets try to add a new property "`material: 'wood'`" to our bookshelf.
 
-We will pick the dict2graph built in node transformer [AddProperty](list_generic_transformer/#dict2graph.transformers.generic_transformers.AddProperty)
+We will pick the dict2graph built in node transformer [AddProperty](/dict2graph-docs/list_generic_transformer/#dict2graph.transformers.generic_transformers.AddProperty)
 
 For your convenience you can import the wrapper class `dict2graph.NodeTrans` which includes all Transformers that are applicable to nodes. Same with `dict2graph.RelTrans` for relationship transformators.
 
