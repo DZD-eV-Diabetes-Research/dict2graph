@@ -109,14 +109,27 @@ class Transformer:
             return transform
 
     class RelTransformerMatcher:
-        def _set_rel_matcher(self, relation_type_match):
+        def _set_rel_matcher(
+            self,
+            relation_type_match: Union[str, List[str], AnyRelation],
+            relation_type_is_not_in: List[str],
+        ):
+            if isinstance(relation_type_match, str):
+                self.relation_type_match = [relation_type_match]
+            else:
+                self.relation_type_match = relation_type_match
             self.relation_type_match = relation_type_match
+
+            if relation_type_is_not_in:
+                self.relation_type_is_not_in = relation_type_is_not_in
+            else:
+                self.relation_type_is_not_in = []
 
         def _match(self, rel: Relation) -> bool:
             if (
                 self.relation_type_match in [None, AnyRelation]
-                or self.relation_type_match in rel.relation_type
-            ):
+                or rel.relation_type in self.relation_type_match
+            ) and rel.relation_type not in self.relation_type_is_not_in:
                 return True
             return False
 
@@ -131,6 +144,16 @@ class Transformer:
         has_one_label_of: List[str] = None,
         has_none_label_of: List[str] = None,
     ) -> NodeTransformerMatcher:
+        """Match nodes to apply tranformers
+
+        Args:
+            has_labels (Union[str, List[str], AnyLabel], optional): _description_. Defaults to AnyLabel.
+            has_one_label_of (List[str], optional): _description_. Defaults to None.
+            has_none_label_of (List[str], optional): _description_. Defaults to None.
+
+        Returns:
+            NodeTransformerMatcher: _description_
+        """
         tm = Transformer.NodeTransformerMatcher()
         tm._set_node_matcher(
             label_match=has_labels,
@@ -142,10 +165,20 @@ class Transformer:
     @classmethod
     def match_rel(
         cls,
-        relation_name: Union[str, AnyRelation] = AnyRelation,
+        relation_type: Union[str, List[str], AnyRelation] = AnyRelation,
+        relation_type_is_not_in: List[str] = None,
     ) -> RelTransformerMatcher:
+        """Match relationships to apply tranformers
+
+        Args:
+            relation_name (Union[str, AnyRelation], optional): A relation type as string or mulitple relation types as list of string. Defaults to AnyRelation.
+
+        Returns:
+            RelTransformerMatcher: _description_
+        """
         tm = Transformer.RelTransformerMatcher()
         tm._set_rel_matcher(
-            relation_type_match=relation_name,
+            relation_type_match=relation_type,
+            relation_type_is_not_in=relation_type_is_not_in,
         )
         return tm

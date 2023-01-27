@@ -122,7 +122,52 @@ class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
     Results in a Neo4j node `(:Person{name:'Camina'})`. the `id` property will be thrown away.
     """
 
-    def __init__(self, properties: Union[str, List[str]]):
+    def __init__(self, property_keys: Union[str, List[str]]):
+        """_summary_
+
+        Args:
+            properties (Union[str, List[str]]): A property key or a list of property keys as strings that should be removed
+        """
+        if isinstance(property_keys, str):
+            property_keys = [property_keys]
+        self.property_keys = property_keys
+
+    def custom_node_match(self, node: Node) -> bool:
+        # check if node keys and defined properties have an overlap
+        return not set(self.property_keys).isdisjoint(set(node.keys()))
+
+    def transform_node(self, node: Node):
+        self._transform(node)
+
+    def transform_rel(self, rel: Relation):
+        self._transform(rel)
+
+    def _transform(self, obj: Union[Node, Relation]):
+        for prop in self.property_keys:
+            obj.pop(prop, None)
+
+
+class AddProperty(_RelationTransformerBase, _NodeTransformerBase):
+    """Add a property to a node
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"name": "Camina"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(NodeTrans.AddProperty({"my_new_prop_key":"my_new_prop_value_1111"}))
+        )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{name:'Camina',my_new_prop_key:"my_new_prop_value_1111"})`.
+    """
+
+    def __init__(self, properties: Dict):
         """_summary_
 
         Args:
@@ -132,16 +177,11 @@ class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
             properties = [properties]
         self.properties = properties
 
-    def custom_node_match(self, node: Node) -> bool:
-        # check if node keys and defined properties have an overlap
-        return not set(self.properties).isdisjoint(set(node.keys()))
-
     def transform_node(self, node: Node):
         self._transform(node)
 
     def transform_rel(self, rel: Relation):
         self._transform(rel)
 
-    def _transform(self, node: Node):
-        for prop in self.properties:
-            node.pop(prop, None)
+    def _transform(self, obj: Union[Node, Relation]):
+        obj.update(self.properties)

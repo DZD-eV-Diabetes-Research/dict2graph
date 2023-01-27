@@ -705,6 +705,71 @@ def test_error_case_list_01():
     assert_result(result, expected_result_nodes)
 
 
+def test_match_filter_rel():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "bookshelf": {
+            "books": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                },
+            ],
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_transformation(
+        Transformer.match_rel(relation_type_is_not_in=["books_LIST_HAS_books"]).do(
+            RelTrans.AddProperty({"matched": True})
+        )
+    )
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    # ToReview: i am not sure if iam happy with this result. its missing a rel but it makes sense from a database perspective. we can not connect to an anaonymous node with no props
+    expected_result_nodes: dict = [
+        {
+            "labels": ["books", "ListHub"],
+            "props": {"id": "9aacef856f873c8156b5e596424b710c"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "books_LIST_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "title": "Fine-structure constant - God set our instance a fine environment variable"
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "title": "Fine-structure constant - God set our instance a fine environment variable"
+            },
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["bookshelf"],
+            "props": {"id": "873aefa9444fb733b8438536edcd1e95"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"matched": True},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListHub"],
+                        "props": {"id": "9aacef856f873c8156b5e596424b710c"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_create_simple_obj()
     test_create_simple_graph()
@@ -718,3 +783,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_empty_obj01()
     test_empty_obj02()
     test_error_case_list_01()
+    test_match_filter_rel()

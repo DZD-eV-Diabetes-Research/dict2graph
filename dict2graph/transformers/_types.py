@@ -8,6 +8,7 @@ class NodeTrans:
     OverridePropertyName = _gentrans.OverridePropertyName
     TypeCastProperty = _gentrans.TypeCastProperty
     RemoveProperty = _gentrans.RemoveProperty
+    AddProperty = _gentrans.AddProperty
     OverrideLabel = _nodetrans.OverrideLabel
     RemoveLabel = _nodetrans.RemoveLabel
     AddLabel = _nodetrans.AddLabel
@@ -33,6 +34,7 @@ class RelTrans:
     OverridePropertyName = _gentrans.OverridePropertyName
     TypeCastProperty = _gentrans.TypeCastProperty
     RemoveProperty = _gentrans.RemoveProperty
+    AddProperty = _gentrans.AddProperty
     UppercaseRelationType = _reltrans.UppercaseRelationType
     OverrideReliationType = _reltrans.OverrideReliationType
     FlipNodes = _reltrans.FlipNodes

@@ -2,9 +2,19 @@ from dict2graph.node import Node
 
 
 class Relation(dict):
+    """Represantation of a property-graph relationship"""
+
     def __init__(
         self, start_node: Node, end_node: Node, relation_type: str = None, **kwargs
     ):
+        """Create a new relationship
+
+        Args:
+            start_node (Node): The node from which the relationship will start
+            end_node (Node): The node to which the relationship will go to
+            relation_type (str, optional): The name if the relation. Defaults to None.
+            **kwargs (Any, optional): Any further properties of this relationship. Defaults to None.
+        """
         self._relation_type = relation_type
         self._start_node = None
         self._end_node = None
@@ -17,6 +27,16 @@ class Relation(dict):
 
     @property
     def relation_type(self) -> str:
+        """The name of the relationship.
+        As in [Neo4j Relation Type](https://neo4j.com/docs/getting-started/current/appendix/graphdb-concepts/#graphdb-relationship-type)
+
+        Defaults to a string with following structure:
+
+        `<start node first label>_HAS_<end_node_first_label>`
+
+        Returns:
+            str: The relationship type as str
+        """
         if self._relation_type:
             return self._relation_type
         elif self.start_node is not None and self.end_node is not None:
@@ -38,6 +58,11 @@ class Relation(dict):
 
     @property
     def start_node(self) -> Node:
+        """The node from which the relationship is originating
+
+        Returns:
+            Node: The start node as a [Dict2Graph.Node](/api/api_node) instance
+        """
         return self._start_node
 
     @start_node.setter
@@ -50,6 +75,11 @@ class Relation(dict):
 
     @property
     def end_node(self) -> Node:
+        """The target node of the relationship
+
+        Returns:
+            Node: The end node as a [Dict2Graph.Node](/api/api_node) instance
+        """
         return self._end_node
 
     @end_node.setter

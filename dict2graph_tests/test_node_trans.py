@@ -668,7 +668,6 @@ def test_RemoveEmptyListRootNodes():
     assert_result(result, expected_result_nodes)
 
 
-
 def test_PopListHubNodes_at_root():
     wipe_all_neo4j_data(DRIVER)
     data = ["Amos", "Avasarala", "Holden", "Nagata"]
@@ -1412,6 +1411,29 @@ def test_OutsourcePropertiesToRelationship():
     assert_result(result, expected_result_nodes)
 
 
+def test_AddProperty():
+    wipe_all_neo4j_data(DRIVER)
+    dic = {"person": {"name": "Camina"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_node("person").do(
+            NodeTrans.AddProperty({"my_new_prop_key": "my_new_prop_value_1111"})
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person"],
+            "props": {"my_new_prop_key": "my_new_prop_value_1111", "name": "Camina"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_OverrideLabel()
     test_RemoveLabel()
@@ -1437,3 +1459,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_MergeChildNodes()
     test_OutsourcePropertiesToRelationship()
     test_CreateHubbing()
+    test_AddProperty()

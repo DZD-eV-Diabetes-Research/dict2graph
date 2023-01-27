@@ -15,6 +15,71 @@ from dict2graph_tests._test_tools import (
 )
 
 
+def test_readme_tiny_example():
+    wipe_all_neo4j_data(DRIVER)
+
+    # lets create a small random  dict
+    dic = {
+        "Action": {
+            "id": 1,
+            "target": "El Oued",
+            "Entities": [{"id": "Isabelle Eberhardt"}, {"id": "Slimène Ehnni"}],
+        }
+    }
+    # create a dict2graph instance, parse our dict and load it into our neo4j instance.
+    Dict2graph().parse(dic).create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Entities", "ListHub"],
+            "props": {"id": "e9c915649e338a805eda93f4cff31d31"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Entities_LIST_HAS_Entities",
+                    "rel_target_node": {
+                        "labels": ["Entities", "ListItem"],
+                        "props": {"id": "Slimène Ehnni"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Entities_LIST_HAS_Entities",
+                    "rel_target_node": {
+                        "labels": ["Entities", "ListItem"],
+                        "props": {"id": "Isabelle Eberhardt"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Entities", "ListItem"],
+            "props": {"id": "Isabelle Eberhardt"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Entities", "ListItem"],
+            "props": {"id": "Slimène Ehnni"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Action"],
+            "props": {"id": 1, "target": "El Oued"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Action_HAS_Entities",
+                    "rel_target_node": {
+                        "labels": ["Entities", "ListHub"],
+                        "props": {"id": "e9c915649e338a805eda93f4cff31d31"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 def test_readme_start_example():
     wipe_all_neo4j_data(DRIVER)
     data = {
@@ -420,7 +485,226 @@ def test_transformer_docs_PopListHubNodes():
     assert_result(result, expected_result_nodes)
 
 
-if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
+def test_matching_tutorial():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "bookshelf": {
+            "books": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                    "condition": "good",
+                }
+            ]
+        }
+    }
+
+    book_matcher = Transformer.match_node("books")
+    d2g = Dict2graph()
+    d2g.add_node_transformation(book_matcher.do(NodeTrans.PopListHubNodes()))
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "condition": "good",
+                "title": "Fine-structure constant - God set our instance a fine environment variable",
+            },
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["bookshelf"],
+            "props": {"id": "293fb136da090a860e65980b492a417f"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "condition": "good",
+                            "title": "Fine-structure constant - God set our instance a fine environment variable",
+                        },
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_matching_tutorial_02():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "bookshelf": {
+            "Genre": "Explaining the world",
+            "books": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                },
+                {
+                    "title": "Goodhart's law - Better benchmark nothing, stupid!",
+                },
+            ],
+        }
+    }
+
+    d2g = Dict2graph()
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["books", "ListItem"],
+            "props": {"title": "Goodhart's law - Better benchmark nothing, stupid!"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["bookshelf"],
+            "props": {"Genre": "Explaining the world"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListHub"],
+                        "props": {"id": "4e39bbf1e5507d360b19a9fedfde26a4"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["books", "ListHub"],
+            "props": {"id": "4e39bbf1e5507d360b19a9fedfde26a4"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "books_LIST_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "title": "Fine-structure constant - God set our instance a fine environment variable"
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "books_LIST_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "title": "Goodhart's law - Better benchmark nothing, stupid!"
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "title": "Fine-structure constant - God set our instance a fine environment variable"
+            },
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_transforming_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    data = {
+        "bookshelf": {
+            "Genre": "Explaining the world",
+            "books": [
+                {
+                    "title": "Fine-structure constant - God set our instance a fine environment variable",
+                },
+                {
+                    "title": "Goodhart's law - Better benchmark nothing, stupid!",
+                },
+            ],
+        }
+    }
+    # we just learned how to "match". lets apply it:
+    bookshelf_matcher = Transformer.match_node("bookshelf")
+    add_prop_transformator = NodeTrans.AddProperty({"material": "wood"})
+
+    # the next thing we should do is to attach the transformator to our dict2graph instance
+    match_and_transform = bookshelf_matcher.do(add_prop_transformator)
+
+    # to be able to enjoy our work lets push the data to neo4j
+    # From here this works the same way as we allready learned in the basic tutorial
+    d2g = Dict2graph()
+    d2g.add_transformation(match_and_transform)
+
+    # parse our dict...
+    d2g.parse(data)
+
+    # ...and push it to the database
+
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["books", "ListHub"],
+            "props": {"id": "4e39bbf1e5507d360b19a9fedfde26a4"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "books_LIST_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "title": "Goodhart's law - Better benchmark nothing, stupid!"
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "books_LIST_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListItem"],
+                        "props": {
+                            "title": "Fine-structure constant - God set our instance a fine environment variable"
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["books", "ListItem"],
+            "props": {
+                "title": "Fine-structure constant - God set our instance a fine environment variable"
+            },
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["books", "ListItem"],
+            "props": {"title": "Goodhart's law - Better benchmark nothing, stupid!"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["bookshelf"],
+            "props": {"material": "wood", "Genre": "Explaining the world"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "bookshelf_HAS_books",
+                    "rel_target_node": {
+                        "labels": ["books", "ListHub"],
+                        "props": {"id": "4e39bbf1e5507d360b19a9fedfde26a4"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "true":
+    test_readme_tiny_example()
     test_readme_start_example()
     test_readme_start_example_transformed()
     test_basics_start_example()
@@ -428,3 +712,6 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_basics_merge_example()
     test_transformer_docs_RemoveLabel()
     test_transformer_docs_PopListHubNodes()
+    test_matching_tutorial()
+    test_matching_tutorial_02()
+    test_transforming_tut_01()

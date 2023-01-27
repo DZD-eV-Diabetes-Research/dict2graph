@@ -1,30 +1,45 @@
 site_name: dict2graph Docs
 site_dir: public
 docs_dir: dict2graph_docs
+repo_url: https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph
 nav:
   - Start: "index.md"
   - Basics:
       - "Introduction": "basics.md"
       - "Examples": "examples.md"
-      - "Dict2Graph API": "dict2graph_api.md"
+
   - Transformers:
-      - "Filtering": "match_content_to_transform.md"
       - "Transforming": "use_transformers.md"
-      - "Available Transformers": "list_transformer.md"
+      - "Generic Transformers": "list_generic_transformer.md"
+      - "Node Transformers": "list_node_transformer.md"
+      - "Relationship Transformers": "list_rel_transformer.md"
       - "Bring your own Transformer": "diy_transformer.md"
+  - "API/Model":
+      - "Dict2Graph": "api/api_dict2graph.md"
+      - "Transformer": "api/api_transformer.md"
+      - "Node": "api/api_node.md"
+      - "Relation": "api/api_relation.md"
 theme:
   name: material
-#  features:
-#    - toc.integrate
+  palette:
+    scheme: slate
+    primary: blue grey
+  features:
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.expand
+    - toc.follow
 plugins:
   - autorefs
   - mkdocstrings
+  - search
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
   - pymdownx.highlight:
       anchor_linenums: true
   - toc:
       permalink: true
+  - admonition
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences

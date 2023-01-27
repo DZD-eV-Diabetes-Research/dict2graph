@@ -104,10 +104,16 @@ class Dict2graph:
             for trans in transformator:
                 self.add_transformation(trans)
 
-        if issubclass(transformator.__class__, _NodeTransformerBase):
+        if issubclass(transformator.__class__, _NodeTransformerBase) or (
+            issubclass(
+                transformator.__class__,
+                _NodeTransformerBase,
+            )
+            and issubclass(transformator.__class__, _RelationTransformerBase)
+        ):
             self.add_node_transformation(transformator)
 
-        if issubclass(transformator.__class__, _RelationTransformerBase):
+        elif issubclass(transformator.__class__, _RelationTransformerBase):
             self.add_relation_transformation(transformator)
 
     def add_node_transformation(
@@ -148,7 +154,9 @@ class Dict2graph:
         else:
             self.relation_transformators.append(transformator)
 
-    def parse(self, data: Dict, root_node_labels: Union[str, List[str]] = None):
+    def parse(
+        self, data: Dict, root_node_labels: Union[str, List[str]] = None
+    ) -> "Dict2graph":
         if root_node_labels is None:
             if isinstance(data, dict) and len(data.keys()) == 1:
                 # we only have one key and therefore only one Node on the top-/root-level. We dont need a root Node to connect the toplevels nodes.
@@ -182,6 +190,7 @@ class Dict2graph:
         self._prepare_root_node(root_node)
 
         self._flush_cache()
+        return self
 
     def merge(self, graph: Union[Graph, Driver]):
         for nodes in self._nodeSets.values():
