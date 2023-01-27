@@ -4,6 +4,12 @@
 
 ## Dict2graph
 
+
+
+----
+
+
+🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!
 ----
 
 Transfer (json compatible) Python dicts into a Neo4j graph database.  
@@ -30,6 +36,7 @@ dict2graph also comes with some powerful data transform capabilities.
 **Content**:
 
 - [Dict2graph](#dict2graph)
+- [🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!](#️-tb27012023-rewrite-in-progress-please-do-not-use-yet)
 - [Install](#install)
 - [What is dict2graph](#what-is-dict2graph)
   - [Recommended workflow](#recommended-workflow)
