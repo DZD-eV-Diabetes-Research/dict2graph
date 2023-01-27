@@ -17,7 +17,7 @@ class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
     dic = {"person": {"name": "Camina Drummer"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.OverridePropertyName("name","fullname"))
+        Transformer.match_nodes("person").do(NodeTrans.OverridePropertyName("name","fullname"))
     )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -57,8 +57,8 @@ class TypeCastProperty(_RelationTransformerBase, _NodeTransformerBase):
     dic = {"person": {"name": "Camina", "captain":"true", "age":"39"}}
     d2g = Dict2graph()
     d2g.add_node_transformation([
-        Transformer.match_node("person").do(NodeTrans.TypeCastProperty("captain",bool)),
-        Transformer.match_node("person").do(NodeTrans.TypeCastProperty("age",int)),
+        Transformer.match_nodes("person").do(NodeTrans.TypeCastProperty("captain",bool)),
+        Transformer.match_nodes("person").do(NodeTrans.TypeCastProperty("age",int)),
     ])
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -114,7 +114,7 @@ class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
     dic = {"person": {"name": "Camina", "id":"sdf343"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.RemoveProperty(id))
+        Transformer.match_nodes("person").do(NodeTrans.RemoveProperty(id))
         )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -159,7 +159,7 @@ class AddProperty(_RelationTransformerBase, _NodeTransformerBase):
     dic = {"person": {"name": "Camina"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.AddProperty({"my_new_prop_key":"my_new_prop_value_1111"}))
+        Transformer.match_nodes("person").do(NodeTrans.AddProperty({"my_new_prop_key":"my_new_prop_value_1111"}))
         )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)

@@ -29,7 +29,7 @@ class CapitalizeLabels(_NodeTransformerBase):
     dic = {"person": {"name": "Camina Drummer"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.CapitalizeLabels())
+        Transformer.match_nodes("person").do(NodeTrans.CapitalizeLabels())
     )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -52,7 +52,7 @@ class OverrideLabel(_NodeTransformerBase):
     dic = {"person": {"name": "Camina Drummer"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.OverrideLabel("Character"))
+        Transformer.match_nodes("person").do(NodeTrans.OverrideLabel("Character"))
     )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -100,7 +100,7 @@ class RemoveLabel(_NodeTransformerBase):
     dic = {"person": [{"name": "Camina Drummer"},{"name":"James Holden"}]}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.RemoveLabel("ListItem"))
+        Transformer.match_nodes("person").do(NodeTrans.RemoveLabel("ListItem"))
     )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -113,7 +113,7 @@ class RemoveLabel(_NodeTransformerBase):
         """_summary_
 
         Args:
-            target_label (str, optional): Optional set this if you dont want the labels from `match_node()` to be replaced. Defaults to None.
+            target_label (str, optional): Optional set this if you dont want the labels from `match_nodes()` to be replaced. Defaults to None.
 
         Raises:
             ValueError: _description_
@@ -141,7 +141,7 @@ class AddLabel(_NodeTransformerBase):
     dic = {"person": {"name": "Camina Drummer"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.AddLabel("Character"))
+        Transformer.match_nodes("person").do(NodeTrans.AddLabel("Character"))
     )
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
@@ -184,7 +184,7 @@ class SetMergeProperties(_NodeTransformerBase):
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node(["books", "ListItem"]).do(
+        Transformer.match_nodes(["books", "ListItem"]).do(
             NodeTrans.SetMergeProperties(props=["title"])
         )
     )
@@ -234,7 +234,7 @@ class PopListHubNodes(_NodeTransformerBase):
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes())
     )
     d2g.parse(data)
     d2g.create(NEO4J_DRIVER)

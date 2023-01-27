@@ -26,7 +26,7 @@ def test_CapitalizeLabels():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.CapitalizeLabels())
+        Transformer.match_nodes().do(NodeTrans.CapitalizeLabels())
     )
     d2g.parse(data)
     d2g.create(DRIVER)
@@ -54,12 +54,12 @@ def test_OverridePropertyName():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("article").do(
+        Transformer.match_nodes("article").do(
             NodeTrans.OverridePropertyName("title", "topic")
         )
     )
     d2g.add_relation_transformation(
-        Transformer.match_rel("author_LIST_HAS_author").do(
+        Transformer.match_rels("author_LIST_HAS_author").do(
             NodeTrans.OverridePropertyName("_list_item_index", "rank")
         )
     )
@@ -130,7 +130,7 @@ def test_OverrideLabel():
 
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("article").do(NodeTrans.OverrideLabel("book"))
+        Transformer.match_nodes("article").do(NodeTrans.OverrideLabel("book"))
     )
     d2g.parse(data)
     d2g.create(DRIVER)
@@ -158,7 +158,7 @@ def test_RemoveLabel():
 
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node(["ListHub", "souls"]).do(NodeTrans.RemoveLabel("souls"))
+        Transformer.match_nodes(["ListHub", "souls"]).do(NodeTrans.RemoveLabel("souls"))
     )
     d2g.parse(data)
     d2g.create(DRIVER)
@@ -244,10 +244,10 @@ def test_RemoveProperty():
     d2g = Dict2graph()
     d2g.add_node_transformation(
         [
-            Transformer.match_node(["Ship"]).do(
+            Transformer.match_nodes(["Ship"]).do(
                 NodeTrans.RemoveProperty(["souls", "note"])
             ),
-            Transformer.match_node("Body").do(
+            Transformer.match_nodes("Body").do(
                 NodeTrans.RemoveProperty(["souls", "nonexists"])
             ),
         ]
@@ -314,7 +314,7 @@ def test_SetMergeProperties():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node(["books", "ListItem"]).do(
+        Transformer.match_nodes(["books", "ListItem"]).do(
             NodeTrans.SetMergeProperties(props=["title"])
         )
     )
@@ -359,10 +359,10 @@ def test_TypeCastProperty():
     d2g = Dict2graph()
     d2g.add_node_transformation(
         [
-            Transformer.match_node("article").do(
+            Transformer.match_nodes("article").do(
                 NodeTrans.TypeCastProperty("good", bool)
             ),
-            Transformer.match_node("article").do(
+            Transformer.match_nodes("article").do(
                 NodeTrans.TypeCastProperty("in_stock_no", int)
             ),
         ]
@@ -391,7 +391,7 @@ def test_CreateNewMergePropertyFromHash_simple():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(
+        Transformer.match_nodes("person").do(
             NodeTrans.CreateNewMergePropertyFromHash(
                 hash_includes_properties=["firstname", "lastname"],
                 hash_includes_existing_merge_props=False,
@@ -453,7 +453,7 @@ def test_CreateNewMergePropertyFromHash_advanced():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(
+        Transformer.match_nodes("person").do(
             NodeTrans.CreateNewMergePropertyFromHash(
                 hash_includes_properties=["firstname", "lastname"],
                 hash_includes_existing_merge_props=False,
@@ -582,7 +582,7 @@ def test_RemoveEmptyListRootNodes():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.RemoveEmptyListRootNodes())
+        Transformer.match_nodes().do(NodeTrans.RemoveEmptyListRootNodes())
     )
 
     d2g.parse(data)
@@ -674,7 +674,7 @@ def test_PopListHubNodes_at_root():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes())
     )
 
     d2g.parse(data)
@@ -714,8 +714,8 @@ def test_TypeCastProperty():
 
     d2g.add_node_transformation(
         [
-            Transformer.match_node().do(NodeTrans.TypeCastProperty("dead", bool)),
-            Transformer.match_node().do(NodeTrans.TypeCastProperty("age", int)),
+            Transformer.match_nodes().do(NodeTrans.TypeCastProperty("dead", bool)),
+            Transformer.match_nodes().do(NodeTrans.TypeCastProperty("age", int)),
         ]
     )
 
@@ -740,7 +740,7 @@ def test_PopListHubNodes():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.PopListHubNodes()),
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
     )
 
     d2g.parse(data)
@@ -796,7 +796,7 @@ def test_CreateHubbing():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("sector").do(
+        Transformer.match_nodes("sector").do(
             NodeTrans.CreateHubbing(
                 follow_nodes_labels=["ship", "captain"],
                 merge_property_mode="edge",
@@ -861,7 +861,7 @@ def test_RemoveListItemLabels():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.RemoveListItemLabels()),
+        Transformer.match_nodes().do(NodeTrans.RemoveListItemLabels()),
     )
 
     d2g.parse(data)
@@ -912,7 +912,7 @@ def test_OutsourcePropertiesToNewNode():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("ship").do(
+        Transformer.match_nodes("ship").do(
             NodeTrans.OutsourcePropertiesToNewNode(
                 property_keys=["navy"],
                 new_node_labels=["Party"],
@@ -961,7 +961,7 @@ def test_RemoveNodesWithOnlyEmptyProps():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.RemoveNodesWithOnlyEmptyProps()),
+        Transformer.match_nodes().do(NodeTrans.RemoveNodesWithOnlyEmptyProps()),
     )
 
     d2g.parse(data)
@@ -1004,7 +1004,7 @@ def test_RemoveNodesWithNoProps():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.RemoveNodesWithNoProps()),
+        Transformer.match_nodes().do(NodeTrans.RemoveNodesWithNoProps()),
     )
 
     d2g.parse(data)
@@ -1046,7 +1046,7 @@ def test_match_has_one_label_of():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node(has_one_label_of=["ship", "totalyOther"]).do(
+        Transformer.match_nodes(has_one_label_of=["ship", "totalyOther"]).do(
             NodeTrans.AddLabel("Matched")
         ),
     )
@@ -1089,7 +1089,7 @@ def test_match_has_not_one_label_of():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node(
+        Transformer.match_nodes(
             has_one_label_of=["ship", "totalyOther"],
             has_none_label_of=["ListHub"],
         ).do(NodeTrans.AddLabel("Matched")),
@@ -1132,7 +1132,7 @@ def test_RemoveNode():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("planet").do(NodeTrans.RemoveNode()),
+        Transformer.match_nodes("planet").do(NodeTrans.RemoveNode()),
     )
 
     d2g.parse(data)
@@ -1192,7 +1192,9 @@ def test_RemoveNode_with_children():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("planet").do(NodeTrans.RemoveNode(remove_children=True)),
+        Transformer.match_nodes("planet").do(
+            NodeTrans.RemoveNode(remove_children=True)
+        ),
     )
 
     d2g.parse(data)
@@ -1233,7 +1235,7 @@ def test_PopNode():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("planet").do(NodeTrans.PopNode()),
+        Transformer.match_nodes("planet").do(NodeTrans.PopNode()),
     )
 
     d2g.parse(data)
@@ -1323,7 +1325,7 @@ def test_MergeChildNodes():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("Human").do(NodeTrans.MergeChildNodes()),
+        Transformer.match_nodes("Human").do(NodeTrans.MergeChildNodes()),
     )
 
     d2g.parse(data)
@@ -1375,7 +1377,7 @@ def test_OutsourcePropertiesToRelationship():
     d2g = Dict2graph()
 
     d2g.add_node_transformation(
-        Transformer.match_node("Human").do(
+        Transformer.match_nodes("Human").do(
             NodeTrans.OutsourcePropertiesToRelationship(
                 property_keys=["main_character"], relation_type="appearances"
             )
@@ -1416,7 +1418,7 @@ def test_AddProperty():
     dic = {"person": {"name": "Camina"}}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(
+        Transformer.match_nodes("person").do(
             NodeTrans.AddProperty({"my_new_prop_key": "my_new_prop_value_1111"})
         )
     )

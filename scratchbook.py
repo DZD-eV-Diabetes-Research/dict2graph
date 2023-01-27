@@ -19,8 +19,8 @@ data = {"bookshelf": {"Genre": "Explaining the world"}}
 d2g = Dict2graph()
 d2g.add_transformation(
     [
-        Transformer.match_node("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
-        Transformer.match_node("bookshelf").do(
+        Transformer.match_nodes("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
+        Transformer.match_nodes("bookshelf").do(
             NodeTrans.OverridePropertyName("mtr", "material")
         ),
     ]

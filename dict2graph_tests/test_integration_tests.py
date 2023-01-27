@@ -44,7 +44,7 @@ def test_merge_two_dicts_and_remove_list_hubs():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes())
     )
     d2g.parse(dic1)
     d2g.parse(dic2)
@@ -148,9 +148,9 @@ def test_hubbing_edge():
     d2g = Dict2graph()
     d2g.add_node_transformation(
         [
-            Transformer.match_node().do(NodeTrans.PopListHubNodes()),
-            Transformer.match_node().do(NodeTrans.RemoveListItemLabels()),
-            Transformer.match_node("Article").do(
+            Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
+            Transformer.match_nodes().do(NodeTrans.RemoveListItemLabels()),
+            Transformer.match_nodes("Article").do(
                 NodeTrans.CreateHubbing(
                     follow_nodes_labels=["Authors", "affiliation"],
                     merge_property_mode="edge",
@@ -493,9 +493,9 @@ def wip_test_pubmed_article():
 
     d2g.add_node_transformation(
         [
-            Transformer.match_node().do(NodeTrans.PopListHubNodes()),
-            Transformer.match_node().do(NodeTrans.RemoveListItemLabels()),
-            Transformer.match_node("Article").do(
+            Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
+            Transformer.match_nodes().do(NodeTrans.RemoveListItemLabels()),
+            Transformer.match_nodes("Article").do(
                 NodeTrans.CreateHubbing(
                     follow_nodes_labels=["Authors", "affiliation"],
                     merge_property_mode="edge",

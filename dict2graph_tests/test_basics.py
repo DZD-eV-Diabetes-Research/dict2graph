@@ -718,7 +718,7 @@ def test_match_filter_rel():
     }
     d2g = Dict2graph()
     d2g.add_transformation(
-        Transformer.match_rel(relation_type_is_not_in=["books_LIST_HAS_books"]).do(
+        Transformer.match_rels(relation_type_is_not_in=["books_LIST_HAS_books"]).do(
             RelTrans.AddProperty({"matched": True})
         )
     )

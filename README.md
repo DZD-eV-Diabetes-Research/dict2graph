@@ -128,9 +128,9 @@ data = {
 d2g = Dict2graph()
 d2g.add_transformation(
     [
-        Transformer.match_node().do(NodeTrans.CapitalizeLabels()),
-        Transformer.match_rel().do(RelTrans.UppercaseRelationType()),
-        Transformer.match_node().do(NodeTrans.PopListHubNodes()),
+        Transformer.match_nodes().do(NodeTrans.CapitalizeLabels()),
+        Transformer.match_rels().do(RelTrans.UppercaseRelationType()),
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
     ]
 )
 d2g.parse(data)

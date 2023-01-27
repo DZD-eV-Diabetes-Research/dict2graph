@@ -82,9 +82,9 @@ The most simple matcher you can build is a "match everything" case. **Matching e
 ```python
 from dict2graph import Transformer, AnyNode
 
-all_matcher = Transformer.match_node()
+all_matcher = Transformer.match_nodes()
 # this is equal to 
-all_matcher = Transformer.match_node(AnyNode)
+all_matcher = Transformer.match_nodes(AnyNode)
 ```
 
 If we wanted to change `(:books)` nodes only we would build a matcher like this:
@@ -92,7 +92,7 @@ If we wanted to change `(:books)` nodes only we would build a matcher like this:
 ```python
 from dict2graph import Transformer
 
-books_matcher = Transformer.match_node("books")
+books_matcher = Transformer.match_nodes("books")
 ```
 
 Or we can even match multiple nodes by providing multiples labels.
@@ -100,7 +100,7 @@ Or we can even match multiple nodes by providing multiples labels.
 ```python
 from dict2graph import Transformer
 
-book_and_shelf_matcher = Transformer.match_node(has_one_label_of=["books","bookshelf"])
+book_and_shelf_matcher = Transformer.match_nodes(has_one_label_of=["books","bookshelf"])
 ```
 This would match `(:books)` and `(:bookshelf)` nodes.
 
@@ -108,7 +108,7 @@ Filtering out certain labels is also possible
 ```python
 from dict2graph import Transformer
 
-no_bookshelf_matcher = Transformer.match_node(has_none_label_of=["bookshelf"])
+no_bookshelf_matcher = Transformer.match_nodes(has_none_label_of=["bookshelf"])
 ```
 This again, would match only the `(:books)`-nodes.
 
@@ -121,7 +121,7 @@ As a starter lets see how we match all relationships:
 ```python
 from dict2graph import Transformer
 
-all_rels_matcher = Transformer.match_rel()
+all_rels_matcher = Transformer.match_rels()
 ```
 
 which is equal to 
@@ -129,7 +129,7 @@ which is equal to
 ```python
 from dict2graph import Transformer, AnyRelation
 
-all_rels_matcher = Transformer.match_rel(AnyRelation)
+all_rels_matcher = Transformer.match_rels(AnyRelation)
 ```
 
 Now lets match our `bookshelf_HAS_books` relations.
@@ -137,7 +137,7 @@ Now lets match our `bookshelf_HAS_books` relations.
 ```python
 from dict2graph import Transformer
 
-shelf2book_matcher = Transformer.match_rel("bookshelf_HAS_books")
+shelf2book_matcher = Transformer.match_rels("bookshelf_HAS_books")
 ```
 
 Or how about matching both of our relations?
@@ -145,7 +145,7 @@ Or how about matching both of our relations?
 ```python
 from dict2graph import Transformer
 
-both_matcher = Transformer.match_rel(
+both_matcher = Transformer.match_rels(
     ["bookshelf_HAS_books", "bookshelf_LIST_HAS_books"]
 )
 ```
@@ -155,7 +155,7 @@ Of course filtering is possible as well. lets filter `bookshelf_HAS_books` away
 ```python
 from dict2graph import Transformer
 
-filter_matcher = Transformer.match_rel(
+filter_matcher = Transformer.match_rels(
     relation_type_is_not_in=["bookshelf_HAS_books"]
 )
 ```
@@ -190,7 +190,7 @@ data = {
         }
     }
 # we just learned how to "match". lets apply it:
-bookshelf_matcher = Transformer.match_node("bookshelf")
+bookshelf_matcher = Transformer.match_nodes("bookshelf")
 add_prop_transformator = NodeTrans.AddProperty({"material":"wood"})
 
 # the next thing we should do is to attach the transformator to our dict2graph instance
@@ -220,13 +220,13 @@ we get
 
 ```json
 [
-{
-"bs.material": "wood"
-}
+  {
+    "bs.material": "wood"
+  }
 ]
 ```
 
-as a return value
+as a return value. we added a new property to the node.
 
 ### Compact variant
 
@@ -253,7 +253,7 @@ data = {
 }
 d2g = Dict2graph()
 d2g.add_transformation(
-    Transformer.match_node("bookshelf").do(NodeTrans.AddProperty({"material": "wood"}))
+    Transformer.match_nodes("bookshelf").do(NodeTrans.AddProperty({"material": "wood"}))
 )
 d2g.parse(data)
 NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
@@ -276,8 +276,8 @@ data = {"bookshelf": {"Genre": "Explaining the world"}}
 d2g = Dict2graph()
 d2g.add_transformation(
     [
-        Transformer.match_node("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
-        Transformer.match_node("bookshelf").do(
+        Transformer.match_nodes("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
+        Transformer.match_nodes("bookshelf").do(
             NodeTrans.OverridePropertyName("mtr", "material")
         ),
     ]
@@ -311,10 +311,10 @@ data = {"bookshelf": {"Genre": "Explaining the world"}}
 d2g = Dict2graph()
 d2g.add_transformation(
     [
-        Transformer.match_node("bookshelf").do(
+        Transformer.match_nodes("bookshelf").do(
             NodeTrans.OverridePropertyName("mtr", "material")
         ),
-        Transformer.match_node("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
+        Transformer.match_nodes("bookshelf").do(NodeTrans.AddProperty({"mtr": "wood"})),
     ]
 )
 d2g.parse(data)

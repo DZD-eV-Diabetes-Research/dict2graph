@@ -20,7 +20,7 @@ import collections
 from typing import Callable, Union
 import graphio
 from collections import defaultdict
-from typing import List, Dict, Tuple, Literal
+from typing import List, Dict, Tuple, Literal, Type
 from py2neo import Graph
 from neo4j import Driver
 
@@ -92,7 +92,7 @@ class Dict2graph:
 
         d2g = Dict2Graph()
         d2g.add_transformation(
-            Transformer.match_node("article").do(NodeTrans.OverrideLabel("book"))
+            Transformer.match_nodes("article").do(NodeTrans.OverrideLabel("book"))
         )
         ```
 
@@ -100,21 +100,36 @@ class Dict2graph:
             transformator (Union[ _NodeTransformerBase, _RelationTransformerBase, List[Union[_NodeTransformerBase, _RelationTransformerBase]], ]): A list or single instance of a Transformer
 
         """
+
         if isinstance(transformator, list):
             for trans in transformator:
                 self.add_transformation(trans)
-
-        if issubclass(transformator.__class__, _NodeTransformerBase) or (
-            issubclass(
-                transformator.__class__,
-                _NodeTransformerBase,
-            )
-            and issubclass(transformator.__class__, _RelationTransformerBase)
-        ):
+            return
+        if self._get_transformer_class(transformator) == _NodeTransformerBase:
             self.add_node_transformation(transformator)
 
-        elif issubclass(transformator.__class__, _RelationTransformerBase):
+        elif self._get_transformer_class(transformator) == _RelationTransformerBase:
             self.add_relation_transformation(transformator)
+        else:
+            raise ValueError(
+                f"Expected transformer of subclass '{_NodeTransformerBase}' or '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}')"
+            )
+
+    def _get_transformer_class(
+        self, transformator: Union[_NodeTransformerBase, _RelationTransformerBase]
+    ) -> Union[Type[_NodeTransformerBase], type[_RelationTransformerBase]]:
+        if issubclass(transformator.__class__, _NodeTransformerBase) and issubclass(
+            transformator.__class__, _RelationTransformerBase
+        ):
+            # We got a generic transformator. we have to look at the matcher to determine the transformator type.
+            if isinstance(transformator.matcher, Transformer.RelTransformerMatcher):
+                return _RelationTransformerBase
+            elif isinstance(transformator.matcher, Transformer.NodeTransformerMatcher):
+                return _NodeTransformerBase
+        elif issubclass(transformator.__class__, _NodeTransformerBase):
+            return _NodeTransformerBase
+        elif issubclass(transformator.__class__, _RelationTransformerBase):
+            return _RelationTransformerBase
 
     def add_node_transformation(
         self, transformator: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
@@ -123,13 +138,15 @@ class Dict2graph:
             for trans in transformator:
                 self.add_node_transformation(trans)
             return
+        if transformator.matcher is None:
+            raise ValueError(f"No matcher added to {transformator}")
         if not issubclass(transformator.__class__, _NodeTransformerBase):
             raise ValueError(
                 f"Expected transformer of subclass '{_NodeTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_relation_transformation()` instead of `add_node_transformation`?"
             )
         elif transformator.matcher.__class__ != Transformer.NodeTransformerMatcher:
             raise ValueError(
-                f"Expected transformer matcher of class '{Transformer.NodeTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a relationship matcher instead of a node matcher (`match_node()` vs. `match_rel()`) while using `Dict2graph.add_node_transformation()`?"
+                f"Expected transformer matcher of class '{Transformer.NodeTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a relationship matcher instead of a node matcher (`match_nodes()` vs. `match_rels()`) while using `Dict2graph.add_node_transformation()`?"
             )
         else:
             transformator.d2g = self
@@ -139,17 +156,17 @@ class Dict2graph:
         self,
         transformator: Union[_RelationTransformerBase, List[_RelationTransformerBase]],
     ):
-
         if isinstance(transformator, list):
             for trans in transformator:
                 self.add_relation_transformation(trans)
+            return
         elif not issubclass(transformator.__class__, _RelationTransformerBase):
             raise ValueError(
                 f"Expected transformer of subclass '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_node_transformation()` instead of `add_relation_transformation`?"
             )
         elif transformator.matcher.__class__ != Transformer.RelTransformerMatcher:
             raise ValueError(
-                f"Expected transformer matcher of class '{Transformer.RelTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a node matcher instead of a relationship matcher (`match_rel()` vs. `match_node()`) while using `Dict2graph.add_relation_transformation()`?"
+                f"Expected transformer matcher of class '{Transformer.RelTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a node matcher instead of a relationship matcher (`match_rels()` vs. `match_nodes()`) while using `Dict2graph.add_relation_transformation()`?"
             )
         else:
             self.relation_transformators.append(transformator)

@@ -138,7 +138,7 @@ class Transformer:
             return transform
 
     @classmethod
-    def match_node(
+    def match_nodes(
         cls,
         has_labels: Union[str, List[str], AnyLabel] = AnyLabel,
         has_one_label_of: List[str] = None,
@@ -163,7 +163,7 @@ class Transformer:
         return tm
 
     @classmethod
-    def match_rel(
+    def match_rels(
         cls,
         relation_type: Union[str, List[str], AnyRelation] = AnyRelation,
         relation_type_is_not_in: List[str] = None,

@@ -20,7 +20,7 @@ def test_OverridePropertyName():
     data = [{"name": "Thomas Prince"}, {"name": "Zheng Fei"}, {"name": "Montenegro"}]
     d2g = Dict2graph()
     d2g.add_relation_transformation(
-        Transformer.match_rel("Ship_LIST_HAS_Ship").do(
+        Transformer.match_rels("Ship_LIST_HAS_Ship").do(
             RelTrans.OverridePropertyName("_list_item_index", "size_rank")
         )
     )
@@ -85,7 +85,7 @@ def test_OverrideReliationType():
     data = {"name": "Holden", "stationed": {"ship": {"name": "Zheng Fei"}}}
     d2g = Dict2graph()
     d2g.add_relation_transformation(
-        Transformer.match_rel("stationed").do(
+        Transformer.match_rels("stationed").do(
             RelTrans.OverrideReliationType(value="IS_STATIONED_AT")
         )
     )
@@ -120,7 +120,7 @@ def test_UppercaseRelationType():
     data = {"name": "Holden", "stationed": {"ship": {"name": "Zheng Fei"}}}
     d2g = Dict2graph()
     d2g.add_relation_transformation(
-        Transformer.match_rel("stationed").do(RelTrans.UppercaseRelationType())
+        Transformer.match_rels("stationed").do(RelTrans.UppercaseRelationType())
     )
     d2g.parse(data, "Person")
     d2g.create(DRIVER)
@@ -163,7 +163,7 @@ def test_FlipNodes():
     d2g = Dict2graph()
 
     d2g.add_relation_transformation(
-        Transformer.match_rel("Journal_HAS_JournalIssue").do(RelTrans.FlipNodes())
+        Transformer.match_rels("Journal_HAS_JournalIssue").do(RelTrans.FlipNodes())
     )
 
     d2g.parse(data)
@@ -234,7 +234,7 @@ def test_TypeCastProperty():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("inhabitans").do(
+        Transformer.match_nodes("inhabitans").do(
             NodeTrans.OutsourcePropertiesToRelationship(
                 ["stationed"], "Asteroid_HAS_inhabitans"
             )
@@ -242,7 +242,7 @@ def test_TypeCastProperty():
     )
 
     d2g.add_relation_transformation(
-        Transformer.match_rel("Asteroid_HAS_inhabitans").do(
+        Transformer.match_rels("Asteroid_HAS_inhabitans").do(
             RelTrans.TypeCastProperty("stationed", bool)
         )
     )

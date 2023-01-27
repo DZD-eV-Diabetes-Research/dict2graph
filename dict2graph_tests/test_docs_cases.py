@@ -156,9 +156,9 @@ def test_readme_start_example_transformed():
     d2g = Dict2graph()
     d2g.add_transformation(
         [
-            Transformer.match_node().do(NodeTrans.CapitalizeLabels()),
-            Transformer.match_rel().do(RelTrans.UppercaseRelationType()),
-            Transformer.match_node().do(NodeTrans.PopListHubNodes()),
+            Transformer.match_nodes().do(NodeTrans.CapitalizeLabels()),
+            Transformer.match_rels().do(RelTrans.UppercaseRelationType()),
+            Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
         ]
     )
     d2g.parse(data)
@@ -374,7 +374,7 @@ def test_transformer_docs_RemoveLabel():
     dic = {"person": [{"name": "Camina Drummer"}, {"name": "James Holden"}]}
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node("person").do(NodeTrans.RemoveLabel("ListItem"))
+        Transformer.match_nodes("person").do(NodeTrans.RemoveLabel("ListItem"))
     )
     d2g.parse(dic)
     d2g.create(DRIVER)
@@ -431,7 +431,7 @@ def test_transformer_docs_PopListHubNodes():
     }
     d2g = Dict2graph()
     d2g.add_node_transformation(
-        Transformer.match_node().do(NodeTrans.PopListHubNodes())
+        Transformer.match_nodes().do(NodeTrans.PopListHubNodes())
     )
     d2g.parse(data)
     d2g.create(DRIVER)
@@ -498,7 +498,7 @@ def test_matching_tutorial():
         }
     }
 
-    book_matcher = Transformer.match_node("books")
+    book_matcher = Transformer.match_nodes("books")
     d2g = Dict2graph()
     d2g.add_node_transformation(book_matcher.do(NodeTrans.PopListHubNodes()))
     d2g.parse(data)
@@ -628,7 +628,7 @@ def test_transforming_tut_01():
         }
     }
     # we just learned how to "match". lets apply it:
-    bookshelf_matcher = Transformer.match_node("bookshelf")
+    bookshelf_matcher = Transformer.match_nodes("bookshelf")
     add_prop_transformator = NodeTrans.AddProperty({"material": "wood"})
 
     # the next thing we should do is to attach the transformator to our dict2graph instance
