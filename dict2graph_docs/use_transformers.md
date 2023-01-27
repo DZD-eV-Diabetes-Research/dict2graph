@@ -77,6 +77,8 @@ This result in the following graph
 
 ### Node Matching
 
+If we want to transform certain nodes and relationships (which we will do in a couple of line. i promise), we first need to find them. In dict2graph this is done with so called "matchers".
+
 The most simple matcher you can build is a "match everything" case. **Matching everything is also the default case**. Just keep the matcher empty.
 
 ```python
@@ -124,7 +126,7 @@ from dict2graph import Transformer
 all_rels_matcher = Transformer.match_rels()
 ```
 
-which is equal to 
+which is (again) equal to 
 
 ```python
 from dict2graph import Transformer, AnyRelation
@@ -162,12 +164,12 @@ filter_matcher = Transformer.match_rels(
 
 ## Transforming
 
-Great. Now as you know how to collect your nodes and relationships, lets manipulate them.
-Fot that we need to create so called `Transformer`s
+Great. Now as we know the concept of "matchers" and how to collect our nodes and relationships, lets manipulate them.
+For that we need to create so called `Transformer`s
 
-Lets add a new property "`material: 'wood'`" to our bookshelf.
+Lets try to add a new property "`material: 'wood'`" to our bookshelf.
 
-We will pick the dict2graph built in node transformer [AddProperty](/list_generic_transformer/#dict2graph.transformers.generic_transformers.AddProperty)
+We will pick the dict2graph built in node transformer [AddProperty](list_generic_transformer/#dict2graph.transformers.generic_transformers.AddProperty)
 
 For your convenience you can import the wrapper class `dict2graph.NodeTrans` which includes all Transformers that are applicable to nodes. Same with `dict2graph.RelTrans` for relationship transformators.
 
@@ -260,7 +262,7 @@ NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
 d2g.create(NEO4J_DRIVER)
 ```
 
-this is much more compact and depending on your taste more readable. But its just a style question. Choice is yours.
+this is much more compact and depending on your taste more readable. But its just a style question. Choice is yours. But...
 
 ## Order matters!
 
@@ -302,6 +304,8 @@ will be
 │{"material":"wood","Genre":"Explaining the world"}│
 └──────────────────────────────────────────────────┘
 ```
+
+Now lets flip the order of our transformators:
 
 ```python
 from neo4j import GraphDatabase
