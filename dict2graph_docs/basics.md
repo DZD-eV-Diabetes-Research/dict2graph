@@ -1,7 +1,5 @@
 # Basic concepts of dict2graph
 
-## Creating
-
 To get a grasp how dict2graph is working lets have a look at a simple example
 
 ```python
@@ -26,7 +24,11 @@ This will create a graph that looks like
 
 ![](img/basics_baseline_example.png "Result example 1")
 
-You can see dict2graph interpreted the dict key `person` as the name (or better "label") of the object, which is behind the key. Same for `affiliation`. 
+## Generated labels
+
+You can see dict2graph interpreted the dict key `person` as the objects label. Same for `affiliation`. 
+
+Basic types like strings, integers, boolean and so on will be interpreted as property.
 
 ### When creating is not enough
 
