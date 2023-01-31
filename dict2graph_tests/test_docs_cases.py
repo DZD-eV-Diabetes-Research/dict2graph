@@ -703,6 +703,230 @@ def test_transforming_tut_01():
     assert_result(result, expected_result_nodes)
 
 
+def test_CreateNewMergePropertyFromHash_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = [
+        {"person": {"fname": "Joe ", "lname": "Miller", "children": []}},
+        {"person": {"fname": "Joe ", "lname": "Miller", "children": ["Tom", "Jane"]}},
+    ]
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.CreateNewMergePropertyFromHash(hash_includes_children_data=True)
+        )
+    )
+    d2g.parse(dic)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Dict2GraphRoot", "ListHub"],
+            "props": {"id": "c40073e2de4c5a6e7f70ab6f5a683e46"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Dict2GraphRoot_LIST_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "ListItem"],
+                        "props": {
+                            "fname": "Joe ",
+                            "lname": "Miller",
+                            "_id": "e3a6c806eef68776c81ca9a00739dd9c",
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Dict2GraphRoot_LIST_HAS_person",
+                    "rel_target_node": {
+                        "labels": ["person", "ListItem"],
+                        "props": {
+                            "fname": "Joe ",
+                            "lname": "Miller",
+                            "_id": "c676ed1d3bec334e54b7133560eb6275",
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["children", "ListHub"],
+            "props": {"id": "d751713988987e9331980363e24189ce"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["children", "ListHub"],
+            "props": {"id": "911568efcb8fdfac62558e2d9a9f8c3c"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "children_LIST_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListItem"],
+                        "props": {"_list_item_data": "Jane"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "children_LIST_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListItem"],
+                        "props": {"_list_item_data": "Tom"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["person", "ListItem"],
+            "props": {
+                "fname": "Joe ",
+                "lname": "Miller",
+                "_id": "c676ed1d3bec334e54b7133560eb6275",
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListHub"],
+                        "props": {"id": "d751713988987e9331980363e24189ce"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["person", "ListItem"],
+            "props": {
+                "fname": "Joe ",
+                "lname": "Miller",
+                "_id": "e3a6c806eef68776c81ca9a00739dd9c",
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListHub"],
+                        "props": {"id": "911568efcb8fdfac62558e2d9a9f8c3c"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["children", "ListItem"],
+            "props": {"_list_item_data": "Tom"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["children", "ListItem"],
+            "props": {"_list_item_data": "Jane"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_RemoveEmptyListRootNodes_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "person": {"fname": "Marco ", "lname": "Inaros", "children": ["Filip Inaros"]}
+    }
+
+    dic2 = {"person": {"fname": "Joe ", "lname": "Miller", "children": []}}
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("children").do(NodeTrans.RemoveEmptyListRootNodes())
+    )
+    d2g.parse(dic)
+    d2g.parse(dic2)
+
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = [
+        {
+            "labels": ["children", "ListHub"],
+            "props": {"id": "f51cced5b17d86b8c7d175446dc9210d"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "children_LIST_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListItem"],
+                        "props": {"_list_item_data": "Filip Inaros"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["children", "ListItem"],
+            "props": {"_list_item_data": "Filip Inaros"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["person"],
+            "props": {"fname": "Marco ", "lname": "Inaros"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_children",
+                    "rel_target_node": {
+                        "labels": ["children", "ListHub"],
+                        "props": {"id": "f51cced5b17d86b8c7d175446dc9210d"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["person"],
+            "props": {"fname": "Joe ", "lname": "Miller"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_OutsourcePropertiesToNewNode_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {"person": {"fname": "Marco ", "lname": "Inaros", "child": "Filip Inaros"}}
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.OutsourcePropertiesToNewNode(
+                property_keys=["child"],
+                new_node_labels=["person"],
+                relation_type="person_has_child",
+            )
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person"],
+            "props": {"fname": "Marco ", "lname": "Inaros"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_has_child",
+                    "rel_target_node": {
+                        "labels": ["person"],
+                        "props": {"child": "Filip Inaros"},
+                    },
+                }
+            ],
+        },
+        {"labels": ["person"], "props": {"child": "Filip Inaros"}, "outgoing_rels": []},
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "true":
     test_readme_tiny_example()
     test_readme_start_example()
@@ -715,3 +939,6 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_matching_tutorial()
     test_matching_tutorial_02()
     test_transforming_tut_01()
+    test_CreateNewMergePropertyFromHash_tut_01()
+    test_RemoveEmptyListRootNodes_tut_01()
+    test_OutsourcePropertiesToNewNode_tut_01()

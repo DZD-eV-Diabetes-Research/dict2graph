@@ -90,4 +90,4 @@ class Relation(dict):
         self._end_node = node
 
     def __str__(self):
-        return f"{self.start_node}-[{self.relation_type}]->({self.end_node})"
+        return f"{self.start_node}-[{self.relation_type}]->{self.end_node}"

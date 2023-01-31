@@ -70,7 +70,10 @@ class Dict2graph:
         self.interpret_single_props_as_labels = interpret_single_props_as_labels
 
         self._node_cache: List[Node] = []
+        self._node_cache_feeder: List[Node] = []
+
         self._rel_cache: List[Relation] = []
+        self._rel_cache_feeder: List[Node] = []
         self._nodeSets: Dict[Tuple, NodeSet] = {}
         self._relSets: Dict[Tuple, RelationshipSet] = {}
         self.node_transformators: List[_NodeTransformerBase] = []
@@ -441,7 +444,14 @@ class Dict2graph:
             )
         return self._relSets[rel_id]
 
+    def add_node_to_cache(self, node: Node):
+        self._node_cache_feeder.append(node)
+
+    def add_rel_to_cache(self, rel: Relation):
+        self._rel_cache_feeder.append(rel)
+
     def _flush_cache(self):
+        self._feed_cache_with_new_nodes_and_rels()
         self._run_transformations()
         for node in self._node_cache:
             if not node.deleted:
@@ -457,6 +467,16 @@ class Dict2graph:
 
             for node in self._node_cache:
                 trans._run_node_match_and_transform(node)
+            self._feed_cache_with_new_nodes_and_rels()
+
         for trans in self.relation_transformators:
+
             for rel in self._rel_cache:
                 trans._run_rel_match_and_transform(rel)
+            self._feed_cache_with_new_nodes_and_rels()
+
+    def _feed_cache_with_new_nodes_and_rels(self):
+        self._node_cache.extend(self._node_cache_feeder)
+        self._node_cache_feeder = []
+        self._rel_cache.extend(self._rel_cache_feeder)
+        self._rel_cache_feeder = []

@@ -19,7 +19,9 @@ import hashlib
 
 class CapitalizeLabels(_NodeTransformerBase):
     """Uppercase the first char of a node Labels.
-    Usage:
+
+    **Usage:**
+
     ```python
     from dict2graph import Dict2graph, Transformer, NodeTrans
     from neo4j import GraphDatabase
@@ -42,7 +44,9 @@ class CapitalizeLabels(_NodeTransformerBase):
 
 
 class OverrideLabel(_NodeTransformerBase):
-    """Replace a node label with a new string    Usage:
+    """Replace a node label with a new string
+    **Usage:**
+
     ```python
     from dict2graph import Dict2graph, Transformer, NodeTrans
     from neo4j import GraphDatabase
@@ -90,7 +94,9 @@ class OverrideLabel(_NodeTransformerBase):
 
 class RemoveLabel(_NodeTransformerBase):
     """Remove a certain label from nodes
-    Usage:
+
+    **Usage:**
+
     ```python
     from dict2graph import Dict2graph, Transformer, NodeTrans
     from neo4j import GraphDatabase
@@ -131,7 +137,9 @@ class RemoveLabel(_NodeTransformerBase):
 
 class AddLabel(_NodeTransformerBase):
     """Add one or more new labels to nodes
-    Usage:
+
+    **Usage:**
+
     ```python
     from dict2graph import Dict2graph, Transformer, NodeTrans
     from neo4j import GraphDatabase
@@ -211,7 +219,9 @@ class PopListHubNodes(_NodeTransformerBase):
     In most cases this is unnecessary and will make your graph model larger as it has to be.
     `PopListHubNodes` will just remove these list hubs.
 
-    Usage:
+
+    **Usage:**
+
     ```python
     from dict2graph import Dict2graph, Transformer, NodeTrans
     from neo4j import GraphDatabase
@@ -261,7 +271,41 @@ class PopListHubNodes(_NodeTransformerBase):
 
 
 class CreateNewMergePropertyFromHash(_NodeTransformerBase):
-    """_summary_"""
+    """Create a new merge-property for the node.
+    The value of this property will be a configurable hash.
+    See __init__() for configruation details.
+
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = [
+        {"person": {"fname": "Joe ", "lname": "Miller", "domiciles": ["Ceres", "Belt", "SOL"]}},
+        {"person": {"fname": "Joe ", "lname": "Miller", "domiciles": ["Earth"]}},
+    ]
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.CreateNewMergePropertyFromHash(
+                hash_includes_children_data=True
+            )
+        )
+    )
+    d2g.parse(dic)
+    d2g.merge(NEO4J_DRIVER)
+    ```
+    Results in a Graph with two different `Joe Miller`s.
+
+    Initially the disambiguation is only determinable by the `Joe Miller` child nodes `domiciles`.
+    With `NodeTrans.CreateNewMergePropertyFromHash` we can create a hash from the node and its children.
+    This way merging will not result in false positives regarding distinguishing objects.
+    See `__init__()` for more options to modify the hash.
+    """
 
     def __init__(
         self,
@@ -269,22 +313,29 @@ class CreateNewMergePropertyFromHash(_NodeTransformerBase):
         hash_includes_existing_merge_props: bool = False,
         hash_includes_existing_other_props: bool = False,
         hash_includes_children_nodes_merge_properties: bool = False,
-        hash_includes_children_nodes_merge_data: bool = False,
+        hash_includes_children_data: bool = False,
         hash_includes_parent_merge_properties: bool = False,
         new_merge_property_name: str = "_id",
     ):
+        """_summary_
+
+        Args:
+            hash_includes_properties (List[str], optional): Define certain properties to go into the hash. Defaults to None.
+            hash_includes_existing_merge_props (bool, optional): Include merge-properties in the hash. Defaults to False.
+            hash_includes_existing_other_props (bool, optional): Include all non merge-properties in the hash. Defaults to False.
+            hash_includes_children_nodes_merge_properties (bool, optional): Include all merge-properties of all direct child nodes. Defaults to False.
+            hash_includes_children_data (bool, optional): Include all data from direct and indirect children. Defaults to False.
+            hash_includes_parent_merge_properties (bool, optional): Include merge properties of parent nodes. Defaults to False.
+            new_merge_property_name (str, optional): The key for the newly generated property. Defaults to "_id".
+        """
         self.hash_includes_existing_merge_props = hash_includes_existing_merge_props
         self.hash_includes_existing_other_props = hash_includes_existing_other_props
         self.hash_includes_properties = hash_includes_properties
         self.hash_includes_children_nodes_merge_properties = (
             hash_includes_children_nodes_merge_properties
         )
-        self.hash_includes_children_nodes_merge_data = (
-            hash_includes_children_nodes_merge_data
-        )
-        self.hash_includes_children_nodes_merge_data = (
-            hash_includes_children_nodes_merge_data
-        )
+        self.hash_includes_children_data = hash_includes_children_data
+        self.hash_includes_children_data = hash_includes_children_data
         self.hash_includes_parent_merge_properties = (
             hash_includes_parent_merge_properties
         )
@@ -301,13 +352,41 @@ class CreateNewMergePropertyFromHash(_NodeTransformerBase):
             include_other_properties=self.hash_includes_existing_other_props,
             include_parent_properties=self.hash_includes_parent_merge_properties,
             include_children_properties=self.hash_includes_children_nodes_merge_properties,
-            include_children_data=self.hash_includes_children_nodes_merge_data,
+            include_children_data=self.hash_includes_children_data,
         )
         node.merge_property_keys = [self.new_merge_property_name]
 
 
 class RemoveEmptyListRootNodes(_NodeTransformerBase):
-    """_summary_"""
+    """Remove any list root/hub nodes with no children.
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {"fname": "Marco ", "lname": "Inaros", "children": ["Filip Inaros"]}
+    }
+
+    dic2 = {"person": {"fname": "Joe ", "lname": "Miller", "children": []}}
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("children").do(NodeTrans.RemoveEmptyListRootNodes())
+    )
+    d2g.parse(dic)
+    d2g.parse(dic2)
+
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in two person nodes. The `Joe Miller`-node will not have any `children` list nodes related.
+    Without the `RemoveEmptyListRootNodes` the `Joe Miller`-node would have attached an empty `ListHub:Children`-node
+    """
 
     def custom_node_match(self, node: Node) -> bool:
         return node.is_list_list_hub and len(node.outgoing_relations) == 0
@@ -319,7 +398,30 @@ class RemoveEmptyListRootNodes(_NodeTransformerBase):
 
 
 class RemoveListItemLabels(_NodeTransformerBase):
-    """_summary_"""
+    """Remove `ListItem` labels that are automatic attached to every list item by dict2graph.
+        **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {"fname": "Marco ", "lname": "Inaros", "children": ["Filip Inaros"]}
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes().do(NodeTrans.RemoveListItemLabels())
+    )
+    d2g.parse(dic)
+
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    The "Filip Inaros"-`children`-node will not have an extra label `ListItem`.
+    """
 
     def custom_node_match(self, node: Node) -> bool:
         return node.is_list_list_item
@@ -331,7 +433,35 @@ class RemoveListItemLabels(_NodeTransformerBase):
 
 
 class OutsourcePropertiesToNewNode(_NodeTransformerBase):
-    """_summary_"""
+    """Explizit move one or multiple properties to a new node.
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": {"fname": "Marco ", "lname": "Inaros", "child": "Filip Inaros"}}
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.OutsourcePropertiesToNewNode(
+                property_keys=["child"],
+                new_node_labels=["person"],
+                relation_type="person_has_child",
+            )
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    instead of only one person-"Marco Inaros"-node, with a property "child:'Filip Inaros'", we have a second person-"Filip Inaros"-node.
+    They are connected with a relation `person_has_child`.
+    """
 
     def __init__(
         self,
@@ -353,10 +483,11 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
 
             if key in node:
                 outsourced_props_node[key] = node.pop(key)
+
         if not outsourced_props_node and self.skip_if_keys_empty:
             return
-        self.d2g._node_cache.append(outsourced_props_node)
-        self.d2g._rel_cache.append(
+        self.d2g.add_node_to_cache(outsourced_props_node)
+        self.d2g.add_rel_to_cache(
             Relation(node, outsourced_props_node, relation_type=self.relation_type)
         )
 
@@ -441,8 +572,8 @@ class CreateHubbing(_NodeTransformerBase):
         hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
             "".join(hash_sources).encode("utf-8")
         ).hexdigest()
-        self.d2g._node_cache.append(hub)
-        self.d2g._rel_cache.append(Relation(start_node=node, end_node=hub))
+        self.d2g.add_node_to_cache(hub)
+        self.d2g.add_rel_to_cache(Relation(start_node=node, end_node=hub))
 
     def _walk_follow_nodes(
         self, node: Node, follow_nodes_labels: List[str]

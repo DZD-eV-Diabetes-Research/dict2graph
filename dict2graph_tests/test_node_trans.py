@@ -458,7 +458,7 @@ def test_CreateNewMergePropertyFromHash_advanced():
                 hash_includes_properties=["firstname", "lastname"],
                 hash_includes_existing_merge_props=False,
                 hash_includes_existing_other_props=False,
-                hash_includes_children_nodes_merge_data=True,
+                hash_includes_children_data=True,
             )
         )
     )
