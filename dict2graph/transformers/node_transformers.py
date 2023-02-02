@@ -433,7 +433,7 @@ class RemoveListItemLabels(_NodeTransformerBase):
 
 
 class OutsourcePropertiesToNewNode(_NodeTransformerBase):
-    """Explizit move one or multiple properties to a new node.
+    """Move one or multiple properties to a new node.
 
     **Usage:**
 
@@ -468,12 +468,12 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
         property_keys: List[str],
         new_node_labels: List[str],
         relation_type: str = None,
-        skip_if_keys_empty: bool = True,
+        skip_if_prop_val_empty: bool = True,
     ):
         self.property_keys = property_keys
         self.new_node_labels = new_node_labels
         self.relation_type = relation_type
-        self.skip_if_keys_empty = skip_if_keys_empty
+        self.skip_if_prop_val_empty = skip_if_prop_val_empty
 
     def transform_node(self, node: Node):
         outsourced_props_node: Node = Node(
@@ -484,7 +484,7 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
             if key in node:
                 outsourced_props_node[key] = node.pop(key)
 
-        if not outsourced_props_node and self.skip_if_keys_empty:
+        if not outsourced_props_node and self.skip_if_prop_val_empty:
             return
         self.d2g.add_node_to_cache(outsourced_props_node)
         self.d2g.add_rel_to_cache(
@@ -493,18 +493,59 @@ class OutsourcePropertiesToNewNode(_NodeTransformerBase):
 
 
 class OutsourcePropertiesToRelationship(_NodeTransformerBase):
-    """_summary_"""
+    """Move one or multiple properties to an existing relation.
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "fname": "Marco ",
+            "lname": "Inaros",
+            "child_rel": "biological",
+            "child": {"person": {"fname": "Filip", "lname": "Inaros"}},
+        }
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.OutsourcePropertiesToRelationship(
+                property_keys=["child_rel"],
+                relation_type="child",
+            )
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Shifts the fathers prop `"child_rel": "biological"` on the relation between child and father.
+    """
 
     def __init__(
         self,
         property_keys: List[str],
         relation_type: str = None,
-        skip_if_keys_empty: bool = True,
+        skip_if_prop_val_empty: bool = False,
         keep_prop_if_relation_does_not_exist: bool = True,
     ):
+        """_summary_
+
+        Args:
+            property_keys (List[str]): The properties, defined by their keys, that should be moved to the relationship.
+            relation_type (str, optional): The relation, the properties should me moved to. Defaults to None.
+            skip_if_prop_val_empty (bool, optional): If the property has no value, dont move it to the relation. Defaults to False.
+            keep_prop_if_relation_does_not_exist (bool, optional): Should the property be removed from the node, even if there is no relation it can move to. Defaults to True.
+        """
         self.property_keys = property_keys
         self.relation_type = relation_type
-        self.skip_if_keys_empty = skip_if_keys_empty
+        self.skip_if_prop_val_empty = skip_if_prop_val_empty
         self.keep_prop_if_relation_does_not_exist = keep_prop_if_relation_does_not_exist
 
     def transform_node(self, node: Node):
@@ -512,7 +553,7 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
             if rel.relation_type == self.relation_type:
                 for prop in self.property_keys:
                     if prop in node and (
-                        node[prop] not in ["", None] or not self.skip_if_keys_empty
+                        node[prop] not in ["", None] or not self.skip_if_prop_val_empty
                     ):
                         rel[prop] = node.pop(prop)
         if not self.keep_prop_if_relation_does_not_exist:
@@ -593,9 +634,43 @@ class CreateHubbing(_NodeTransformerBase):
 
 
 class RemoveNode(_NodeTransformerBase):
-    """_summary_"""
+    """Removes matched nodes.
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "fname": "Marco ",
+            "lname": "Inaros",
+            "child": {"fname": "Filip", "lname": "Inaros"},
+        }
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("child").do(
+            NodeTrans.RemoveNode()
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Shifts the fathers prop `"child_rel": "biological"` on the relation between child and father.
+    """
 
     def __init__(self, remove_children: bool = False):
+        """_summary_
+
+        Args:
+            remove_children (bool, optional): Remove all nodes and relations down the tree as well. Defaults to False.
+        """
         self.remove_children = remove_children
 
     def transform_node(self, node: Node):
@@ -607,7 +682,36 @@ class RemoveNode(_NodeTransformerBase):
 
 
 class RemoveNodesWithNoProps(_NodeTransformerBase):
-    """_summary_"""
+    """Removes matched nodes with no properties.
+    # TODO YOU ARE HERE
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "fname": "Marco ",
+            "lname": "Inaros",
+            "child": {"fname": "Filip", "lname": "Inaros"},
+        }
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("child").do(
+            NodeTrans.RemoveNode()
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Shifts the fathers prop `"child_rel": "biological"` on the relation between child and father.
+    """
 
     def __init__(self, only_if_no_child_nodes: bool = True):
         self.only_if_no_child_nodes = only_if_no_child_nodes

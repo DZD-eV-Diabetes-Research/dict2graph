@@ -927,6 +927,55 @@ def test_OutsourcePropertiesToNewNode_tut_01():
     assert_result(result, expected_result_nodes)
 
 
+def test_OutsourcePropertiesToRelationship_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "person": {
+            "fname": "Marco ",
+            "lname": "Inaros",
+            "child_rel": "biological",
+            "child": {"person": {"fname": "Filip", "lname": "Inaros"}},
+        }
+    }
+
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            NodeTrans.OutsourcePropertiesToRelationship(
+                property_keys=["child_rel"],
+                relation_type="child",
+            )
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person"],
+            "props": {"fname": "Filip", "lname": "Inaros"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["person"],
+            "props": {"fname": "Marco ", "lname": "Inaros"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"child_rel": "biological"},
+                    "rel_type": "child",
+                    "rel_target_node": {
+                        "labels": ["person"],
+                        "props": {"fname": "Filip", "lname": "Inaros"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "true":
     test_readme_tiny_example()
     test_readme_start_example()
@@ -942,3 +991,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_CreateNewMergePropertyFromHash_tut_01()
     test_RemoveEmptyListRootNodes_tut_01()
     test_OutsourcePropertiesToNewNode_tut_01()
+    test_OutsourcePropertiesToRelationship_tut_01()
