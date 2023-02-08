@@ -5,7 +5,7 @@ More precise, it is used in the node transformer [`CreateHubbing`](https://dzd-e
 
 ## The Problem
 
-When merging multiple datasets, the connection from origin parent to child nodes can get lost. 
+When merging multiple datasets, the relation from parent to child nodes can get lost. 
 
 Lets have an example with two datasets that will be merged:
 
