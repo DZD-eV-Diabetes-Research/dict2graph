@@ -60,9 +60,9 @@ The information got lost, when we merged the two datasets.
 
 There are multiple solutions to this problem. Dict2graph solves this by letting you create new inbetween nodes:
 
-## Hubbing
+## One solution: Hubbing
 
-With dict2graph you can create "hubs". Hubbing will result in one or multiple new nodes that preserve the child parent relation while letting you merge equal nodes.
+With dict2graph you can, very simply,  create "hubs". Hubbing will result in one or multiple new nodes that preserve the child parent relation while letting you merge equal nodes.
 
 In our example we will label the hubs with `Contribution`. The result will look like this:
 
@@ -147,16 +147,15 @@ With dict2graph this would result in a graph roughly looking like this:
 
 <svg xmlns="http://www.w3.org/2000/svg" width="388" height="289" viewBox="0 0 388 289"><defs><style type="text/css"/></defs><g transform="translate(-190.20000076293945 190.35446237388118) scale(1)"><g class="relationship"><g transform="translate(254.4499992132187 -45.659199413432304) rotate(90)" stroke-width="2" stroke="#000000"><path d="M 12 0 L 85.69526296044887 0"/></g></g><g class="relationship"><g transform="translate(254.4499992132187 -143.35446237388118) rotate(90)" stroke-width="2" stroke="#000000"><path d="M 12 0 L 85.69526296044887 0"/></g></g><g class="node"><g fill="#a4dd00" stroke="#000000" stroke-width="2"><circle cx="254.4499992132187" cy="52.03606354701657" r="11"/></g><g transform="translate(254.4499992132187 52.03606354701657)"><g transform="translate(8.572527594031472e-16 14)"><g transform="translate(0 0)"><g transform="translate(-24.825000762939453 0)"><g fill="#ffffff" stroke="#000000" stroke-width="2"><rect x="0" y="0" width="47.650001525878906" height="14" rx="7" ry="7"/><text xml:space="preserve" x="7" y="10" stroke="none" font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000">Author</text></g></g></g><g transform="translate(0 20)"><g transform="translate(-64.24999845027924 0)" fill="white"><rect x="0" y="0" width="128.49999690055847" height="12" rx="0" ry="0" stroke="none"/><g font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000" text-anchor="end"><text xml:space="preserve" x="34.90000033378601" y="9" stroke="none">name:</text><text xml:space="preserve" x="38.08333373069763" y="9" stroke="none" text-anchor="start">Leemon McHenry</text></g></g></g></g></g></g><g class="node"><g fill="#7b64ff" stroke="#000000" stroke-width="2"><circle cx="254.4499992132187" cy="-45.659199413432304" r="11"/></g><g transform="translate(254.4499992132187 -45.659199413432304)"><g transform="translate(14 -16)"><g transform="translate(0 0)"><g transform="translate(0 0)"><g fill="#ffffff" stroke="#000000" stroke-width="2"><rect x="0" y="0" width="61.349998474121094" height="14" rx="7" ry="7"/><text xml:space="preserve" x="7" y="10" stroke="none" font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000">Affiliation</text></g></g></g><g transform="translate(0 20)"><g transform="translate(0 0)" fill="white"><rect x="0" y="0" width="308.8999984264374" height="12" rx="0" ry="0" stroke="none"/><g font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000" text-anchor="end"><text xml:space="preserve" x="34.90000033378601" y="9" stroke="none">name:</text><text xml:space="preserve" x="38.08333373069763" y="9" stroke="none" text-anchor="start">Department of Philosophy, California State University</text></g></g></g></g></g></g><g class="node"><g fill="#e27300" stroke="#000000" stroke-width="2"><circle cx="254.4499992132187" cy="-143.35446237388118" r="11"/></g><g transform="translate(254.4499992132187 -143.35446237388118)"><g transform="translate(8.572527594031472e-16 -46)"><g transform="translate(0 0)"><g transform="translate(-24.04166603088379 0)"><g fill="#ffffff" stroke="#000000" stroke-width="2"><rect x="0" y="0" width="46.08333206176758" height="14" rx="7" ry="7"/><text xml:space="preserve" x="7" y="10" stroke="none" font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000">Article</text></g></g></g><g transform="translate(0 20)"><g transform="translate(-53.13333451747894 0)" fill="white"><rect x="0" y="0" width="106.26666903495789" height="12" rx="0" ry="0" stroke="none"/><g font-family="sans-serif" font-size="10" font-weight="normal" fill="#000000" text-anchor="end"><text xml:space="preserve" x="26.09999918937683" y="9" stroke="none">title:</text><text xml:space="preserve" x="29.283332586288452" y="9" stroke="none" text-anchor="start">Blood money...</text></g></g></g></g></g></g></g></svg>
 
-Almost the same; we need to build the hubs id (again) from `Article`and `Affiliation`. but in this case they are the _leading nodes_. So would operate in the so called _"lead merge mode"_. You get the idea.
+Almost the same; we need to build the hubs id (again) from a hash of `Article`and `Affiliation` properties. But in this case they are the _leading nodes_. So we operate in the so called _"lead merge mode"_. You get the idea.
 
 
 ### 'Nuff said. Let's code!
 
+All this sounded very work intensive? No worries, you just needed to see the concept once.  
+From now on dict2graph will do most of the work for you.
 
-Lets apply our knowledge with the help of dict2graph now:
-
-
-Lets start with the baseline:
+Lets start with the baseline from above:
 
 ```python
 from dict2graph import Dict2graph
