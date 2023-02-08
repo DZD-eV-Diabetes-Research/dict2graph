@@ -359,7 +359,7 @@ All `articles`,`affiliations` and `authors` connected as efficient as it can get
 ## tl;dr
 
 
-dict2graph helps you to merge multiple datasets without losing informations about parent child relations.
+dict2graph helps you to merge multiple datasets without losing informations about parent child relations by creating "hubs".
 
 From
 
