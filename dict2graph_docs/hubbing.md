@@ -347,9 +347,10 @@ And again, lets have a look in our database:
 
 Oh, don't we love it when a plan comes together!
 
-All `articles`,`affiliations` and `authors` connected as efficient as it can get! And only a handfull extra lines of code (which would be unformated just **one** line of code).
+All `articles`,`affiliations` and `authors` connected as efficient as it can get! And only a handfull extra lines of code (actually!... unformated it would be just **one** line of code 😎).
 
 > 🎖️ Achievement unlocked 
+> 
 > You are now a Hubber!
 
 
