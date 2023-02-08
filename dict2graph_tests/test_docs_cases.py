@@ -976,6 +976,503 @@ def test_OutsourcePropertiesToRelationship_tut_01():
     assert_result(result, expected_result_nodes)
 
 
+def test_RemoveNodesWithNoProps_tut_01():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "person": {
+            "name": "Roberta W. Draper",
+            "child": {},
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("child").do(NodeTrans.RemoveNodesWithNoProps())
+    )
+
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person"],
+            "props": {"name": "Roberta W. Draper"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_hubbing_tut():
+    wipe_all_neo4j_data(DRIVER)
+    dic = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "originator": {
+                "affiliation": "Department of Philosophy, California State University",
+                "author": {
+                    "name": "Leemon McHenry",
+                },
+            },
+        },
+    }
+    d2g = Dict2graph()
+    """
+    d2g.add_node_transformation(
+        Transformer.match_nodes("child").do(NodeTrans.RemoveNodesWithNoProps())
+    )
+    """
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["author"],
+            "props": {"name": "Leemon McHenry"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["originator"],
+            "props": {
+                "affiliation": "Department of Philosophy, California State University"
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "originator_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["article"],
+            "props": {
+                "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs"
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_originator",
+                    "rel_target_node": {
+                        "labels": ["originator"],
+                        "props": {
+                            "affiliation": "Department of Philosophy, California State University"
+                        },
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_hubbing_tut_ets_code_baseline():
+    wipe_all_neo4j_data(DRIVER)
+    d2g = Dict2graph()
+    dataset_1 = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Department of Philosophy, California State University"
+                },
+            },
+        },
+    }
+    d2g.parse(dataset_1)
+
+    dataset_2 = {
+        "article": {
+            "title": "Conflicted medical journals and the failure of trust",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Discipline of Psychiatry, University of Adelaide"
+                },
+            },
+        },
+    }
+
+    d2g.parse(dataset_2)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Department of Philosophy, California State University"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Discipline of Psychiatry, University of Adelaide"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["author"],
+            "props": {"name": "Leemon McHenry"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "author_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Department of Philosophy, California State University"
+                        },
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "author_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Discipline of Psychiatry, University of Adelaide"
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["article"],
+            "props": {
+                "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs"
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["article"],
+            "props": {"title": "Conflicted medical journals and the failure of trust"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_hubbing_tut_ets_code_hub_01():
+    wipe_all_neo4j_data(DRIVER)
+    d2g = Dict2graph()
+    d2g.add_transformation(
+        Transformer.match_nodes("article").do(
+            NodeTrans.CreateHubbing(
+                follow_nodes_labels=["author", "affiliation"],
+                merge_mode="edge",
+                hub_labels=["Contribution"],
+            )
+        )
+    )
+    dataset_1 = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Department of Philosophy, California State University"
+                },
+            },
+        },
+    }
+    d2g.parse(dataset_1)
+
+    dataset_2 = {
+        "article": {
+            "title": "Conflicted medical journals and the failure of trust",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Discipline of Psychiatry, University of Adelaide"
+                },
+            },
+        },
+    }
+
+    d2g.parse(dataset_2)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Discipline of Psychiatry, University of Adelaide"
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Department of Philosophy, California State University"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Discipline of Psychiatry, University of Adelaide"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["author"],
+            "props": {"name": "Leemon McHenry"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["article"],
+            "props": {
+                "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs"
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "4f08b78e5a99a61b617b3db6d94b60be"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["article"],
+            "props": {"title": "Conflicted medical journals and the failure of trust"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "4f08b78e5a99a61b617b3db6d94b60be"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Department of Philosophy, California State University"
+                        },
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_hubbing_tut_ets_code_hub_02():
+    wipe_all_neo4j_data(DRIVER)
+
+    d2g = Dict2graph()
+
+    # we define the start node by matching it with dict2graph
+    transformer = Transformer.match_nodes("article").do(
+        # apply the hubbing-transformer
+        NodeTrans.CreateHubbing(
+            # define the node chain by defining the follow node labels
+            follow_nodes_labels=["author", "affiliation"],
+            # define the merge mode
+            merge_mode="edge",
+            # give the hub node one or more labels
+            hub_labels=["Contribution"],
+        )
+    )
+    # Add the transformator the tranformator stack of our Dict2graph instance
+    d2g.add_transformation(transformer)
+
+    dataset_1 = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Department of Philosophy, California State University"
+                },
+            },
+        },
+    }
+    d2g.parse(dataset_1)
+
+    dataset_2 = {
+        "article": {
+            "title": "Conflicted medical journals and the failure of trust",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Discipline of Psychiatry, University of Adelaide"
+                },
+            },
+        },
+    }
+    d2g.parse(dataset_2)
+    dataaset_3 = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "author": {
+                "name": "Mellad Khoshnood",
+                "affiliation": {
+                    "name": "Department of Philosophy, California State University"
+                },
+            },
+        },
+    }
+    d2g.parse(dataaset_3)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Discipline of Psychiatry, University of Adelaide"
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Department of Philosophy, California State University"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["affiliation"],
+            "props": {"name": "Discipline of Psychiatry, University of Adelaide"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["author"],
+            "props": {"name": "Leemon McHenry"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["article"],
+            "props": {
+                "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs"
+            },
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "4f08b78e5a99a61b617b3db6d94b60be"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["article"],
+            "props": {"title": "Conflicted medical journals and the failure of trust"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "article_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "4f08b78e5a99a61b617b3db6d94b60be"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Department of Philosophy, California State University"
+                        },
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "true":
     test_readme_tiny_example()
     test_readme_start_example()
@@ -992,3 +1489,8 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_RemoveEmptyListRootNodes_tut_01()
     test_OutsourcePropertiesToNewNode_tut_01()
     test_OutsourcePropertiesToRelationship_tut_01()
+    test_RemoveNodesWithNoProps_tut_01()
+    test_hubbing_tut()
+    test_hubbing_tut_ets_code_baseline()
+    test_hubbing_tut_ets_code_hub_01()
+    test_hubbing_tut_ets_code_hub_02()

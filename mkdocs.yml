@@ -19,6 +19,8 @@ nav:
       - "Transformer": "api/api_transformer.md"
       - "Node": "api/api_node.md"
       - "Relation": "api/api_relation.md"
+  - Extras:
+      - "Hubbing": "hubbing.md"
 theme:
   name: material
   palette:

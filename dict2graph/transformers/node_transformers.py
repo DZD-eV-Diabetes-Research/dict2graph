@@ -18,7 +18,7 @@ import hashlib
 
 
 class CapitalizeLabels(_NodeTransformerBase):
-    """Uppercase the first char of a node Labels.
+    """Uppercase the first char of node labels.
 
     **Usage:**
 
@@ -566,19 +566,19 @@ class CreateHubbing(_NodeTransformerBase):
     def __init__(
         self,
         follow_nodes_labels: List[str],
-        merge_property_mode: Literal["lead", "edge"],
+        merge_mode: Literal["lead", "edge"],
         hub_labels: List[str] = ["Hub"],
     ):
         if len(follow_nodes_labels) <= 1:
             raise ValueError(
                 f"At least chains of 3 node are needed for hubbing. Please provide min. 2 `follow_nodes_labels`. Got only {len(follow_nodes_labels)} labels"
             )
-        if merge_property_mode.upper() not in ["LEAD", "EDGE"]:
+        if merge_mode.upper() not in ["LEAD", "EDGE"]:
             raise ValueError(
-                f"Only 'lead' and 'edge' mode are supported. got '{merge_property_mode}'"
+                f"Only 'lead' and 'edge' mode are supported. got '{merge_mode}'"
             )
         self.follow_nodes_labels = follow_nodes_labels
-        self.merge_property_mode = merge_property_mode
+        self.merge_mode = merge_mode
         if isinstance(hub_labels, str):
             hub_labels = [hub_labels]
         self.hub_labels = hub_labels
@@ -604,11 +604,11 @@ class CreateHubbing(_NodeTransformerBase):
             follow_rel.start_node = hub
         fill_nodes.remove(end_node)
         hash_sources = []
-        if self.merge_property_mode.upper() == "EDGE":
+        if self.merge_mode.upper() == "EDGE":
             hash_sources.append(start_node.get_hash())
             hash_sources.append(end_node.get_hash())
 
-        elif self.merge_property_mode.upper() == "LEAD":
+        elif self.merge_mode.upper() == "LEAD":
             hash_sources.extend([n.get_hash() for n in fill_nodes])
         hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
             "".join(hash_sources).encode("utf-8")
@@ -682,8 +682,7 @@ class RemoveNode(_NodeTransformerBase):
 
 
 class RemoveNodesWithNoProps(_NodeTransformerBase):
-    """Removes matched nodes with no properties.
-    # TODO YOU ARE HERE
+    """Removes nodes if they have no properties.
     **Usage:**
 
     ```python
@@ -694,23 +693,22 @@ class RemoveNodesWithNoProps(_NodeTransformerBase):
 
     dic = {
         "person": {
-            "fname": "Marco ",
-            "lname": "Inaros",
-            "child": {"fname": "Filip", "lname": "Inaros"},
+            "name": "Roberta W. Draper",
+            "child": {},
         }
     }
 
     d2g = Dict2graph()
+
     d2g.add_node_transformation(
-        Transformer.match_nodes("child").do(
-            NodeTrans.RemoveNode()
-        )
+        Transformer.match_nodes("child").do(NodeTrans.RemoveNodesWithNoProps())
     )
+
     d2g.parse(dic)
     d2g.create(NEO4J_DRIVER)
     ```
 
-    Shifts the fathers prop `"child_rel": "biological"` on the relation between child and father.
+    Results in removing the empty `child`-node
     """
 
     def __init__(self, only_if_no_child_nodes: bool = True):

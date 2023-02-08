@@ -28,3 +28,14 @@ d2g.add_transformation(
 d2g.parse(data)
 NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
 d2g.create(NEO4J_DRIVER)
+
+
+t = {
+    "article": {
+        "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+        "author": {
+            "name": "Leemon McHenry",
+            "affiliation": "Department of Philosophy, California State University",
+        },
+    },
+}

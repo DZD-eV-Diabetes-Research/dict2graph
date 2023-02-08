@@ -4,6 +4,12 @@
 
 ## Dict2graph
 
+
+
+----
+
+
+🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!
 ----
 
 Transfer (json compatible) Python dicts into a Neo4j graph database.  
@@ -30,6 +36,7 @@ dict2graph also comes with some powerful data transform capabilities.
 **Content**:
 
 - [Dict2graph](#dict2graph)
+- [🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!](#️-tb27012023-rewrite-in-progress-please-do-not-use-yet)
 - [Install](#install)
 - [What is dict2graph](#what-is-dict2graph)
   - [Recommended workflow](#recommended-workflow)
@@ -141,5 +148,5 @@ Now that looks more like a graph we are used to, isn't it?
 
 ![](img/readme_basic_example_trans.png "Result example 1")
 
- There are a lot of more powerful [`Transformator`s](https://dzd-ev.github.io/dict2graph-docs/list_transformer) and you can even [make your own](https://dzd-ev.github.io/dict2graph-docs/diy_transformer/) 🚀!  
+ There are a lot of more powerful [`Transformator`s](http://127.0.0.1:8000/list_generic_transformer) and you can even [make your own](https://dzd-ev.github.io/dict2graph-docs/diy_transformer/) 🚀!  
  Have a deeper look into the docs to [learn more how Transformators work](https://dzd-ev.github.io/dict2graph-docs/use_transformers/).

@@ -799,7 +799,7 @@ def test_CreateHubbing():
         Transformer.match_nodes("sector").do(
             NodeTrans.CreateHubbing(
                 follow_nodes_labels=["ship", "captain"],
-                merge_property_mode="edge",
+                merge_mode="edge",
                 hub_labels=["Service"],
             )
         ),

@@ -153,7 +153,7 @@ def test_hubbing_edge():
             Transformer.match_nodes("Article").do(
                 NodeTrans.CreateHubbing(
                     follow_nodes_labels=["Authors", "affiliation"],
-                    merge_property_mode="edge",
+                    merge_mode="edge",
                     hub_labels=["Contribution"],
                 )
             ),
@@ -498,7 +498,7 @@ def wip_test_pubmed_article():
             Transformer.match_nodes("Article").do(
                 NodeTrans.CreateHubbing(
                     follow_nodes_labels=["Authors", "affiliation"],
-                    merge_property_mode="edge",
+                    merge_mode="edge",
                     hub_labels=["Contribution"],
                 )
             ),
