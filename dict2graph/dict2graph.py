@@ -556,6 +556,8 @@ class Dict2graph:
         """Add a new [dict2graph.Node][] to the dict2graph cache.
         This method is only relevant for [`Transformers`](/use_transformers).
 
+        You will propably only need it of you create [custom Transformers](/diy_transformer).
+
         Args:
             node (Node): The [dict2graph.Node][] to add.
         """
@@ -564,6 +566,8 @@ class Dict2graph:
     def add_rel_to_cache(self, rel: Relation):
         """Add a new [dict2graph.Relation][] to the dict2graph cache.
         This method is only relevant for [`Transformers`](/use_transformers).
+
+        You will propably only need it of you create [custom Transformers](/diy_transformer).
 
         Args:
             node (Node): The [dict2graph.Relation][] to add.
