@@ -64,7 +64,8 @@ There are multiple solutions to this problem. Dict2graph solves this by letting 
 
 ## One solution: Hubbing
 
-With dict2graph you can, very simply,  create "hubs". Hubbing will result in one or multiple new nodes that preserve the child parent relation while letting you merge equal nodes.
+With dict2graph you can create "hubs". A new node that is created betweent the parent and its children. This would be a relative complex process with multiple task. Dict2graph helps you to do this with minimal effort.  
+Hubbing will result in one or multiple new nodes that preserve the child parent relation while letting you merge equal nodes.
 
 In our example we will label the hubs with `Contribution`. The result will look like this:
 

@@ -15,12 +15,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 """
 
 import json
-import hashlib
-import collections
-from typing import Callable, Union
-import graphio
-from collections import defaultdict
-from typing import List, Dict, Tuple, Literal, Type
+from typing import Union
+from typing import List, Dict, Tuple, Type
 from py2neo import Graph
 from neo4j import Driver
 
@@ -35,6 +31,49 @@ from dict2graph.transformers import Transformer
 
 
 class Dict2graph:
+    """
+    The central class for dict2graph. Must be instanced to do get started and access the dict2graph api.
+
+    **Class attributes**
+    Dict2Graph has some basic options, packed into class attributes. You can change them after instantiating Dict2Graph.
+    Usally you can go with the default values and dont need to change anything here.
+
+    **example**
+
+    ```python
+    from dict2graph import Dict2graph
+
+    d2g = Dict2graph()
+    d2g.list_hub_additional_labels = ["Collection"]
+    ```
+    This will (later when parsing/transforming) add a label `Collection` to all list hubs
+
+
+    Attributes:
+        list_hub_additional_labels: Add these labels to list hub nodes. Defaults to `["ListHub"]`.
+
+        list_item_additional_labels: Add these labels to list item nodes. Defaults to `["ListItem"]`.
+
+        list_hub_id_property_name: A hub node has hash generated property based on its items.
+            This is the name/key of the property. Defaults to `id`.
+
+        list_item_relation_index_property_name: To preserve a json/dict list sequence,
+            the index will be added to the relation from a list item node.
+            This is the name/key of this property. Defaults to `_list_item_index`.
+
+        simple_list_item_data_property_name: A list of basic types like `[1,2,3]` will get the label from its parents,
+            but needs a default name/key for the value properties. Defaults to `_list_item_data`.
+
+        root_node_default_labels: Will be used as root node label, if no root node label can be captured
+            and no articial root node labels (via `Dict2Graph.parse(root_node_labels)`) are provided. Defaults to `["Dict2GraphRoot"]`.
+
+        root_node_default_id_property_name: The root node will have a primary key based on a hash of the dict input. This is the name/key fir this property.
+
+        empty_node_default_id_property_name: To prevent all empty nodes to merging together when doing
+            `Dict2Graph.merge()`, they get an hash id by default.
+            This is name/key for this property. Defaults to `id`.
+    """
+
     # Replacement strings {ITEM_PRIMARY_LABEL} and {ITEM_LABELs} are available
     list_hub_additional_labels: List[str] = ["ListHub"]
     list_item_additional_labels: List[str] = ["ListItem"]
@@ -43,16 +82,16 @@ class Dict2graph:
 
     simple_list_item_data_property_name: str = "_list_item_data"
     root_node_default_labels: List[str] = ["Dict2GraphRoot"]
-    root_node_default_id_property_name = "id"
+    root_node_default_id_property_name: str = "id"
 
-    empty_node_default_id_property_name = "id"
+    empty_node_default_id_property_name: str = "id"
 
     def __init__(
         self,
         create_ids_for_empty_nodes: bool = True,
         interpret_single_props_as_labels: bool = True,
     ):
-        """Main class for dict2graph. Instance Dict2graph to get access to the API.
+        """
         Usage:
         ```python
         from dict2graph import Dict2graph
@@ -62,7 +101,7 @@ class Dict2graph:
 
         Args:
             create_ids_for_empty_nodes (bool, optional): When input dicts results in empty 'hub' nodes, this will create artificially key properties based on the child data. The key will be deterministic . Defaults to True.
-            interpret_single_props_as_labels (bool, optional): When having object with a single property like `{"animal":{"name":"dog"}}` `animal` will be interpreted as label. If set to false "animal" will result in an extra Node. Defaults to True.
+            interpret_single_props_as_labels (bool, optional): When having objects with a single property like `{"animal":{"name":"dog"}}` `animal` will be interpreted as label. If set to false "animal" will result in an extra Node. Defaults to True.
         """
         self.create_ids_for_empty_nodes = create_ids_for_empty_nodes
 
@@ -87,9 +126,10 @@ class Dict2graph:
             List[Union[_NodeTransformerBase, _RelationTransformerBase]],
         ],
     ):
-        """Add a [`Transformers`](dict2graph/use_transformers.md) to the Dict2Graph instance.
-        Transformers can re-model your graph befor writing it to a Neo4h database.
-        usage:
+        """Add one or a list of [`Transformers`](/use_transformers.md) to the Dict2Graph instance.
+        Transformers can re-model your graph befor writing it to a Neo4j database.
+
+        **usage**:
         ```python
         from dict2graph import Dict2graph, Transformer, NodeTrans
 
@@ -177,6 +217,32 @@ class Dict2graph:
     def parse(
         self, data: Dict, root_node_labels: Union[str, List[str]] = None
     ) -> "Dict2graph":
+        """Submit your actual data (as dict) to dict2graph. The data will be transformed instantly but not yet pushed to your Neo4j database.
+        It will land in a dict2graph internal cache. You can run multiple `Dict2Graph.parse()` passes before pushing the data to your Neo4j database.
+
+        **usage**
+        ```python
+        from dict2graph import Dict2graph
+        # provide any dict that is json compatible (basic typed values and keys)
+        data = {"myDictKey":"myValue"}
+        d2g = Dict2Graph()
+        d2g.parse(data)
+        ```
+        Args:
+            data (Dict): Your data as a dict with only basic typed valued, as a rule of thumb it should be json compatible.
+                If you have json string you may use the build-in python module "json" in before(`json.loads(your_data_as_json)`)
+            root_node_labels (Union[str, List[str]], optional): Dict2graph tries to determine a sensible root node.
+                But that is not possible in many cases and dict2graph
+                will return to the default label in `Dict2graph.root_node_default_labels`.
+                with `Dict2graph.parse(root_node_labels)` you can force a root label.
+                Defaults to None.
+
+        Raises:
+            ValueError: When data is not parsable.
+
+        Returns:
+            Dict2graph: Returns itself to be able to chains commands like `dict2graph_ints.parse(data).parse(data2).create(NEO4J_DRIVER)`
+        """
         if root_node_labels is None:
             if isinstance(data, dict) and len(data.keys()) == 1:
                 # we only have one key and therefore only one Node on the top-/root-level. We dont need a root Node to connect the toplevels nodes.
@@ -213,12 +279,54 @@ class Dict2graph:
         return self
 
     def merge(self, graph: Union[Graph, Driver]):
+        """Push the data to a Neo4h database, with a merge operation.
+
+        **usage**
+        ```python
+        from dict2graph import Dict2graph
+        from neo4j import GraphDatabase
+        # provide any dict that is json compatible (basic typed values and keys)
+        data = {"car":{"wheels":"4"}}
+        data2 = {"car":{"wheels":"4"}}
+        d2g = Dict2Graph()
+        d2g.parse(data)
+        d2g.parse(dat2)
+        d2g.merge(GraphDatabase.driver("neo4j://localhost"))
+        ```
+
+        Will result in one node `(:car{wheels:4})` because the two datasets where merged (based on same labels and properties).
+
+        Args:
+            graph (Union[Graph, Driver]): A [`neo4j.GraphDatabase` instance](https://neo4j.com/docs/api/python-driver/current/)
+                or a [`py2neo.Graph` instance](https://py2neo.org/2021.1/workflow.html#graph-objects)
+        """
         for nodes in self._nodeSets.values():
             nodes.merge(graph)
         for rels in self._relSets.values():
             rels.merge(graph)
 
     def create(self, graph: Union[Graph, Driver]):
+        """Push the data to a Neo4h database, with a create operation.
+
+        **usage**
+        ```python
+        from dict2graph import Dict2graph
+        from neo4j import GraphDatabase
+        # provide any dict that is json compatible (basic typed values and keys)
+        data = {"car":{"wheels":"4"}}
+        data2 = {"car":{"wheels":"4"}}
+        d2g = Dict2Graph()
+        d2g.parse(data)
+        d2g.parse(dat2)
+        d2g.create(GraphDatabase.driver("neo4j://localhost"))
+        ```
+
+         Will result in two nodes `(:car{wheels:4})`.
+
+        Args:
+            graph (Union[Graph, Driver]): A [Neo4j python driver instance](https://neo4j.com/docs/api/python-driver/current/)
+                or a [`py2neo.Graph` instance](https://py2neo.org/2021.1/workflow.html#graph-objects)
+        """
         for nodes in self._nodeSets.values():
             nodes.create(graph)
         for rels in self._relSets.values():
@@ -445,9 +553,21 @@ class Dict2graph:
         return self._relSets[rel_id]
 
     def add_node_to_cache(self, node: Node):
+        """Add a new [dict2graph.Node][] to the dict2graph cache.
+        This method is only relevant for [`Transformers`](/use_transformers).
+
+        Args:
+            node (Node): The [dict2graph.Node][] to add.
+        """
         self._node_cache_feeder.append(node)
 
     def add_rel_to_cache(self, rel: Relation):
+        """Add a new [dict2graph.Relation][] to the dict2graph cache.
+        This method is only relevant for [`Transformers`](/use_transformers).
+
+        Args:
+            node (Node): The [dict2graph.Relation][] to add.
+        """
         self._rel_cache_feeder.append(rel)
 
     def _flush_cache(self):

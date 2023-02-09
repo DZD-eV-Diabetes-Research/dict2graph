@@ -159,7 +159,7 @@ class AddLabel(_NodeTransformerBase):
     """
 
     def __init__(self, labels: Union[str, List[str]]):
-        """_summary_
+        """
 
         Args:
             labels (Union[str, List[str]]): A string or a list of strings that will be added as new labels to the matched nodes
@@ -561,7 +561,50 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
 
 
 class CreateHubbing(_NodeTransformerBase):
-    """_summary_"""
+    """Convert a chain of nodes to a tree of nodes. Details are explained in the [hubbing article](/hubbing)
+
+    **usage**:
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    DRIVER = GraphDatabase.driver("neo4j://localhost")
+    d2g = Dict2graph()
+
+    # we define the start node by matching it with dict2graph
+    transformer = Transformer.match_nodes("article").do(
+            # apply the hubbing-transformer
+            NodeTrans.CreateHubbing(
+                # define the node chain by defining the follow node labels
+                follow_nodes_labels=["author", "affiliation"],
+                # define the merge mode
+                merge_mode="edge",
+                # give the hub node one or more labels
+                hub_labels=["Contribution"],
+            )
+        )
+    # Add the transformator the tranformator stack of our Dict2graph instance
+    d2g.add_transformation(transformer)
+
+    dataset_1 = {
+        "article": {
+            "title": "Blood money: Bayer's inventory of HIV-contaminated blood products and third world hemophiliacs",
+            "author": {
+                "name": "Leemon McHenry",
+                "affiliation": {
+                    "name": "Department of Philosophy, California State University"
+                },
+            },
+        },
+    }
+    d2g.parse(dataset_1)
+    d2g.merge(DRIVER)
+    ```
+
+    Results in a Y-formed graph with a new hub node in the middle, instead of three nodes in a chain.
+
+    """
 
     def __init__(
         self,
@@ -569,6 +612,12 @@ class CreateHubbing(_NodeTransformerBase):
         merge_mode: Literal["lead", "edge"],
         hub_labels: List[str] = ["Hub"],
     ):
+        """
+        Args:
+            follow_nodes_labels (List[str]): The child nodes in the chain.
+            merge_mode (Literal["lead", "edge"]): Should the hash ID for the hub be based on parent nodes or the outer nodes.
+            hub_labels (List[str], optional): The labels for the new hub node. Defaults to ["Hub"].
+        """
         if len(follow_nodes_labels) <= 1:
             raise ValueError(
                 f"At least chains of 3 node are needed for hubbing. Please provide min. 2 `follow_nodes_labels`. Got only {len(follow_nodes_labels)} labels"

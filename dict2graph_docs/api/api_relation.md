@@ -1,5 +1,5 @@
 
-## ::: dict2graph.Relation
+# ::: dict2graph.Relation
     options:
       show_root_heading: True
       show_source: true

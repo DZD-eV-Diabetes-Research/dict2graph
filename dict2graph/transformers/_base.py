@@ -171,7 +171,8 @@ class Transformer:
         """Match relationships to apply tranformers
 
         Args:
-            relation_name (Union[str, AnyRelation], optional): A relation type as string or mulitple relation types as list of string. Defaults to AnyRelation.
+            relation_type (Union[str, List[str], AnyRelation], optional): A relation type as string or mulitple relation types as list of string.. Defaults to AnyRelation.
+            relation_type_is_not_in (List[str], optional): _description_. Defaults to None.
 
         Returns:
             RelTransformerMatcher: _description_

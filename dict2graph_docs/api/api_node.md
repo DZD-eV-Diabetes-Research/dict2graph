@@ -1,4 +1,4 @@
-## ::: dict2graph.Node
+# ::: dict2graph.Node
     options:
       show_root_heading: True
       show_source: true

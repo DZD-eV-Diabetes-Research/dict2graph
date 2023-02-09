@@ -1,4 +1,4 @@
-## ::: dict2graph.Transformer
+# ::: dict2graph.Transformer
     options:
       show_root_heading: True
       show_source: true

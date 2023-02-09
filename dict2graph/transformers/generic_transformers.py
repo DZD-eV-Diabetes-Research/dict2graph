@@ -126,7 +126,7 @@ class RemoveProperty(_RelationTransformerBase, _NodeTransformerBase):
         """_summary_
 
         Args:
-            properties (Union[str, List[str]]): A property key or a list of property keys as strings that should be removed
+            property_keys (Union[str, List[str]]): A property key or a list of property keys as strings that should be removed
         """
         if isinstance(property_keys, str):
             property_keys = [property_keys]

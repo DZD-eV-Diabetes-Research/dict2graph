@@ -75,7 +75,7 @@ But what we get is are 4 relationships. Why is that?
 
 dict2graph creates relationship targets (start node, end node) based on the target nodes labels and properties. So if we have a node that looks equal to another they both will end up as a relatioship target, even we only wanted to relate one of them.
 
-You can workaround that by creating a custom key property. More on that later in the Chapter [`dict2graph.Transformers`](dict2graph/use_transormers.md).
+You can workaround that by creating a custom key property. More on that later in the Chapter [`dict2graph.Transformers`](/use_transformers.md).
 
 ## Merging
 
