@@ -761,6 +761,11 @@ class RemoveNodesWithNoProps(_NodeTransformerBase):
     """
 
     def __init__(self, only_if_no_child_nodes: bool = True):
+        """_summary_
+
+        Args:
+            only_if_no_child_nodes (bool, optional): Remove the node only if it is  at the edge of our graph and has not outgoing relationshsips. Defaults to True.
+        """
         self.only_if_no_child_nodes = only_if_no_child_nodes
 
     def transform_node(self, node: Node):
@@ -773,7 +778,35 @@ class RemoveNodesWithNoProps(_NodeTransformerBase):
 
 
 class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
-    """_summary_"""
+    """Removes nodes if they have only empty properties.
+    "Empty" in terms of null/"" values
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "name": "Roberta W. Draper",
+            "child": {"name":""},
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("child").do(NodeTrans.RemoveNodesWithOnlyEmptyProps())
+    )
+
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in removing the empty `child`-node
+    """
 
     def __init__(self, only_if_no_child_nodes: bool = True):
         self.only_if_no_child_nodes = only_if_no_child_nodes
