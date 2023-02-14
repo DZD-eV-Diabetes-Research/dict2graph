@@ -7,7 +7,7 @@
 Transfer (json compatible) Python dicts into a Neo4j graph database.  
 dict2graph also comes with some powerful data transform capabilities.
 
-**Maintainer**: tim.bleimehl@dzd-ev.de
+**Maintainer**: bleimehl@dzd-ev.de
 
 **Licence**: MIT
 
