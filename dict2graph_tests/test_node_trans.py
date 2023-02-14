@@ -1245,65 +1245,47 @@ def test_PopNode():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["ListHub", "Dict2GraphRoot"],
+            "labels": ["Dict2GraphRoot", "ListHub"],
             "props": {"id": "fac642ec1dfb4de1a3f0d4d4841c0ee0"},
             "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Dict2GraphRoot_LIST_HAS_objs",
-                    "rel_target_node": {
-                        "labels": ["ListHub", "objs"],
-                        "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
-                    },
-                },
                 {
                     "rel_props": {"_list_item_index": 0},
                     "rel_type": "Dict2GraphRoot_LIST_HAS_ship",
                     "rel_target_node": {
-                        "labels": ["ListItem", "ship"],
+                        "labels": ["ship", "ListItem"],
                         "props": {"navy": "United Nations Navy", "name": "Agatha King"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Dict2GraphRoot_LIST_HAS_objs",
+                    "rel_target_node": {
+                        "labels": ["objs", "ListHub"],
+                        "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
                     },
                 },
             ],
         },
         {
-            "labels": ["ListItem", "ship"],
+            "labels": ["ship", "ListItem"],
             "props": {"navy": "United Nations Navy", "name": "Agatha King"},
             "outgoing_rels": [],
         },
         {
-            "labels": ["ListHub", "objs"],
+            "labels": ["objs", "ListHub"],
             "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
             "outgoing_rels": [
                 {
                     "rel_props": {"_list_item_index": 0},
                     "rel_type": "objs_LIST_HAS_house",
                     "rel_target_node": {
-                        "labels": ["ListItem", "house"],
+                        "labels": ["house", "ListItem"],
                         "props": {"rooms": 4},
                     },
                 }
             ],
         },
-        {
-            "labels": ["ListItem", "house"],
-            "props": {"rooms": 4},
-            "outgoing_rels": [],
-        },
-        {
-            "labels": ["ListItem", "planet"],
-            "props": {"name": "Earth"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "planet_HAS_objs",
-                    "rel_target_node": {
-                        "labels": ["ListHub", "objs"],
-                        "props": {"id": "aea54934980c63eade651ca6bec5ef53"},
-                    },
-                }
-            ],
-        },
+        {"labels": ["house", "ListItem"], "props": {"rooms": 4}, "outgoing_rels": []},
     ]
     assert_result(result, expected_result_nodes)
 
