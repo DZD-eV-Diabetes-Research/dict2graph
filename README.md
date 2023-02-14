@@ -32,10 +32,10 @@ dict2graph also comes with some powerful data transform capabilities.
 - [What is dict2graph](#what-is-dict2graph)
   - [Recommended workflow](#recommended-workflow)
   - [What dict2graph is **not**](#what-dict2graph-is-not)
-  - [py2neo depcrecation warning](#py2neo-depcrecation-warning)
+- [py2neo depcrecation warning](#py2neo-depcrecation-warning)
 - [Basic Usage Example](#basic-usage-example)
   - [Load a dict](#load-a-dict)
-    - [Transform the model](#transform-the-model)
+  - [Transform the model](#transform-the-model)
 
 ----
 
@@ -63,7 +63,7 @@ The recommended workflow is:
 dict2graph can **not** be used for de-/serializing your dict into a graph database. There is no `graph2dict` functionality (nore is it planned to have one).  
 Your data/dict will be transformed to be more suitable in a graph represantation. On the way, certain informations can be lost. Reproducing the exact same dict from the graph is not possible in many cases.
 
-### py2neo depcrecation warning
+## py2neo depcrecation warning
 
 In past versions of `dict2graph`, the awesome [`py2neo`](https://py2neo.org/2021.1/) library was the only way to connect to a Neo4j instance.  
 But (sadly) this lib is in a low-maintanance mode. For now it is still supported but marked as deprecated. We recommend to switch to the official [Neo4j Python Driver](https://neo4j.com/docs/api/python-driver/current/). 
@@ -100,7 +100,7 @@ This will result in following graph:
 
 ![](dict2graph_docs/img/readme_basic_example.png "Result example 1")
 
-#### Transform the model
+### Transform the model
 
 We now have loaded the dict data into a Neo4j Graph. But usally we dont need stuff like explicit `list`s in a graph. Also it is common to uppercase relationship types and capitalize labels.
 
