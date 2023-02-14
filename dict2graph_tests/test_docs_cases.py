@@ -1582,7 +1582,6 @@ def test_custom_transformer():
 
     class NameHerChrissy(_NodeTransformerBase):
         def custom_node_match(self, node: Node) -> bool:
-            print(node)
             return node["name"] == "Chrisjen Avasarala"
 
         def transform_node(self, node: Node):
