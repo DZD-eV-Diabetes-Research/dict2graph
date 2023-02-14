@@ -371,6 +371,10 @@ class Dict2graph:
                     n = self._parse_traverse_list_fragment(
                         labels=[key], data=val, parent_node=new_node
                     )
+                else:
+                    raise ValueError(
+                        f"Expected dict val to be a basic type, a list or a dict. Got `{type(val)}` for key '{key}' value '{val}'"
+                    )
                 if n is not None:
                     new_child_nodes.append(n)
                     if r is None:

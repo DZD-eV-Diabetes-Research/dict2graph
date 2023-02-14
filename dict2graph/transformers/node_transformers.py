@@ -823,27 +823,104 @@ class RemoveNodesWithOnlyEmptyProps(_NodeTransformerBase):
 
 
 class PopNode(_NodeTransformerBase):
-    """_summary_"""
+    """Removes nodes but connect its children and parents to not lose the path.
+
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "name": "Chrisjen Avasarala",
+            "connections": {
+                "child_1": {"name": "Charanpal"},
+                "child_2": {"name": "Ashanti"},
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("connections").do(NodeTrans.PopNode())
+    )
+
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in directly conneting children to person "Chrisjen Avasarala" without an in between node "connections"
+    """
 
     def transform_node(self, node: Node):
-        for i_rel in node.incoming_relations:
-            for o_rel in node.outgoing_relations:
-                i_rel.end_node = o_rel.end_node
-        node.deleted
+        for parent_rel in node.incoming_relations:
+            for child_rel in node.outgoing_relations:
+                child_rel.start_node = parent_rel.start_node
+            parent_rel.deleted = True
+        node.deleted = True
 
 
 class MergeChildNodes(_NodeTransformerBase):
-    """_summary_"""
+    """Removes nodes but connect its children and parents to not lose the path.
+
+
+    **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {
+        "person": {
+            "name": "Chrisjen Avasarala",
+            "personal_info": {
+                "Home": "New York, Earth",
+                "occupation": "United Nations Government",
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(NodeTrans.MergeChildNodes("personal_info"))
+    )
+
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    Results in one person-node with all attributes instead of an extra "personal_info"-node connected to the person-node "Chrisjen Avasarala"
+    """
 
     def __init__(
         self,
-        child_labels: Union[str, AnyLabel] = AnyLabel,
+        child_labels: Union[str, List[str], AnyLabel] = AnyLabel,
         child_relation_type: Union[str, AnyRelation] = AnyRelation,
         overwrite_existing_props: bool = True,
         prefix_merged_props_with_primary_label_of_child: bool = False,
         prefix_merged_props_with_hash_of_child: bool = False,
         include_relation_props: bool = True,
     ):
+        """_summary_
+
+        Args:
+            child_labels (Union[str, List[str], AnyLabel], optional): Label to match a specific child. Defaults to AnyLabel which merges all children
+            child_relation_type (Union[str, AnyRelation], optional): If you want to match children with a specifi relationshop only. Defaults to AnyRelation.
+            overwrite_existing_props (bool, optional): If parent and children share property keys overwrite them on the parent. If set so false, the props will get an index. Defaults to True.
+            prefix_merged_props_with_primary_label_of_child (bool, optional): Prefix the merged properties with the primary label of the child. Defaults to False.
+            prefix_merged_props_with_hash_of_child (bool, optional): Prefix the merged properties with a hash of the child. Defaults to False.
+            include_relation_props (bool, optional): Merge properties from the Node-child relationship as well. Defaults to True.
+        """
+        if isinstance(child_labels, str):
+            child_labels = [child_labels]
         self.child_labels = child_labels
         self.child_relation_type = child_relation_type
         self.overwrite_existing_props = overwrite_existing_props

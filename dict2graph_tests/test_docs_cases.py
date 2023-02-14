@@ -1377,30 +1377,6 @@ def test_hubbing_tut_ets_code_hub_02():
 
     expected_result_nodes: dict = [
         {
-            "labels": ["Contribution"],
-            "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "Contribution_HAS_author",
-                    "rel_target_node": {
-                        "labels": ["author"],
-                        "props": {"name": "Leemon McHenry"},
-                    },
-                },
-                {
-                    "rel_props": {},
-                    "rel_type": "Contribution_HAS_affiliation",
-                    "rel_target_node": {
-                        "labels": ["affiliation"],
-                        "props": {
-                            "name": "Discipline of Psychiatry, University of Adelaide"
-                        },
-                    },
-                },
-            ],
-        },
-        {
             "labels": ["affiliation"],
             "props": {"name": "Department of Philosophy, California State University"},
             "outgoing_rels": [],
@@ -1413,6 +1389,11 @@ def test_hubbing_tut_ets_code_hub_02():
         {
             "labels": ["author"],
             "props": {"name": "Leemon McHenry"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["author"],
+            "props": {"name": "Mellad Khoshnood"},
             "outgoing_rels": [],
         },
         {
@@ -1454,6 +1435,14 @@ def test_hubbing_tut_ets_code_hub_02():
                     "rel_type": "Contribution_HAS_author",
                     "rel_target_node": {
                         "labels": ["author"],
+                        "props": {"name": "Mellad Khoshnood"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
                         "props": {"name": "Leemon McHenry"},
                     },
                 },
@@ -1469,6 +1458,148 @@ def test_hubbing_tut_ets_code_hub_02():
                 },
             ],
         },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "916b86b9ef8f5e9d6858add1de838ceb"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_author",
+                    "rel_target_node": {
+                        "labels": ["author"],
+                        "props": {"name": "Leemon McHenry"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {
+                            "name": "Discipline of Psychiatry, University of Adelaide"
+                        },
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_transformer_docs_PopNode():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "person": {
+            "name": "Chrisjen Avasarala",
+            "connections": {
+                "child_1": {"name": "Charanpal"},
+                "child_2": {"name": "Ashanti"},
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("connections").do(NodeTrans.PopNode())
+    )
+
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {"labels": ["child_1"], "props": {"name": "Charanpal"}, "outgoing_rels": []},
+        {"labels": ["child_2"], "props": {"name": "Ashanti"}, "outgoing_rels": []},
+        {
+            "labels": ["person"],
+            "props": {"name": "Chrisjen Avasarala"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_child_2",
+                    "rel_target_node": {
+                        "labels": ["child_2"],
+                        "props": {"name": "Ashanti"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "person_HAS_child_1",
+                    "rel_target_node": {
+                        "labels": ["child_1"],
+                        "props": {"name": "Charanpal"},
+                    },
+                },
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_transformer_docs_MergeChildNodes():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "person": {
+            "name": "Chrisjen Avasarala",
+            "personal_info": {
+                "Home": "New York, Earth",
+                "occupation": "United Nations Government",
+            },
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(NodeTrans.MergeChildNodes("personal_info"))
+    )
+
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["person"],
+            "props": {
+                "occupation": "United Nations Government",
+                "name": "Chrisjen Avasarala",
+                "Home": "New York, Earth",
+            },
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
+def test_custom_transformer():
+    wipe_all_neo4j_data(DRIVER)
+    from dict2graph import Node
+    from dict2graph.transformers._base import _NodeTransformerBase
+
+    class NameHerChrissy(_NodeTransformerBase):
+        def custom_node_match(self, node: Node) -> bool:
+            print(node)
+            return node["name"] == "Chrisjen Avasarala"
+
+        def transform_node(self, node: Node):
+            node["name"] = "Chrissy"
+
+    dic = {"person": {"name": "Chrisjen Avasarala"}}
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(Transformer.match_nodes("person").do(NameHerChrissy()))
+
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {"labels": ["person"], "props": {"name": "Chrissy"}, "outgoing_rels": []}
     ]
     assert_result(result, expected_result_nodes)
 
@@ -1482,6 +1613,8 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_basics_merge_example()
     test_transformer_docs_RemoveLabel()
     test_transformer_docs_PopListHubNodes()
+    test_transformer_docs_PopNode()
+    test_transformer_docs_MergeChildNodes()
     test_matching_tutorial()
     test_matching_tutorial_02()
     test_transforming_tut_01()
@@ -1494,3 +1627,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_hubbing_tut_ets_code_baseline()
     test_hubbing_tut_ets_code_hub_01()
     test_hubbing_tut_ets_code_hub_02()
+    test_custom_transformer()

@@ -4,14 +4,6 @@
 
 ## Dict2graph
 
-
-
-----
-
-
-🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!
-----
-
 Transfer (json compatible) Python dicts into a Neo4j graph database.  
 dict2graph also comes with some powerful data transform capabilities.
 
@@ -36,7 +28,6 @@ dict2graph also comes with some powerful data transform capabilities.
 **Content**:
 
 - [Dict2graph](#dict2graph)
-- [🏗️ TB,27.01.2023: REWRITE IN PROGRESS. Please do not use yet!](#️-tb27012023-rewrite-in-progress-please-do-not-use-yet)
 - [Install](#install)
 - [What is dict2graph](#what-is-dict2graph)
   - [Recommended workflow](#recommended-workflow)
@@ -50,13 +41,8 @@ dict2graph also comes with some powerful data transform capabilities.
 
 ## Install
 
-at the moment if dev:
-
-`pip3 install git+https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph.git@V3`
-
-Later will be:
-
 `pip3 install dict2graph`
+
 ## What is dict2graph 
 
 With dict2graph you can transfer python dicts into a neo4j graph out of the box.  
