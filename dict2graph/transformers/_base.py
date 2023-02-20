@@ -141,8 +141,16 @@ class Transformer:
                 return True
             return False
 
-        def do(self, transform: _RelationTransformerBase) -> _RelationTransformerBase:
-            transform._set_matcher(self)
+        def do(
+            self, transform: _RelationTransformerBase
+        ) -> Union[_NodeTransformerBase, List[_NodeTransformerBase]]:
+            if isinstance(transform, list):
+                transformers = []
+                for trans in transform:
+                    transformers.append(self.do(trans))
+                return transformers
+            else:
+                transform._set_matcher(self)
             return transform
 
     @classmethod
