@@ -104,8 +104,16 @@ class Transformer:
 
             return False
 
-        def do(self, transform: _NodeTransformerBase) -> _NodeTransformerBase:
-            transform._set_matcher(self)
+        def do(
+            self, transform: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
+        ) -> Union[_NodeTransformerBase, List[_NodeTransformerBase]]:
+            if isinstance(transform, list):
+                transformers = []
+                for trans in transform:
+                    transformers.append(self.do(trans))
+                return transformers
+            else:
+                transform._set_matcher(self)
             return transform
 
     class RelTransformerMatcher:

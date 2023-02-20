@@ -770,6 +770,38 @@ def test_match_filter_rel():
     assert_result(result, expected_result_nodes)
 
 
+def test_list_trans():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "Human": {
+            "name": "Drummer",
+            "first_name": "Camina",
+        }
+    }
+
+    d2g = Dict2graph()
+
+    d2g.add_node_transformation(
+        Transformer.match_nodes("Human").do(
+            [NodeTrans.AddProperty({"prop1": "val2"}), NodeTrans.AddLabel("Label1")]
+        ),
+    )
+
+    d2g.parse(data)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Human", "Label1"],
+            "props": {"prop1": "val2", "name": "Drummer", "first_name": "Camina"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_create_simple_obj()
     test_create_simple_graph()
@@ -784,3 +816,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_empty_obj02()
     test_error_case_list_01()
     test_match_filter_rel()
+    test_list_trans()

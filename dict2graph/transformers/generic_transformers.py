@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Callable, Union, Dict, Type, Any, Tuple, Liter
 from dict2graph.node import Node
 from dict2graph.relation import Relation
 from dict2graph.transformers._base import _NodeTransformerBase, _RelationTransformerBase
-import typing
+import json
 
 
 class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
@@ -173,8 +173,10 @@ class AddProperty(_RelationTransformerBase, _NodeTransformerBase):
         Args:
             properties (Union[str, List[str]]): A property key or a list of property keys as strings that should be removed
         """
-        if isinstance(properties, str):
-            properties = [properties]
+        if not isinstance(properties, dict):
+            raise ValueError(
+                f"Transformer `AddProperty` init failed. Parameters `properties` malformed: Expected dict, got {type(properties)}"
+            )
         self.properties = properties
 
     def transform_node(self, node: Node):
