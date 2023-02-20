@@ -944,7 +944,7 @@ def test_OutsourcePropertiesToRelationship_tut_01():
         Transformer.match_nodes("person").do(
             NodeTrans.OutsourcePropertiesToRelationship(
                 property_keys=["child_rel"],
-                relation_type="child",
+                relation_types="child",
             )
         )
     )

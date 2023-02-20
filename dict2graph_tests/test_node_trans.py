@@ -1361,7 +1361,7 @@ def test_OutsourcePropertiesToRelationship():
     d2g.add_node_transformation(
         Transformer.match_nodes("Human").do(
             NodeTrans.OutsourcePropertiesToRelationship(
-                property_keys=["main_character"], relation_type="appearances"
+                property_keys=["main_character"], relation_types="appearances"
             )
         ),
     )

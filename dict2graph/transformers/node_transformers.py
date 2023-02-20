@@ -531,34 +531,39 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
     def __init__(
         self,
         property_keys: List[str],
-        relation_type: Union[str, List[str]],
+        relation_types: Union[str, List[str]],
         skip_if_prop_val_empty: bool = False,
-        keep_prop_if_relation_does_not_exist: bool = True,
+        keep_prop_if_no_relation_exist: bool = True,
     ):
         """
         Args:
             property_keys (List[str]): The properties, defined by their keys, that should be moved to the relationship.
-            relation_type (Union[str, List[str]]): The relation(s), the properties should be moved to.
+            relation_types (Union[str, List[str]]): The relation(s), the properties should be moved to.
             skip_if_prop_val_empty (bool, optional): If the property has no value, dont move it to the relation. Defaults to False.
-            keep_prop_if_relation_does_not_exist (bool, optional): Should the property be removed from the node, even if there is no relation it can move to. Defaults to True.
+            keep_prop_if_no_relation_exist (bool, optional): Set to `False` if the property should be removed from the node, even if there is no relation it can move to. Defaults to True.
         """
         self.property_keys = property_keys
-        if isinstance(relation_type, str):
-            relation_type = [relation_type]
-        self.relation_type = relation_type
+        if isinstance(relation_types, str):
+            relation_types = [relation_types]
+        self.relation_types = relation_types
         self.skip_if_prop_val_empty = skip_if_prop_val_empty
-        self.keep_prop_if_relation_does_not_exist = keep_prop_if_relation_does_not_exist
+        self.keep_prop_if_no_relation_exist = keep_prop_if_no_relation_exist
 
     def transform_node(self, node: Node):
-        for rel in node.relations:
-            if rel.relation_type in self.relation_type:
-                for prop in self.property_keys:
-                    if prop in node and (
-                        node[prop] not in ["", None] or not self.skip_if_prop_val_empty
-                    ):
-                        rel[prop] = node.pop(prop)
-        if not self.keep_prop_if_relation_does_not_exist:
-            [node.pop(prop, None) for prop in self.property_keys]
+        for prop_key in self.property_keys:
+            if prop_key in node:
+                prop_val = node.pop(prop_key)
+            else:
+                continue
+            if not prop_val and self.skip_if_prop_val_empty:
+                continue
+            found_rel: bool = False
+            for rel in node.relations:
+                if rel.relation_type in self.relation_types:
+                    found_rel = True
+                    rel[prop_key] = prop_val
+            if not found_rel and self.keep_prop_if_no_relation_exist:
+                node[prop_key] = prop_val
 
 
 class CreateHubbing(_NodeTransformerBase):
