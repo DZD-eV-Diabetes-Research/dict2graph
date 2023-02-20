@@ -531,7 +531,7 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
     def __init__(
         self,
         property_keys: List[str],
-        relation_type: str = None,
+        relation_type: str,
         skip_if_prop_val_empty: bool = False,
         keep_prop_if_relation_does_not_exist: bool = True,
     ):
@@ -539,7 +539,7 @@ class OutsourcePropertiesToRelationship(_NodeTransformerBase):
 
         Args:
             property_keys (List[str]): The properties, defined by their keys, that should be moved to the relationship.
-            relation_type (str, optional): The relation, the properties should me moved to. Defaults to None.
+            relation_type (str): The relation, the properties should be moved to.
             skip_if_prop_val_empty (bool, optional): If the property has no value, dont move it to the relation. Defaults to False.
             keep_prop_if_relation_does_not_exist (bool, optional): Should the property be removed from the node, even if there is no relation it can move to. Defaults to True.
         """
