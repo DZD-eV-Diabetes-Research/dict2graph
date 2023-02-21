@@ -1621,10 +1621,11 @@ def test_blog_example():
     d2g.add_transformation(
         Transformer.match_nodes("ListItem").do(
             [
-                NodeTrans.AddLabel("Tool"),
-                NodeTrans.RemoveLabel(
-                    target_labels=AnyLabel, omit_removal_for_labels="Tool"
+                NodeTrans.ConvertLabelToProp(
+                    prop_key="name", target_labels=AnyLabel, omit_move_labels="ListItem"
                 ),
+                NodeTrans.AddLabel("Tool"),
+                NodeTrans.RemoveListItemLabels(),
             ]
         )
     )
@@ -1632,7 +1633,60 @@ def test_blog_example():
     result = get_all_neo4j_nodes_with_rels(DRIVER)
 
     expected_result_nodes: dict = [
-        {"labels": ["person"], "props": {"name": "Chrissy"}, "outgoing_rels": []}
+        {
+            "labels": ["inventory", "ListHub"],
+            "props": {"id": "32efdb27ef282ff16cddea6d7a64941d"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "inventory_LIST_HAS_Tool",
+                    "rel_target_node": {
+                        "labels": ["Tool"],
+                        "props": {
+                            "price": 9.99,
+                            "name": "screwdriver",
+                            "brand": "SharpDrivers",
+                        },
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "inventory_LIST_HAS_Tool",
+                    "rel_target_node": {
+                        "labels": ["Tool"],
+                        "props": {
+                            "price": 12.4,
+                            "name": "hammer",
+                            "brand": "DullHammers",
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Tool"],
+            "props": {"price": 12.4, "name": "hammer", "brand": "DullHammers"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Tool"],
+            "props": {"price": 9.99, "name": "screwdriver", "brand": "SharpDrivers"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["shop"],
+            "props": {"name": "Helga`s Toolshop"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "shop_HAS_inventory",
+                    "rel_target_node": {
+                        "labels": ["inventory", "ListHub"],
+                        "props": {"id": "32efdb27ef282ff16cddea6d7a64941d"},
+                    },
+                }
+            ],
+        },
     ]
     assert_result(result, expected_result_nodes)
 

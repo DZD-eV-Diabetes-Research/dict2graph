@@ -251,13 +251,11 @@ class ConvertLabelToProp(_NodeTransformerBase):
                     continue
             else:
                 converted_labels.append(existing_label)
-        print("converted_labels", converted_labels)
         if len(converted_labels) == 1:
             node.labels.pop(node.labels.index(converted_labels[0]))
             node[self.prop_key] = converted_labels[0]
         elif len(converted_labels) > 1:
             for index, convert_label in enumerate(converted_labels):
-                print(convert_label)
                 node.labels.pop(node.labels.index(convert_label))
                 node[f"{self.prop_key}_{index}"] = convert_label
 
