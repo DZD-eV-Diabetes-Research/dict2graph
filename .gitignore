@@ -142,3 +142,4 @@ dmypy.json
 cython_debug/
 version.py
 /public
+dict2graph_docs/index.md
