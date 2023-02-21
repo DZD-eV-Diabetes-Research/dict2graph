@@ -1603,6 +1603,40 @@ def test_custom_transformer():
     assert_result(result, expected_result_nodes)
 
 
+def test_blog_example():
+    wipe_all_neo4j_data(DRIVER)
+    from dict2graph import Node, AnyLabel
+    from dict2graph.transformers._base import _NodeTransformerBase
+
+    data = {
+        "shop": {
+            "name": "Helga`s Toolshop",
+            "inventory": [
+                {"hammer": {"price": 12.4, "brand": "DullHammers"}},
+                {"screwdriver": {"price": 9.99, "brand": "SharpDrivers"}},
+            ],
+        }
+    }
+    d2g = Dict2graph()
+    d2g.add_transformation(
+        Transformer.match_nodes("ListItem").do(
+            [
+                NodeTrans.AddLabel("Tool"),
+                NodeTrans.RemoveLabel(
+                    target_labels=AnyLabel, omit_removal_for_labels="Tool"
+                ),
+            ]
+        )
+    )
+    d2g.parse(data).create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {"labels": ["person"], "props": {"name": "Chrissy"}, "outgoing_rels": []}
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "true":
     test_readme_tiny_example()
     test_readme_start_example()
@@ -1627,3 +1661,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", False) == "tr
     test_hubbing_tut_ets_code_hub_01()
     test_hubbing_tut_ets_code_hub_02()
     test_custom_transformer()
+    test_blog_example()

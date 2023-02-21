@@ -115,24 +115,151 @@ class RemoveLabel(_NodeTransformerBase):
     Results in removing the `:ListItem` label from `:Person` nodes
     """
 
-    def __init__(self, target_label: str = None):
+    def __init__(
+        self,
+        target_labels: Union[None, str, List[str], AnyLabel] = None,
+        omit_removal_for_labels: Union[None, str, List[str]] = None,
+    ):
         """_summary_
 
         Args:
-            target_label (str, optional): Optional set this if you dont want the labels from `match_nodes()` to be replaced. Defaults to None.
+            target_labels (Union[None, str, List[str], AnyLabel], optional): Optional set this if you dont want the labels from `match_nodes()` to be replaced. Defaults to None.
+            omit_removal_for_labels (Union[None, str, List[str]], optional): _description_. Defaults to None.
+        """
+        if isinstance(target_labels, str):
+            target_labels = [target_labels]
+        if isinstance(omit_removal_for_labels, str):
+            omit_removal_for_labels = [omit_removal_for_labels]
+
+        if (
+            target_labels not in [None, AnyLabel]
+            and omit_removal_for_labels
+            not in [
+                None,
+                AnyLabel,
+            ]
+            and set(target_labels).intersection(set(omit_removal_for_labels))
+        ):
+            raise ValueError(
+                f"`target_labels` and `omit_removal_for_labels` are contradicting: \ntarget_labels: {target_labels}\nomit_removal_for_labels:{omit_removal_for_labels}"
+            )
+        self.target_labels = target_labels
+        self.omit_removal_for_labels = omit_removal_for_labels
+
+    def transform_node(self, node: Node):
+        # ToDo: Refactor this mess.
+        target_labels: Union[List[str], AnyLabel] = (
+            self.target_labels
+            if self.target_labels is not None
+            else self.matcher.label_match
+        )
+        if isinstance(target_labels, str):
+            target_labels = [target_labels]
+        if isinstance(target_labels, str):
+            target_labels = [target_labels]
+        new_labels = []
+        for existing_label in node.labels:
+            if target_labels == AnyLabel or existing_label in target_labels:
+                if (
+                    self.omit_removal_for_labels
+                    and existing_label in self.omit_removal_for_labels
+                ):
+                    new_labels.append(existing_label)
+                else:
+                    continue
+            else:
+                new_labels.append(existing_label)
+
+        node.labels = new_labels
+
+
+class ConvertLabelToProp(_NodeTransformerBase):
+    """Convert a certain label to a node property
+
+     **Usage:**
+
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"person": [{"name": "Camina"}, {"name": "Asom"}]}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            [
+                NodeTrans.AddLabel("Agent"),
+                NodeTrans.ConvertLabelToProp(
+                    "type",
+                    target_labels=AnyLabel,
+                    omit_move_labels=["Agent", "ListItem", "ListHub"],
+                ),
+            ]
+        )
+
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+
+    This removes the `:person` labels nad add a new property `type` with the value `person`
+    """
+
+    def __init__(
+        self,
+        prop_key: str,
+        target_labels: Union[None, str, List[str], AnyLabel] = None,
+        omit_move_labels: Union[None, str, List[str]] = None,
+    ):
+        """_summary_
+
+        Args:
+            prop_key (str): _description_
+            target_labels (Union[None, str, List[str], AnyLabel], optional): _description_. Defaults to None.
+            omit_move_labels (Union[None, str, List[str]], optional): _description_. Defaults to None.
 
         Raises:
             ValueError: _description_
         """
-        self.target_label = target_label
+        self.prop_key = prop_key
+        if isinstance(target_labels, str):
+            target_labels = [target_labels]
+        if isinstance(omit_move_labels, str):
+            omit_move_labels = [omit_move_labels]
+        if omit_move_labels is None:
+            omit_move_labels = []
+
+        self.target_labels: Union[None, List[str], AnyLabel] = target_labels
+
+        self.omit_move_labels: List[str] = omit_move_labels
 
     def transform_node(self, node: Node):
-        if self.target_label == AnyLabel:
-            node.labels = []
-        elif self.target_label is None:
-            node.labels = [l for l in node.labels if l not in self.matcher.label_match]
-        elif isinstance(self.target_label, str):
-            node.labels = [l for l in node.labels if l != self.target_label]
+        # ToDo: Refactor this mess.
+        target_labels: Union[List[str], AnyLabel] = (
+            self.target_labels
+            if self.target_labels is not None
+            else self.matcher.label_match
+        )
+        if isinstance(target_labels, str):
+            target_labels = [target_labels]
+        converted_labels = []
+        for existing_label in node.labels:
+            if target_labels == AnyLabel or existing_label in target_labels:
+                if not existing_label in self.omit_move_labels:
+                    converted_labels.append(existing_label)
+                else:
+                    continue
+            else:
+                converted_labels.append(existing_label)
+        print("converted_labels", converted_labels)
+        if len(converted_labels) == 1:
+            node.labels.pop(node.labels.index(converted_labels[0]))
+            node[self.prop_key] = converted_labels[0]
+        elif len(converted_labels) > 1:
+            for index, convert_label in enumerate(converted_labels):
+                print(convert_label)
+                node.labels.pop(node.labels.index(convert_label))
+                node[f"{self.prop_key}_{index}"] = convert_label
 
 
 class AddLabel(_NodeTransformerBase):

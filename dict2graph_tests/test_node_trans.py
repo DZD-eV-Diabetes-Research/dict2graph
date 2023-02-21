@@ -7,7 +7,7 @@ if __name__ == "__main__":
     )
     MODULE_ROOT_DIR = os.path.join(SCRIPT_DIR, "..")
     sys.path.insert(0, os.path.normpath(MODULE_ROOT_DIR))
-from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
+from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans, AnyLabel
 from dict2graph_tests._test_tools import (
     wipe_all_neo4j_data,
     DRIVER,
@@ -1418,6 +1418,64 @@ def test_AddProperty():
     assert_result(result, expected_result_nodes)
 
 
+def test_ConvertLabelToProp():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {"person": [{"name": "Camina"}, {"name": "Asom"}]}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes("person").do(
+            [
+                NodeTrans.AddLabel("Agent"),
+                NodeTrans.ConvertLabelToProp(
+                    "type",
+                    target_labels=AnyLabel,
+                    omit_move_labels=["Agent", "ListItem", "ListHub"],
+                ),
+            ]
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["ListHub", "Agent"],
+            "props": {"id": "f27976a40ba0ab62af34189e4afb6804", "type": "person"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "ListHub_LIST_HAS_ListItem",
+                    "rel_target_node": {
+                        "labels": ["ListItem", "Agent"],
+                        "props": {"name": "Camina", "type": "person"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "ListHub_LIST_HAS_ListItem",
+                    "rel_target_node": {
+                        "labels": ["ListItem", "Agent"],
+                        "props": {"name": "Asom", "type": "person"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["ListItem", "Agent"],
+            "props": {"name": "Camina", "type": "person"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["ListItem", "Agent"],
+            "props": {"name": "Asom", "type": "person"},
+            "outgoing_rels": [],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_OverrideLabel()
     test_RemoveLabel()
@@ -1444,3 +1502,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_OutsourcePropertiesToRelationship()
     test_CreateHubbing()
     test_AddProperty()
+    test_ConvertLabelToProp()

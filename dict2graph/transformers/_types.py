@@ -28,6 +28,7 @@ class NodeTrans:
     PopNode = _nodetrans.PopNode
     MergeChildNodes = _nodetrans.MergeChildNodes
     OutsourcePropertiesToRelationship = _nodetrans.OutsourcePropertiesToRelationship
+    ConvertLabelToProp = _nodetrans.ConvertLabelToProp
 
 
 class RelTrans:
