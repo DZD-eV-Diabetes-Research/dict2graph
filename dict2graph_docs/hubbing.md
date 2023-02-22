@@ -253,7 +253,7 @@ transformer = Transformer.match_nodes("article").do(
             hub_labels=["Contribution"],
         )
     )
-# Add the transformator the tranformator stack of our Dict2graph instance
+# Add the transformer the tranformator stack of our Dict2graph instance
 d2g.add_transformation(transformer)
 
 dataset_1 = {
@@ -315,7 +315,7 @@ transformer = Transformer.match_nodes("article").do(
             hub_labels=["Contribution"],
         )
     )
-# Add the transformator the tranformator stack of our Dict2graph instance
+# Add the transformer the tranformator stack of our Dict2graph instance
 d2g.add_transformation(transformer)
 
 dataset_1 = {

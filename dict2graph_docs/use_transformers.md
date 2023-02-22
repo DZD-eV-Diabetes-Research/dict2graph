@@ -171,7 +171,7 @@ Lets try to add a new property "`material: 'wood'`" to our bookshelf.
 
 We will pick the dict2graph built in node transformer [AddProperty](/dict2graph-docs/list_generic_transformer/#dict2graph.transformers.generic_transformers.AddProperty)
 
-For your convenience you can import the wrapper class `dict2graph.NodeTrans` which includes all Transformers that are applicable to nodes. Same with `dict2graph.RelTrans` for relationship transformators.
+For your convenience you can import the wrapper class `dict2graph.NodeTrans` which includes all Transformers that are applicable to nodes. Same with `dict2graph.RelTrans` for relationship transformers.
 
 
 ```python
@@ -193,10 +193,10 @@ data = {
     }
 # we just learned how to "match". lets apply it:
 bookshelf_matcher = Transformer.match_nodes("bookshelf")
-add_prop_transformator = NodeTrans.AddProperty({"material":"wood"})
+add_prop_transformer = NodeTrans.AddProperty({"material":"wood"})
 
-# the next thing we should do is to attach the transformator to our dict2graph instance
-match_and_transform = bookshelf_matcher.do(add_prop_transformator)
+# the next thing we should do is to attach the transformer to our dict2graph instance
+match_and_transform = bookshelf_matcher.do(add_prop_transformer)
 
 # to be able to enjoy our work lets push the data to neo4j
 # From here this works the same way as we allready learned in the basic tutorial
@@ -266,9 +266,9 @@ this is much more compact and depending on your taste more readable. But its jus
 
 ## Order matters!
 
-The sequence of your transformers matters. Any transformation is passed to the next transformator.
+The sequence of your transformers matters. Any transformation is passed to the next transformer.
 
-Lets compare to very similar code snippets. The only differentce will be the sequence of our transformators.
+Lets compare to very similar code snippets. The only differentce will be the sequence of our transformers.
 
 ```python
 from neo4j import GraphDatabase
@@ -305,7 +305,7 @@ will be
 └──────────────────────────────────────────────────┘
 ```
 
-Now lets flip the order of our transformators:
+Now lets flip the order of our transformers:
 
 ```python
 from neo4j import GraphDatabase
@@ -345,6 +345,6 @@ will be
 
 You see in the first case we added the new property first and then renamed it.
 
-In the second case we tried to rename it first. but it was not available yet, as the node Transformator `AddProperty` came after `OverridePropertyName`
+In the second case we tried to rename it first. but it was not available yet, as the node Transformer `AddProperty` came after `OverridePropertyName`
 
 So keep that in mind when chaining transformations.

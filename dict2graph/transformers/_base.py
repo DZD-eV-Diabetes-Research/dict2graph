@@ -25,12 +25,8 @@ class _NodeTransformerBase:
         self.matcher = matcher
         self.d2g: "Dict2graph" = None
 
-    def _run_node_match_and_transform(self, node: Node):
-        if (
-            not node.deleted
-            and (self.matcher._match(node))
-            and self.custom_node_match(node)
-        ):
+    def _run_custom_node_match_and_transform(self, node: Node):
+        if self.custom_node_match(node):
             try:
                 self.transform_node(node=node)
             except:
@@ -54,7 +50,7 @@ class _RelationTransformerBase:
     def _set_matcher(self, matcher: "Transformer.RelTransformerMatcher"):
         self.matcher = matcher
 
-    def _run_rel_match_and_transform(self, rel: Relation):
+    def _run_custom_rel_match_and_transform(self, rel: Relation):
         if (
             not rel.deleted
             and (self.matcher._match(rel))
@@ -89,6 +85,8 @@ class Transformer:
             self.has_none_label_of = has_none_label_of
 
         def _match(self, node: Node) -> bool:
+            if node.deleted:
+                return False
             if self.has_none_label_of is not None and not set(
                 self.has_none_label_of
             ).isdisjoint(node.labels):

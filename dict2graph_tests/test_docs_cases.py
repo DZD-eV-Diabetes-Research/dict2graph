@@ -629,10 +629,10 @@ def test_transforming_tut_01():
     }
     # we just learned how to "match". lets apply it:
     bookshelf_matcher = Transformer.match_nodes("bookshelf")
-    add_prop_transformator = NodeTrans.AddProperty({"material": "wood"})
+    add_prop_transformer = NodeTrans.AddProperty({"material": "wood"})
 
-    # the next thing we should do is to attach the transformator to our dict2graph instance
-    match_and_transform = bookshelf_matcher.do(add_prop_transformator)
+    # the next thing we should do is to attach the transformer to our dict2graph instance
+    match_and_transform = bookshelf_matcher.do(add_prop_transformer)
 
     # to be able to enjoy our work lets push the data to neo4j
     # From here this works the same way as we allready learned in the basic tutorial
@@ -1332,7 +1332,7 @@ def test_hubbing_tut_ets_code_hub_02():
             hub_labels=["Contribution"],
         )
     )
-    # Add the transformator the tranformator stack of our Dict2graph instance
+    # Add the transformer the tranformator stack of our Dict2graph instance
     d2g.add_transformation(transformer)
 
     dataset_1 = {

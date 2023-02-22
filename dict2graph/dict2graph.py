@@ -28,6 +28,10 @@ from dict2graph.transformers._base import (
     _RelationTransformerBase,
 )
 from dict2graph.transformers import Transformer
+from dict2graph.matcher_transformators_container import (
+    MatcherTransformersContainer,
+    MatcherTransformersContainerStack,
+)
 
 
 class Dict2graph:
@@ -115,12 +119,12 @@ class Dict2graph:
         self._rel_cache_feeder: List[Node] = []
         self._nodeSets: Dict[Tuple, NodeSet] = {}
         self._relSets: Dict[Tuple, RelationshipSet] = {}
-        self.node_transformators: List[_NodeTransformerBase] = []
-        self.relation_transformators: List[_RelationTransformerBase] = []
+        self.matcher_and_node_transformers_stack = MatcherTransformersContainerStack([])
+        self.matcher_and_rel_transformers_stack = MatcherTransformersContainerStack([])
 
     def add_transformation(
         self,
-        transformator: Union[
+        transformer: Union[
             _NodeTransformerBase,
             _RelationTransformerBase,
             List[Union[_NodeTransformerBase, _RelationTransformerBase]],
@@ -140,79 +144,79 @@ class Dict2graph:
         ```
 
         Args:
-            transformator (Union[ _NodeTransformerBase, _RelationTransformerBase, List[Union[_NodeTransformerBase, _RelationTransformerBase]], ]): A list or single instance of a Transformer
+            transformer (Union[ _NodeTransformerBase, _RelationTransformerBase, List[Union[_NodeTransformerBase, _RelationTransformerBase]], ]): A list or single instance of a Transformer
 
         """
 
-        if isinstance(transformator, list):
-            for trans in transformator:
+        if isinstance(transformer, list):
+            for trans in transformer:
                 self.add_transformation(trans)
             return
-        if self._get_transformer_class(transformator) == _NodeTransformerBase:
-            self.add_node_transformation(transformator)
+        if self._get_transformer_class(transformer) == _NodeTransformerBase:
+            self.add_node_transformation(transformer)
 
-        elif self._get_transformer_class(transformator) == _RelationTransformerBase:
-            self.add_relation_transformation(transformator)
+        elif self._get_transformer_class(transformer) == _RelationTransformerBase:
+            self.add_relation_transformation(transformer)
         else:
             raise ValueError(
-                f"Expected transformer of subclass '{_NodeTransformerBase}' or '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}')"
+                f"Expected transformer of subclass '{_NodeTransformerBase}' or '{_RelationTransformerBase}', got '{transformer.__class__}' (child of '{transformer.__class__.__bases__}')"
             )
 
     def _get_transformer_class(
-        self, transformator: Union[_NodeTransformerBase, _RelationTransformerBase]
+        self, transformer: Union[_NodeTransformerBase, _RelationTransformerBase]
     ) -> Union[Type[_NodeTransformerBase], type[_RelationTransformerBase]]:
-        if issubclass(transformator.__class__, _NodeTransformerBase) and issubclass(
-            transformator.__class__, _RelationTransformerBase
+        if issubclass(transformer.__class__, _NodeTransformerBase) and issubclass(
+            transformer.__class__, _RelationTransformerBase
         ):
-            # We got a generic transformator. we have to look at the matcher to determine the transformator type.
-            if isinstance(transformator.matcher, Transformer.RelTransformerMatcher):
+            # We got a generic transformer. we have to look at the matcher to determine the transformer type.
+            if isinstance(transformer.matcher, Transformer.RelTransformerMatcher):
                 return _RelationTransformerBase
-            elif isinstance(transformator.matcher, Transformer.NodeTransformerMatcher):
+            elif isinstance(transformer.matcher, Transformer.NodeTransformerMatcher):
                 return _NodeTransformerBase
-        elif issubclass(transformator.__class__, _NodeTransformerBase):
+        elif issubclass(transformer.__class__, _NodeTransformerBase):
             return _NodeTransformerBase
-        elif issubclass(transformator.__class__, _RelationTransformerBase):
+        elif issubclass(transformer.__class__, _RelationTransformerBase):
             return _RelationTransformerBase
 
     def add_node_transformation(
-        self, transformator: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
+        self, transformer: Union[_NodeTransformerBase, List[_NodeTransformerBase]]
     ):
-        if isinstance(transformator, list):
-            for trans in transformator:
+        if isinstance(transformer, list):
+            for trans in transformer:
                 self.add_node_transformation(trans)
             return
-        if transformator.matcher is None:
-            raise ValueError(f"No matcher added to {transformator}")
-        if not issubclass(transformator.__class__, _NodeTransformerBase):
+        if transformer.matcher is None:
+            raise ValueError(f"No matcher added to {transformer}")
+        if not issubclass(transformer.__class__, _NodeTransformerBase):
             raise ValueError(
-                f"Expected transformer of subclass '{_NodeTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_relation_transformation()` instead of `add_node_transformation`?"
+                f"Expected transformer of subclass '{_NodeTransformerBase}', got '{transformer.__class__}' (child of '{transformer.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_relation_transformation()` instead of `add_node_transformation`?"
             )
-        elif transformator.matcher.__class__ != Transformer.NodeTransformerMatcher:
+        elif transformer.matcher.__class__ != Transformer.NodeTransformerMatcher:
             raise ValueError(
-                f"Expected transformer matcher of class '{Transformer.NodeTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a relationship matcher instead of a node matcher (`match_nodes()` vs. `match_rels()`) while using `Dict2graph.add_node_transformation()`?"
+                f"Expected transformer matcher of class '{Transformer.NodeTransformerMatcher}', got '{transformer.matcher.__class__}'.\nMaybe you accidentally added a relationship matcher instead of a node matcher (`match_nodes()` vs. `match_rels()`) while using `Dict2graph.add_node_transformation()`?"
             )
         else:
-            transformator.d2g = self
-            self.node_transformators.append(transformator)
+            transformer.d2g = self
+            self.matcher_and_node_transformers_stack.add_container(transformer)
 
     def add_relation_transformation(
         self,
-        transformator: Union[_RelationTransformerBase, List[_RelationTransformerBase]],
+        transformer: Union[_RelationTransformerBase, List[_RelationTransformerBase]],
     ):
-        if isinstance(transformator, list):
-            for trans in transformator:
+        if isinstance(transformer, list):
+            for trans in transformer:
                 self.add_relation_transformation(trans)
             return
-        elif not issubclass(transformator.__class__, _RelationTransformerBase):
+        elif not issubclass(transformer.__class__, _RelationTransformerBase):
             raise ValueError(
-                f"Expected transformer of subclass '{_RelationTransformerBase}', got '{transformator.__class__}' (child of '{transformator.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_node_transformation()` instead of `add_relation_transformation`?"
+                f"Expected transformer of subclass '{_RelationTransformerBase}', got '{transformer.__class__}' (child of '{transformer.__class__.__bases__}').\nMaybe you wanted to use function `Dict2graph.add_node_transformation()` instead of `add_relation_transformation`?"
             )
-        elif transformator.matcher.__class__ != Transformer.RelTransformerMatcher:
+        elif transformer.matcher.__class__ != Transformer.RelTransformerMatcher:
             raise ValueError(
-                f"Expected transformer matcher of class '{Transformer.RelTransformerMatcher}', got '{transformator.matcher.__class__}'.\nMaybe you accidentally added a node matcher instead of a relationship matcher (`match_rels()` vs. `match_nodes()`) while using `Dict2graph.add_relation_transformation()`?"
+                f"Expected transformer matcher of class '{Transformer.RelTransformerMatcher}', got '{transformer.matcher.__class__}'.\nMaybe you accidentally added a node matcher instead of a relationship matcher (`match_rels()` vs. `match_nodes()`) while using `Dict2graph.add_relation_transformation()`?"
             )
         else:
-            self.relation_transformators.append(transformator)
+            self.matcher_and_rel_transformers_stack.add_container(transformer)
 
     def parse(
         self, data: Dict, root_node_labels: Union[str, List[str]] = None
@@ -591,16 +595,23 @@ class Dict2graph:
         self._rel_cache = []
 
     def _run_transformations(self):
-        for trans in self.node_transformators:
-
+        for (
+            matcher_trans_node_container
+        ) in self.matcher_and_node_transformers_stack.containers:
             for node in self._node_cache:
-                trans._run_node_match_and_transform(node)
+                if matcher_trans_node_container.matcher._match(node):
+                    for trans in matcher_trans_node_container.transformers:
+                        trans._run_custom_node_match_and_transform(node)
             self._feed_cache_with_new_nodes_and_rels()
 
-        for trans in self.relation_transformators:
-
+        for (
+            matcher_trans_rel_container
+        ) in self.matcher_and_rel_transformers_stack.containers:
             for rel in self._rel_cache:
-                trans._run_rel_match_and_transform(rel)
+                if matcher_trans_rel_container.matcher._match(rel):
+                    for trans in matcher_trans_rel_container.transformers:
+                        trans._run_custom_rel_match_and_transform(rel)
+
             self._feed_cache_with_new_nodes_and_rels()
 
     def _feed_cache_with_new_nodes_and_rels(self):

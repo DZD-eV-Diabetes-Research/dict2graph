@@ -54,9 +54,9 @@ The recommended workflow is:
 
 - Load your dict (or a sample of your larger datasets) as it is, with dict2graph into a neo4j test instance
 - Inspect the result in neo4j
-- Add dict2graph-transformators to shape your resulting graph model
+- Add dict2graph-transformers to shape your resulting graph model
 - Wipe your neo4j test instance
-- Repeat the work flow with the changed dict2graph-transformators until your happy with the result
+- Repeat the work flow with the changed dict2graph-transformers until your happy with the result
 
 ### What dict2graph is **not**
 
@@ -134,5 +134,5 @@ Now that looks more like a graph we are used to, isn't it?
 
 ![](dict2graph_docs/img/readme_basic_example_trans.png "Result example 1")
 
- There are a lot of more powerful [`Transformator`s](https://dzd-ev.github.io/dict2graph-docs/list_generic_transformer) and you can even [make your own](https://dzd-ev.github.io/dict2graph-docs/diy_transformer/) 🚀!  
- Have a deeper look into the docs to [learn more how Transformators work](https://dzd-ev.github.io/dict2graph-docs/use_transformers/).
+ There are a lot of more powerful [`Transformer`s](https://dzd-ev.github.io/dict2graph-docs/list_generic_transformer) and you can even [make your own](https://dzd-ev.github.io/dict2graph-docs/diy_transformer/) 🚀!  
+ Have a deeper look into the docs to [learn more how Transformers work](https://dzd-ev.github.io/dict2graph-docs/use_transformers/).

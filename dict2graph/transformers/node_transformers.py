@@ -715,7 +715,7 @@ class CreateHubbing(_NodeTransformerBase):
                 hub_labels=["Contribution"],
             )
         )
-    # Add the transformator the tranformator stack of our Dict2graph instance
+    # Add the transformer the tranformator stack of our Dict2graph instance
     d2g.add_transformation(transformer)
 
     dataset_1 = {

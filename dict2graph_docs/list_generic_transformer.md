@@ -1,9 +1,9 @@
 
-dict2graph comes with a lot of predefined transformators. For a basic concepts of a dict2Graph transformators have a look at [How to use Transformators](/use_transformers)
+dict2graph comes with a lot of predefined transformers. For a basic concepts of a dict2Graph transformers have a look at [How to use Transformers](/use_transformers)
 
-## Generic Transformators List
+## Generic Transformers List
 
-This is a list if transformators that can be applied to nodes and relationships
+This is a list if transformers that can be applied to nodes and relationships
 
 ### ::: dict2graph.transformers.generic_transformers
     options:
