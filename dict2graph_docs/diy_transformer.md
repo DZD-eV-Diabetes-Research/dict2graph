@@ -13,7 +13,6 @@ DRIVER = GraphDatabase.driver(os.getenv("NEO4J_URI", "neo4j://localhost"))
 ## The custom transfomer class
 class NameHerChrissy(_NodeTransformerBase):
     def custom_node_match(self, node: Node) -> bool:
-        print(node)
         return node["name"] == "Chrisjen Avasarala"
 
     def transform_node(self, node: Node):
