@@ -42,7 +42,10 @@ class Node(dict):
             str: The id. A hex number string
         """
         if self.merge_property_keys and len(self.merge_property_keys) == 1:
-            return self[self.merge_property_keys[0]]
+            if self.merge_property_keys[0] in self:
+                return self[self.merge_property_keys[0]]
+            else:
+                return None
         elif len(self.keys()) == 0:
             return None
         else:
