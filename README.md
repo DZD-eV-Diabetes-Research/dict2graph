@@ -84,10 +84,10 @@ NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
 
 # lets create a small random  dict
 dic = {
-    "Action": {
+    "action": {
         "id": 1,
         "target": "El Oued",
-        "Entities": [{"id": "Isabelle Eberhardt"}, {"id": "Slimène Ehnni"}],
+        "entities": [{"id": "Isabelle Eberhardt"}, {"id": "Slimène Ehnni"}],
     }
 }
 # create a dict2graph instance, 
@@ -112,10 +112,10 @@ from dict2graph import Dict2graph, Transformer, NodeTrans, RelTrans
 from py2neo import Graph
 NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
 data = {
-    "Action": {
+    "action": {
         "id": 1,
         "target": "El Oued",
-        "Entities": [{"id": "Isabelle Eberhardt"}, {"id": "Slimène Ehnni"}],
+        "entities": [{"id": "Isabelle Eberhardt"}, {"id": "Slimène Ehnni"}],
     }
 }
 d2g = Dict2graph()
