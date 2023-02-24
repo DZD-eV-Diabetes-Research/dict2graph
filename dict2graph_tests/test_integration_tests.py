@@ -513,8 +513,88 @@ def wip_test_pubmed_article():
     assert_result(result, expected_result_nodes)
 
 
+def wip_pubmed_author_hubbing():
+    wipe_all_neo4j_data(DRIVER)
+    data = {
+        "PubMedArticle": {
+            "PMID": "12345",
+            "AuthorList": {
+                "CompleteYN": "Y",
+                "Author": [
+                    {
+                        "LastName": "Clay",
+                        "ForeName": "J",
+                    },
+                    {
+                        "LastName": "Kalla",
+                        "ForeName": "Roger",
+                        "AffiliationInfo": [
+                            {"Affiliation": "University Hospital Bern"},
+                            {
+                                "Affiliation": "German Center for Vertigo and Balance Disorders"
+                            },
+                        ],
+                    },
+                    {
+                        "LastName": "Strupp",
+                        "ForeName": "Michael",
+                        "AffiliationInfo": [
+                            {
+                                "Affiliation": "German Center for Vertigo and Balance Disorders"
+                            }
+                        ],
+                    },
+                    {
+                        "LastName": "Miller",
+                        "ForeName": "Tom",
+                        "AffiliationInfo": [
+                            {"Affiliation": "University Hospital Bern"}
+                        ],
+                    },
+                ],
+            },
+        }
+    }
+    d2g = Dict2graph()
+
+    d2g.add_transformation(
+        [
+            Transformer.match_nodes().do(
+                [
+                    NodeTrans.PopListHubNodes(),
+                    NodeTrans.RemoveListItemLabels(),
+                ]
+            ),
+            Transformer.match_nodes("AffiliationInfo").do(
+                NodeTrans.OverrideLabel("Affiliation"),
+            ),
+            Transformer.match_nodes("PubMedArticle").do(
+                NodeTrans.MergeChildNodes(
+                    child_labels="AuthorList",
+                    prefix_merged_props_with_primary_label_of_child=False,
+                )
+            ),
+            Transformer.match_nodes("PubMedArticle").do(
+                NodeTrans.CreateHubbing(
+                    follow_nodes_labels=["Author", "Affiliation"],
+                    merge_mode="edge",
+                    hub_labels=["Contribution"],
+                )
+            ),
+        ]
+    )
+
+    d2g.parse(data)
+    d2g.merge(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    expected_result_nodes: dict = []
+    # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     # test_merge_two_dicts_and_remove_list_hubs()
-    test_hubbing_edge()
-    test_pubmed_article_base_test()
+    # test_hubbing_edge()
+    # test_pubmed_article_base_test()
     # wip_test_pubmed_article()
+    wip_pubmed_author_hubbing()
