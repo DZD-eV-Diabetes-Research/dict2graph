@@ -517,4 +517,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     # test_merge_two_dicts_and_remove_list_hubs()
     test_hubbing_edge()
     test_pubmed_article_base_test()
-    wip_test_pubmed_article()
+    # wip_test_pubmed_article()

@@ -523,7 +523,10 @@ class Dict2graph:
         node_set.add_node(cached_node)
 
     def _get_or_create_nodeSet(self, node: Node) -> NodeSet:
-        node_type_fingerprint = frozenset(node.labels)
+        node_type_fingerprint = (
+            frozenset(node.labels),
+            frozenset(node.merge_property_keys),
+        )
         if node_type_fingerprint not in self._nodeSets:
             self._nodeSets[node_type_fingerprint] = NodeSet(
                 labels=node.labels,

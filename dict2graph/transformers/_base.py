@@ -89,14 +89,15 @@ class Transformer:
                 return False
             if self.has_none_label_of is not None and not set(
                 self.has_none_label_of
-            ).isdisjoint(node.labels):
-                return False
-            if self.has_one_label_of is not None and not set(
-                self.has_one_label_of
             ).isdisjoint(set(node.labels)):
+                return False
+            if self.has_one_label_of is not None and set(
+                self.has_one_label_of
+            ).intersection(set(node.labels)):
                 return True
-            if self.label_match == AnyLabel or set(self.label_match).issubset(
-                set(node.labels)
+            if self.label_match == AnyLabel or (
+                self.label_match is not None
+                and set(self.label_match).issubset(set(node.labels))
             ):
                 return True
 
@@ -169,6 +170,8 @@ class Transformer:
             NodeTransformerMatcher: _description_
         """
         tm = Transformer.NodeTransformerMatcher()
+        if has_one_label_of or has_none_label_of and has_labels == AnyLabel:
+            has_labels = None
         tm._set_node_matcher(
             label_match=has_labels,
             has_one_label_of=has_one_label_of,
