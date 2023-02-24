@@ -998,7 +998,7 @@ class PopNode(_NodeTransformerBase):
 
 class MergeChildNodes(_NodeTransformerBase):
     """A node will absorb the properties of one or multiple child nodes
-    and the child node will be poped (aka. removed but a relation to grandchild nodes keeps existing)
+    and the child nodes will be poped (aka. removed but a relation to grandchild nodes keeps existing)
 
 
     **Usage:**
