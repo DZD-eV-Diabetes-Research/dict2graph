@@ -585,7 +585,7 @@ def wip_pubmed_author_hubbing():
     )
 
     d2g.parse(data)
-    d2g.merge(DRIVER)
+    d2g.create(DRIVER)
     result = get_all_neo4j_nodes_with_rels(DRIVER)
     expected_result_nodes: dict = []
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
