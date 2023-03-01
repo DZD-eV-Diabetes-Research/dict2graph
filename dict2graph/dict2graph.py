@@ -602,7 +602,10 @@ class Dict2graph:
             matcher_trans_node_container
         ) in self.matcher_and_node_transformers_stack.containers:
             for node in self._node_cache:
-                if matcher_trans_node_container.matcher._match(node):
+                if (
+                    matcher_trans_node_container.matcher._match(node)
+                    and not node.deleted
+                ):
                     for trans in matcher_trans_node_container.transformers:
                         trans._run_custom_node_match_and_transform(node)
             self._feed_cache_with_new_nodes_and_rels()
@@ -611,7 +614,7 @@ class Dict2graph:
             matcher_trans_rel_container
         ) in self.matcher_and_rel_transformers_stack.containers:
             for rel in self._rel_cache:
-                if matcher_trans_rel_container.matcher._match(rel):
+                if matcher_trans_rel_container.matcher._match(rel) and not rel.deleted:
                     for trans in matcher_trans_rel_container.transformers:
                         trans._run_custom_rel_match_and_transform(rel)
 

@@ -204,7 +204,11 @@ class Node(dict):
         Returns:
             List[Relation]: A list of relations
         """
-        return [rel for rel in self.relations if rel.start_node == self]
+        return [
+            rel
+            for rel in self.relations
+            if rel.start_node == self and not rel.end_node.deleted
+        ]
 
     @property
     def incoming_relations(self) -> List[Relation]:
@@ -213,7 +217,11 @@ class Node(dict):
         Returns:
             List[Relation]: A list of relations
         """
-        return [rel for rel in self.relations if rel.end_node == self]
+        return [
+            rel
+            for rel in self.relations
+            if rel.end_node == self and not rel.start_node.deleted
+        ]
 
     @property
     def child_nodes(self) -> List[Node]:

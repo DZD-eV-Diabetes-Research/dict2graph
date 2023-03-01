@@ -743,9 +743,9 @@ class CreateHubbing(_NodeTransformerBase):
         depth_level: int
         node: Node
         parent_rels: List[Relation]
-        parent_fill_nodes: List["CreateHubbing.ToBeHubbedNode"]
-        child_nodes: List["CreateHubbing.ToBeHubbedNode"]
-        end_node: bool = (True,)
+        parent_nodes: List["CreateHubbing.ToBeHubbedNode"]
+        # child_nodes: List["CreateHubbing.ToBeHubbedNode"]
+        is_end_node: bool = False
 
     def __init__(
         self,
@@ -785,12 +785,16 @@ class CreateHubbing(_NodeTransformerBase):
         print("start_node", start_node)
 
         self.sub_graph_nodes: List[CreateHubbing.ToBeHubbedNode] = []
-        subg = self._get_to_be_hubbed_sub_graph(start_node=start_node)
+        self._get_to_be_hubbed_sub_graph(start_node=start_node)
 
+        print(self.sub_graph_nodes)
+
+        ######
         end_nodes: List[CreateHubbing.ToBeHubbedNode] = [
-            n for n in self.sub_graph_nodes if n.end_node
+            n for n in self.sub_graph_nodes if n.is_end_node
         ]
         for end_node in end_nodes:
+            print("end_node", end_node.node)
             hub, fill_nodes = self._hub_subgraph_branch(
                 start_node=start_node, end_node=end_node
             )
@@ -804,12 +808,29 @@ class CreateHubbing(_NodeTransformerBase):
                 hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
                     "".join(hash_sources).encode("utf-8")
                 )
+            self.d2g.add_node_to_cache(hub)
 
     def _hub_subgraph_branch(
         self,
         start_node: Node,
         end_node: "CreateHubbing.ToBeHubbedNode",
     ):
+        def hub_chain(hub: Node, to_be_hubbed_node: CreateHubbing.ToBeHubbedNode):
+            fill_nodes: List[CreateHubbing.ToBeHubbedNode] = []
+            for index, parent_rel in enumerate(to_be_hubbed_node.parent_rels):
+                print("##", to_be_hubbed_node.node, parent_rel)
+                if parent_rel.end_node == to_be_hubbed_node.node:
+                    parent_rel.start_node = hub
+                    fill_nodes.append(to_be_hubbed_node.parent_nodes[index])
+                    fill_nodes.extend(
+                        hub_chain(hub, to_be_hubbed_node.parent_nodes[index])
+                    )
+            return fill_nodes
+
+        hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
+        hub.merge_property_keys = [self.d2g.list_hub_id_property_name]
+        return hub, hub_chain(hub, end_node)
+        #########
         def hub_fill_nodes(
             hub: Node,
             child_node: CreateHubbing.ToBeHubbedNode,
@@ -842,8 +863,46 @@ class CreateHubbing(_NodeTransformerBase):
         self,
         start_node: Node,
         parent_node: "CreateHubbing.ToBeHubbedNode" = None,
+        parent_rel: Relation = None,
         depth: int = 0,
     ) -> List[ToBeHubbedNode]:
+        current_node: CreateHubbing.ToBeHubbedNode = None
+        if depth == 0 or self.follow_nodes_labels[depth - 1] in start_node.labels:
+            for allready_checked_node in self.sub_graph_nodes:
+                if (
+                    allready_checked_node.node
+                    is start_node
+                    # and allready_hubbed_node.depth_level == depth
+                ):
+                    current_node = allready_checked_node
+                    break
+
+            if current_node is None:
+                current_node = CreateHubbing.ToBeHubbedNode(
+                    depth_level=depth,
+                    node=start_node,
+                    parent_rels=[],
+                    parent_nodes=[],
+                    is_end_node=depth == len(self.follow_nodes_labels),
+                )
+                self.sub_graph_nodes.append(current_node)
+            if parent_node:
+                current_node.parent_nodes.append(parent_node)
+                current_node.parent_rels.append(parent_rel)
+            for outgoing_rel in current_node.node.outgoing_relations:
+                child_node = outgoing_rel.end_node
+                if self.follow_nodes_labels[depth] in child_node.labels:
+                    self._get_to_be_hubbed_sub_graph(
+                        start_node=child_node,
+                        parent_node=current_node,
+                        parent_rel=outgoing_rel,
+                        depth=depth + 1,
+                    )
+
+            return current_node
+        return
+
+        #########
         nodes: List[CreateHubbing.ToBeHubbedNode] = []
         for outgoing_rel in start_node.outgoing_relations:
             node = outgoing_rel.end_node
@@ -851,10 +910,10 @@ class CreateHubbing(_NodeTransformerBase):
                 is_end_node: bool = depth == len(self.follow_nodes_labels) - 1
                 existing_node: CreateHubbing.ToBeHubbedNode = next(
                     (
-                        to_be_hubbed_node
-                        for to_be_hubbed_node in nodes
-                        if to_be_hubbed_node.node == node
-                        and to_be_hubbed_node.depth_level == depth
+                        allready_checked_node
+                        for allready_checked_node in nodes
+                        if allready_checked_node.node == node
+                        and allready_checked_node.depth_level == depth
                     ),
                     None,
                 )
@@ -866,11 +925,9 @@ class CreateHubbing(_NodeTransformerBase):
                         depth_level=depth,
                         node=node,
                         parent_rels=[outgoing_rel],
-                        parent_fill_nodes=[parent_node]
-                        if parent_node is not None
-                        else [],
+                        parent_nodes=[parent_node] if parent_node is not None else [],
                         child_nodes=None,
-                        end_node=is_end_node,
+                        is_end_node=is_end_node,
                     )
                     if not is_end_node:
                         new_node.child_nodes = self._get_to_be_hubbed_sub_graph(
