@@ -746,12 +746,14 @@ class CreateHubbing(_NodeTransformerBase):
         parent_nodes: List["CreateHubbing.ToBeHubbedNode"]
         # child_nodes: List["CreateHubbing.ToBeHubbedNode"]
         is_end_node: bool = False
+        incomplete_chain: bool = False
 
     def __init__(
         self,
         follow_nodes_labels: List[str],
         merge_mode: Literal["lead", "edge"],
         hub_labels: List[str] = ["Hub"],
+        hub_incomplete_chains: bool = True,
     ):
         """
         Args:
@@ -772,6 +774,7 @@ class CreateHubbing(_NodeTransformerBase):
         if isinstance(hub_labels, str):
             hub_labels = [hub_labels]
         self.hub_labels = hub_labels
+        self.hub_incomplete_chains = hub_incomplete_chains
 
     def custom_node_match(self, node: Node) -> bool:
         # walk the node tree to check if this subtree needs to be hubbed.
@@ -782,45 +785,48 @@ class CreateHubbing(_NodeTransformerBase):
 
     def transform_node(self, node: Node):
         start_node: Node = node
-        print("start_node", start_node)
-
         self.sub_graph_nodes: List[CreateHubbing.ToBeHubbedNode] = []
         self._get_to_be_hubbed_sub_graph(start_node=start_node)
 
-        print(self.sub_graph_nodes)
-
-        ######
         end_nodes: List[CreateHubbing.ToBeHubbedNode] = [
             n for n in self.sub_graph_nodes if n.is_end_node
         ]
         for end_node in end_nodes:
-            print("end_node", end_node.node)
-            hub, fill_nodes = self._hub_subgraph_branch(
+            hub, fill_nodes = self._hub_upstream_subgraph_branch(
                 start_node=start_node, end_node=end_node
             )
             hash_sources = []
             if self.merge_mode.upper() == "EDGE":
                 hash_sources.append(start_node.get_hash())
-                hash_sources.append(end_node.node.get_hash())
+                if not end_node.incomplete_chain:
+                    hash_sources.append(end_node.node.get_hash())
 
             elif self.merge_mode.upper() == "LEAD":
                 hash_sources.extend([n.node.get_hash() for n in fill_nodes])
-                hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
-                    "".join(hash_sources).encode("utf-8")
-                )
-            self.d2g.add_node_to_cache(hub)
+            hub[self.d2g.list_hub_id_property_name] = hashlib.md5(
+                "".join(hash_sources).encode("utf-8")
+            ).hexdigest()
 
-    def _hub_subgraph_branch(
+    def _hub_upstream_subgraph_branch(
         self,
         start_node: Node,
         end_node: "CreateHubbing.ToBeHubbedNode",
     ):
         def hub_chain(hub: Node, to_be_hubbed_node: CreateHubbing.ToBeHubbedNode):
+            if to_be_hubbed_node.is_end_node:
+                if not any(
+                    to_be_hubbed_node.node is rel.start_node
+                    for rel in hub.incoming_relations
+                ):
+                    self.d2g.add_rel_to_cache(
+                        Relation(start_node=hub, end_node=to_be_hubbed_node.node)
+                    )
             fill_nodes: List[CreateHubbing.ToBeHubbedNode] = []
             for index, parent_rel in enumerate(to_be_hubbed_node.parent_rels):
-                print("##", to_be_hubbed_node.node, parent_rel)
                 if parent_rel.end_node == to_be_hubbed_node.node:
+                    flip_start_node = parent_rel.start_node
                     parent_rel.start_node = hub
+                    parent_rel.end_node = flip_start_node
                     fill_nodes.append(to_be_hubbed_node.parent_nodes[index])
                     fill_nodes.extend(
                         hub_chain(hub, to_be_hubbed_node.parent_nodes[index])
@@ -828,36 +834,11 @@ class CreateHubbing(_NodeTransformerBase):
             return fill_nodes
 
         hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
-        hub.merge_property_keys = [self.d2g.list_hub_id_property_name]
-        return hub, hub_chain(hub, end_node)
-        #########
-        def hub_fill_nodes(
-            hub: Node,
-            child_node: CreateHubbing.ToBeHubbedNode,
-        ) -> List[CreateHubbing.ToBeHubbedNode]:
-            for index, fill_node in enumerate(child_node.parent_fill_nodes):
-                rel = child_node.parent_rels[index]
-                rel.end_node = hub
-                fill_nodes = hub_fill_nodes(hub=hub, child_node=fill_node)
-                return child_node.parent_fill_nodes + fill_nodes if fill_nodes else []
 
-        hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
-        hub.merge_property_keys = [self.d2g.list_hub_id_property_name]
-
-        fill_nodes = hub_fill_nodes(hub=hub, child_node=end_node)
         self.d2g.add_node_to_cache(hub)
-        # if end_node.node not in [r.end_node for r in hub.outgoing_relations]:
-        if not any(end_node.node is r.end_node for r in hub.outgoing_relations):
-            new_end_node_hub_rel = Relation(start_node=hub, end_node=end_node.node)
-            self.d2g.add_rel_to_cache(new_end_node_hub_rel)
-
-        if not any(hub is r.end_node for r in start_node.outgoing_relations):
-            # if hub not in [r.end_node for r in start_node.outgoing_relations]:
-            print("start_node", start_node)
-            print("hub", hub)
-            new_start_node_hub_rel = Relation(start_node=start_node, end_node=hub)
-            self.d2g.add_rel_to_cache(new_start_node_hub_rel)
-        return hub, fill_nodes
+        # if not any(start_node is rel.start_node for rel in hub.incoming_relations):
+        #    self.d2g.add_rel_to_cache(Relation(start_node=start_node, end_node=hub))
+        return hub, hub_chain(hub, end_node)
 
     def _get_to_be_hubbed_sub_graph(
         self,
@@ -867,6 +848,8 @@ class CreateHubbing(_NodeTransformerBase):
         depth: int = 0,
     ) -> List[ToBeHubbedNode]:
         current_node: CreateHubbing.ToBeHubbedNode = None
+        if depth > len(self.follow_nodes_labels):
+            return
         if depth == 0 or self.follow_nodes_labels[depth - 1] in start_node.labels:
             for allready_checked_node in self.sub_graph_nodes:
                 if (
@@ -878,65 +861,42 @@ class CreateHubbing(_NodeTransformerBase):
                     break
 
             if current_node is None:
+                is_end_node = depth == len(self.follow_nodes_labels)
+                incomplete_chain = False
+                if not is_end_node and self.hub_incomplete_chains:
+                    has_child = False
+                    for rel in start_node.outgoing_relations:
+                        if self.follow_nodes_labels[depth] in rel.end_node.labels:
+                            has_child = True
+                            break
+                    is_end_node = True if not has_child else False
+                    incomplete_chain = True if not has_child else False
+
                 current_node = CreateHubbing.ToBeHubbedNode(
                     depth_level=depth,
                     node=start_node,
                     parent_rels=[],
                     parent_nodes=[],
-                    is_end_node=depth == len(self.follow_nodes_labels),
+                    is_end_node=is_end_node,
+                    incomplete_chain=incomplete_chain,
                 )
                 self.sub_graph_nodes.append(current_node)
-            if parent_node:
+
+            if parent_node is not None:
                 current_node.parent_nodes.append(parent_node)
                 current_node.parent_rels.append(parent_rel)
             for outgoing_rel in current_node.node.outgoing_relations:
+
                 child_node = outgoing_rel.end_node
-                if self.follow_nodes_labels[depth] in child_node.labels:
-                    self._get_to_be_hubbed_sub_graph(
-                        start_node=child_node,
-                        parent_node=current_node,
-                        parent_rel=outgoing_rel,
-                        depth=depth + 1,
-                    )
+                self._get_to_be_hubbed_sub_graph(
+                    start_node=child_node,
+                    parent_node=current_node,
+                    parent_rel=outgoing_rel,
+                    depth=depth + 1,
+                )
 
             return current_node
         return
-
-        #########
-        nodes: List[CreateHubbing.ToBeHubbedNode] = []
-        for outgoing_rel in start_node.outgoing_relations:
-            node = outgoing_rel.end_node
-            if self.follow_nodes_labels[depth] in node.labels:
-                is_end_node: bool = depth == len(self.follow_nodes_labels) - 1
-                existing_node: CreateHubbing.ToBeHubbedNode = next(
-                    (
-                        allready_checked_node
-                        for allready_checked_node in nodes
-                        if allready_checked_node.node == node
-                        and allready_checked_node.depth_level == depth
-                    ),
-                    None,
-                )
-                if existing_node:
-                    existing_node.parent_rels.append(outgoing_rel)
-                    existing_node.parent_fill_nodes.append(parent_node)
-                else:
-                    new_node = CreateHubbing.ToBeHubbedNode(
-                        depth_level=depth,
-                        node=node,
-                        parent_rels=[outgoing_rel],
-                        parent_nodes=[parent_node] if parent_node is not None else [],
-                        child_nodes=None,
-                        is_end_node=is_end_node,
-                    )
-                    if not is_end_node:
-                        new_node.child_nodes = self._get_to_be_hubbed_sub_graph(
-                            start_node=node, parent_node=new_node, depth=depth + 1
-                        )
-
-                    nodes.append(new_node)
-        self.sub_graph_nodes.extend(nodes)
-        return nodes
 
     def _walk_follow_nodes(
         self, node: Node, follow_nodes_labels: List[str]

@@ -145,22 +145,37 @@ def test_hubbing_edge():
             ],
         }
     }
+    dic3 = {
+        "Article": {
+            "title": "Transhumanism in Computergames",
+            "Authors": [
+                {
+                    "firstName": "William",
+                    "lastName": "Gibson",
+                    "affiliation": [{"name": "University 1"}],
+                },
+            ],
+        }
+    }
     d2g = Dict2graph()
     d2g.add_node_transformation(
         [
             Transformer.match_nodes().do(NodeTrans.PopListHubNodes()),
             Transformer.match_nodes().do(NodeTrans.RemoveListItemLabels()),
-            Transformer.match_nodes("Article").do(
-                NodeTrans.CreateHubbing(
-                    follow_nodes_labels=["Authors", "affiliation"],
-                    merge_mode="edge",
-                    hub_labels=["Contribution"],
-                )
-            ),
         ]
     )
+    hub_trans = Transformer.match_nodes("Article").do(
+        NodeTrans.CreateHubbing(
+            follow_nodes_labels=["Authors", "affiliation"],
+            merge_mode="edge",
+            hub_labels=["Contribution"],
+            hub_incomplete_chains=True,
+        )
+    )
+    d2g.add_node_transformation(hub_trans)
     d2g.parse(dic1)
     d2g.parse(dic2)
+    d2g.parse(dic3)
     d2g.merge(DRIVER)
     result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
@@ -169,17 +184,82 @@ def test_hubbing_edge():
         {
             "labels": ["affiliation"],
             "props": {"name": "University 1"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "affiliation_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "affiliation_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
+                    },
+                },
+            ],
         },
         {
             "labels": ["affiliation"],
             "props": {"name": "University 2"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "affiliation_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
+                    },
+                }
+            ],
         },
         {
             "labels": ["Authors"],
             "props": {"firstName": "Mike", "lastName": "Pondsmith"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Authors_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Authors_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Authors_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Authors"],
+            "props": {"firstName": "William", "lastName": "Gibson"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Authors_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
+                    },
+                }
+            ],
         },
         {
             "labels": ["Article"],
@@ -206,60 +286,31 @@ def test_hubbing_edge():
                         "labels": ["Contribution"],
                         "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
                     },
-                }
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Article_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
+                    },
+                },
             ],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Contribution_HAS_Authors",
-                    "rel_target_node": {
-                        "labels": ["Authors"],
-                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Contribution_HAS_affiliation",
-                    "rel_target_node": {
-                        "labels": ["affiliation"],
-                        "props": {"name": "University 1"},
-                    },
-                },
-            ],
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "8487f076ec304ed104156566b47d250b"},
+            "outgoing_rels": [],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Contribution_HAS_Authors",
-                    "rel_target_node": {
-                        "labels": ["Authors"],
-                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Contribution_HAS_affiliation",
-                    "rel_target_node": {
-                        "labels": ["affiliation"],
-                        "props": {"name": "University 1"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Contribution_HAS_affiliation",
-                    "rel_target_node": {
-                        "labels": ["affiliation"],
-                        "props": {"name": "University 2"},
-                    },
-                },
-            ],
+            "outgoing_rels": [],
         },
     ]
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
@@ -513,7 +564,7 @@ def wip_test_pubmed_article():
     assert_result(result, expected_result_nodes)
 
 
-def wip_pubmed_author_hubbing():
+def test_pubmed_author_hubbing():
     wipe_all_neo4j_data(DRIVER)
     data = {
         "PubMedArticle": {
@@ -526,10 +577,20 @@ def wip_pubmed_author_hubbing():
                         "ForeName": "J",
                     },
                     {
+                        "LastName": "Rutha",
+                        "ForeName": "Heatherford",
+                    },
+                    {
                         "LastName": "Kalla",
                         "ForeName": "Roger",
                         "AffiliationInfo": [
-                            {"Affiliation": "University Hospital Bern"},
+                            {
+                                "Affiliation": "University Hospital Bern",
+                                "otherstuff": {
+                                    "building_count": 23,
+                                    "altname": "HospBern",
+                                },
+                            },
                             {
                                 "Affiliation": "German Center for Vertigo and Balance Disorders"
                             },
@@ -585,9 +646,174 @@ def wip_pubmed_author_hubbing():
     )
 
     d2g.parse(data)
-    d2g.create(DRIVER)
+    d2g.merge(DRIVER)
     result = get_all_neo4j_nodes_with_rels(DRIVER)
-    expected_result_nodes: dict = []
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Author"],
+            "props": {"ForeName": "J", "LastName": "Clay"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Author"],
+            "props": {"ForeName": "Heatherford", "LastName": "Rutha"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Author"],
+            "props": {"ForeName": "Roger", "LastName": "Kalla"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Author"],
+            "props": {"ForeName": "Michael", "LastName": "Strupp"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["Author"],
+            "props": {"ForeName": "Tom", "LastName": "Miller"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Author_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["otherstuff"],
+            "props": {"altname": "HospBern", "building_count": 23},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Affiliation"],
+            "props": {"Affiliation": "University Hospital Bern"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Affiliation_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "Affiliation_HAS_otherstuff",
+                    "rel_target_node": {
+                        "labels": ["otherstuff"],
+                        "props": {"altname": "HospBern", "building_count": 23},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Affiliation"],
+            "props": {"Affiliation": "German Center for Vertigo and Balance Disorders"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "Affiliation_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
+                    },
+                }
+            ],
+        },
+        {
+            "labels": ["PubMedArticle"],
+            "props": {"CompleteYN": "Y", "PMID": "12345"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "PubMedArticle_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "PubMedArticle_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
+                    },
+                },
+                {
+                    "rel_props": {},
+                    "rel_type": "PubMedArticle_HAS_Contribution",
+                    "rel_target_node": {
+                        "labels": ["Contribution"],
+                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
+                    },
+                },
+            ],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
+            "outgoing_rels": [],
+        },
+        {
+            "labels": ["Contribution"],
+            "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
+            "outgoing_rels": [],
+        },
+    ]
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
     assert_result(result, expected_result_nodes)
 
@@ -597,4 +823,4 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     # test_hubbing_edge()
     # test_pubmed_article_base_test()
     # wip_test_pubmed_article()
-    wip_pubmed_author_hubbing()
+    test_pubmed_author_hubbing()
