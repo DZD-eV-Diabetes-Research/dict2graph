@@ -807,42 +807,6 @@ class CreateHubbing(_NodeTransformerBase):
                 "".join(hash_sources).encode("utf-8")
             ).hexdigest()
 
-    """
-    def _hub_upstream_subgraph_branch_old(
-        self,
-        start_node: Node,
-        end_node: "CreateHubbing.ToBeHubbedNode",
-    ):
-        def hub_chain(hub: Node, to_be_hubbed_node: CreateHubbing.ToBeHubbedNode):
-            if to_be_hubbed_node.is_end_node:
-                if not any(
-                    to_be_hubbed_node.node is rel.start_node
-                    for rel in hub.incoming_relations
-                ):
-                    self.d2g.add_rel_to_cache(
-                        Relation(start_node=hub, end_node=to_be_hubbed_node.node)
-                    )
-            fill_nodes: List[CreateHubbing.ToBeHubbedNode] = []
-            for index, parent_rel in enumerate(to_be_hubbed_node.parent_rels):
-                if parent_rel.end_node == to_be_hubbed_node.node:
-                    flip_start_node = parent_rel.start_node
-                    parent_rel.start_node = hub
-                    parent_rel.end_node = flip_start_node
-                    fill_nodes.append(to_be_hubbed_node.parent_nodes[index])
-                    fill_nodes.extend(
-                        hub_chain(hub, to_be_hubbed_node.parent_nodes[index])
-                    )
-            return fill_nodes
-
-        hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
-        hub.set_transformer_meta_data(self, "is_hub", True)
-        self.d2g.add_node_to_cache(hub)
-
-        if not any(start_node is rel.start_node for rel in hub.incoming_relations):
-            self.d2g.add_rel_to_cache(Relation(start_node=start_node, end_node=hub))
-        return hub, hub_chain(hub, end_node)
-    """
-
     def _hub_upstream_subgraph_branch(
         self,
         start_node: Node,
