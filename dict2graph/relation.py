@@ -1,7 +1,12 @@
 from dict2graph.node import Node
+from typing import Dict
+
+from dict2graph.graph_object_transformer_meta_data import (
+    TransformerMetaDataMixin,
+)
 
 
-class Relation(dict):
+class Relation(dict, TransformerMetaDataMixin):
     """Represantation of a property-graph relationship"""
 
     def __init__(
@@ -24,6 +29,7 @@ class Relation(dict):
         self._origin_relation_type: str = relation_type
         self.deleted = False
         self.update(**kwargs)
+        self._transformer_meta_data: Dict = {}
 
     @property
     def relation_type(self) -> str:

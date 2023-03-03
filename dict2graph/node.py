@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Dict, Tuple, Union, FrozenSet
+from typing import TYPE_CHECKING, List, Dict, Tuple, Union, FrozenSet, Any
 import json
 import uuid
 import hashlib
@@ -7,9 +7,12 @@ import hashlib
 if TYPE_CHECKING:
     from dict2graph import Dict2graph
     from dict2graph.relation import Relation
+from dict2graph.graph_object_transformer_meta_data import (
+    TransformerMetaDataMixin,
+)
 
 
-class Node(dict):
+class Node(dict, TransformerMetaDataMixin):
     """Represantation of a property-graph node"""
 
     def __init__(
@@ -31,6 +34,7 @@ class Node(dict):
         self.is_list_list_item: bool = False
         self.is_root_node: bool = False
         self.deleted = False
+        self._transformer_meta_data: Dict = {}
 
     @property
     def id(self) -> str:

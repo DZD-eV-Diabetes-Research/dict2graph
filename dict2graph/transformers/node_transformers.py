@@ -807,7 +807,8 @@ class CreateHubbing(_NodeTransformerBase):
                 "".join(hash_sources).encode("utf-8")
             ).hexdigest()
 
-    def _hub_upstream_subgraph_branch(
+    """
+    def _hub_upstream_subgraph_branch_old(
         self,
         start_node: Node,
         end_node: "CreateHubbing.ToBeHubbedNode",
@@ -834,10 +835,47 @@ class CreateHubbing(_NodeTransformerBase):
             return fill_nodes
 
         hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
+        hub.set_transformer_meta_data(self, "is_hub", True)
+        self.d2g.add_node_to_cache(hub)
+
+        if not any(start_node is rel.start_node for rel in hub.incoming_relations):
+            self.d2g.add_rel_to_cache(Relation(start_node=start_node, end_node=hub))
+        return hub, hub_chain(hub, end_node)
+    """
+
+    def _hub_upstream_subgraph_branch(
+        self,
+        start_node: Node,
+        end_node: ToBeHubbedNode,
+    ) -> List[ToBeHubbedNode]:
+        def hub_chain(
+            hub: Node, to_be_hubbed_node: CreateHubbing.ToBeHubbedNode
+        ) -> List[CreateHubbing.ToBeHubbedNode]:
+            fill_nodes = []
+            for index, parent in enumerate(to_be_hubbed_node.parent_nodes):
+
+                parent_rel = to_be_hubbed_node.parent_rels[index]
+
+                if parent_rel.start_node.get_transformer_meta_data(
+                    self, "is_hub", default=False
+                ):
+                    # relation is allready hubbed in antoher context
+                    # we need to create clone and adapt the relation
+                    new_rel = Relation(
+                        start_node=hub, end_node=to_be_hubbed_node.node, **parent_rel
+                    )
+                    self.d2g.add_rel_to_cache(new_rel)
+                else:
+                    parent_rel.start_node = hub
+                fill_nodes.append(hub_chain(hub, parent))
+            return fill_nodes + [to_be_hubbed_node]
+
+        hub = Node(labels=self.hub_labels, source_data={}, parent_node=start_node)
 
         self.d2g.add_node_to_cache(hub)
-        # if not any(start_node is rel.start_node for rel in hub.incoming_relations):
-        #    self.d2g.add_rel_to_cache(Relation(start_node=start_node, end_node=hub))
+        hub.set_transformer_meta_data(self, "is_hub", True)
+
+        self.d2g.add_rel_to_cache(Relation(start_node=start_node, end_node=hub))
         return hub, hub_chain(hub, end_node)
 
     def _get_to_be_hubbed_sub_graph(
@@ -853,9 +891,8 @@ class CreateHubbing(_NodeTransformerBase):
         if depth == 0 or self.follow_nodes_labels[depth - 1] in start_node.labels:
             for allready_checked_node in self.sub_graph_nodes:
                 if (
-                    allready_checked_node.node
-                    is start_node
-                    # and allready_hubbed_node.depth_level == depth
+                    allready_checked_node.node is start_node
+                    and allready_checked_node.depth_level == depth
                 ):
                     current_node = allready_checked_node
                     break
@@ -903,7 +940,7 @@ class CreateHubbing(_NodeTransformerBase):
     ) -> Generator[Tuple[Node, Relation], None, None]:
         if len(follow_nodes_labels) == 0:
             return
-        for o_rel in [r for r in node.outgoing_relations if not r.deleted]:
+        for o_rel in [r for r in node.outgoing_relations]:
             for end_node_label in o_rel.end_node.labels:
                 if end_node_label in follow_nodes_labels[0]:
                     yield o_rel.end_node, o_rel

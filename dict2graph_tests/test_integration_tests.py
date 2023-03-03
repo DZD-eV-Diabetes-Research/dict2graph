@@ -184,82 +184,22 @@ def test_hubbing_edge():
         {
             "labels": ["affiliation"],
             "props": {"name": "University 1"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "affiliation_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
-                    },
-                },
-                {
-                    "rel_props": {},
-                    "rel_type": "affiliation_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
-                    },
-                },
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["affiliation"],
             "props": {"name": "University 2"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "affiliation_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Authors"],
             "props": {"firstName": "Mike", "lastName": "Pondsmith"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Authors_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
-                    },
-                },
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Authors"],
             "props": {"firstName": "William", "lastName": "Gibson"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Authors_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Article"],
@@ -284,7 +224,7 @@ def test_hubbing_edge():
                     "rel_type": "Article_HAS_Contribution",
                     "rel_target_node": {
                         "labels": ["Contribution"],
-                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
+                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
                     },
                 },
                 {
@@ -292,7 +232,7 @@ def test_hubbing_edge():
                     "rel_type": "Article_HAS_Contribution",
                     "rel_target_node": {
                         "labels": ["Contribution"],
-                        "props": {"id": "8487f076ec304ed104156566b47d250b"},
+                        "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
                     },
                 },
             ],
@@ -300,17 +240,76 @@ def test_hubbing_edge():
         {
             "labels": ["Contribution"],
             "props": {"id": "7fcd494bd8e15df89a8c970efcb1beeb"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["Authors"],
+                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "University 1"},
+                    },
+                },
+            ],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "8487f076ec304ed104156566b47d250b"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["Authors"],
+                        "props": {"firstName": "William", "lastName": "Gibson"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["Authors"],
+                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "University 1"},
+                    },
+                },
+            ],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "d6d0f91b22b1aa33ccb4584344c07508"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Authors",
+                    "rel_target_node": {
+                        "labels": ["Authors"],
+                        "props": {"firstName": "Mike", "lastName": "Pondsmith"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Contribution_HAS_affiliation",
+                    "rel_target_node": {
+                        "labels": ["affiliation"],
+                        "props": {"name": "University 2"},
+                    },
+                },
+            ],
         },
     ]
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
@@ -652,80 +651,27 @@ def test_pubmed_author_hubbing():
         {
             "labels": ["Author"],
             "props": {"ForeName": "J", "LastName": "Clay"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Author"],
             "props": {"ForeName": "Heatherford", "LastName": "Rutha"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Author"],
             "props": {"ForeName": "Roger", "LastName": "Kalla"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 1},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
-                    },
-                },
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
-                    },
-                },
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Author"],
             "props": {"ForeName": "Michael", "LastName": "Strupp"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["Author"],
             "props": {"ForeName": "Tom", "LastName": "Miller"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {"_list_item_index": 0},
-                    "rel_type": "Author_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["otherstuff"],
@@ -738,35 +684,18 @@ def test_pubmed_author_hubbing():
             "outgoing_rels": [
                 {
                     "rel_props": {},
-                    "rel_type": "Affiliation_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
-                    },
-                },
-                {
-                    "rel_props": {},
                     "rel_type": "Affiliation_HAS_otherstuff",
                     "rel_target_node": {
                         "labels": ["otherstuff"],
                         "props": {"altname": "HospBern", "building_count": 23},
                     },
-                },
+                }
             ],
         },
         {
             "labels": ["Affiliation"],
             "props": {"Affiliation": "German Center for Vertigo and Balance Disorders"},
-            "outgoing_rels": [
-                {
-                    "rel_props": {},
-                    "rel_type": "Affiliation_HAS_Contribution",
-                    "rel_target_node": {
-                        "labels": ["Contribution"],
-                        "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
-                    },
-                }
-            ],
+            "outgoing_rels": [],
         },
         {
             "labels": ["PubMedArticle"],
@@ -801,17 +730,86 @@ def test_pubmed_author_hubbing():
         {
             "labels": ["Contribution"],
             "props": {"id": "8f492ab45657303e8a9bd4334d41c428"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 1},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "Heatherford", "LastName": "Rutha"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "J", "LastName": "Clay"},
+                    },
+                },
+            ],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "97ad3f47b0e310c023933e4db4dc502c"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 4},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "Tom", "LastName": "Miller"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "Roger", "LastName": "Kalla"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Affiliation",
+                    "rel_target_node": {
+                        "labels": ["Affiliation"],
+                        "props": {"Affiliation": "University Hospital Bern"},
+                    },
+                },
+            ],
         },
         {
             "labels": ["Contribution"],
             "props": {"id": "97c45bbc829267c994a9e56e25b01a97"},
-            "outgoing_rels": [],
+            "outgoing_rels": [
+                {
+                    "rel_props": {"_list_item_index": 3},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "Michael", "LastName": "Strupp"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 2},
+                    "rel_type": "Contribution_HAS_Author",
+                    "rel_target_node": {
+                        "labels": ["Author"],
+                        "props": {"ForeName": "Roger", "LastName": "Kalla"},
+                    },
+                },
+                {
+                    "rel_props": {"_list_item_index": 0},
+                    "rel_type": "Contribution_HAS_Affiliation",
+                    "rel_target_node": {
+                        "labels": ["Affiliation"],
+                        "props": {
+                            "Affiliation": "German Center for Vertigo and Balance Disorders"
+                        },
+                    },
+                },
+            ],
         },
     ]
     # print("DIFF:", DeepDiff(expected_result_nodes, result, ignore_order=True))
@@ -819,8 +817,8 @@ def test_pubmed_author_hubbing():
 
 
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
-    # test_merge_two_dicts_and_remove_list_hubs()
-    # test_hubbing_edge()
-    # test_pubmed_article_base_test()
+    test_merge_two_dicts_and_remove_list_hubs()
+    test_hubbing_edge()
+    test_pubmed_article_base_test()
     # wip_test_pubmed_article()
     test_pubmed_author_hubbing()
