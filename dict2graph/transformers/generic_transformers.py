@@ -5,6 +5,52 @@ from dict2graph.transformers._base import _NodeTransformerBase, _RelationTransfo
 import json
 
 
+class EscapeInvalidNamesForNeo4JCompatibility(
+    _RelationTransformerBase, _NodeTransformerBase
+):
+    """Rename labels and property keys to be valid with Neo4j rules
+    # https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+    """
+
+    def is_string_valid(self, val: str):
+
+        if len(val) == 0:
+            return False
+        if not val[0].isalpha():
+            return False
+        elif not val.isalnum():
+            return False
+        elif len(val) > 65355:
+            return False
+        else:
+            return True
+
+    def make_valid(self, val: str):
+        return f"`{val[:65354]}`"
+
+    def _transform(self, obj: Dict):
+        new_keys = {}
+        for key in obj.keys():
+            if not self.is_string_valid(key):
+                new_keys[self.make_valid(key)] = obj[key]
+        obj.update(new_keys)
+
+    def transform_node(self, node: Node):
+        new_labels = []
+        for label in node.labels:
+            if not self.is_string_valid(label):
+                new_labels.append(self.make_valid(label))
+            else:
+                new_labels.append(label)
+        node.labels = new_labels
+        self._transform(node)
+
+    def transform_rel(self, rel: Relation):
+        if self.is_string_valid(rel.relation_type):
+            rel.relation_type = self.make_valid(rel.relation_type)
+        self._transform(rel)
+
+
 class OverridePropertyName(_RelationTransformerBase, _NodeTransformerBase):
     """Replace a property name/key with a new string of your choice.
     Usage:

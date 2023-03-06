@@ -29,6 +29,9 @@ class NodeTrans:
     MergeChildNodes = _nodetrans.MergeChildNodes
     OutsourcePropertiesToRelationship = _nodetrans.OutsourcePropertiesToRelationship
     ConvertLabelToProp = _nodetrans.ConvertLabelToProp
+    EscapeInvalidNamesForNeo4JCompatibility = (
+        _gentrans.EscapeInvalidNamesForNeo4JCompatibility
+    )
 
 
 class RelTrans:
@@ -39,3 +42,6 @@ class RelTrans:
     UppercaseRelationType = _reltrans.UppercaseRelationType
     OverrideReliationType = _reltrans.OverrideReliationType
     FlipNodes = _reltrans.FlipNodes
+    EscapeInvalidNamesForNeo4JCompatibility = (
+        _gentrans.EscapeInvalidNamesForNeo4JCompatibility
+    )

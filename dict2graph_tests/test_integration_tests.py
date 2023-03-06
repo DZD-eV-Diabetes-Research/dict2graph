@@ -816,9 +816,55 @@ def test_pubmed_author_hubbing():
     assert_result(result, expected_result_nodes)
 
 
+def real_world_data():
+    import json
+
+    wipe_all_neo4j_data(DRIVER)
+    d2g = Dict2graph()
+    d2g.add_transformation(
+        [
+            Transformer.match_nodes().do(
+                NodeTrans.EscapeInvalidNamesForNeo4JCompatibility()
+            ),
+            Transformer.match_rels().do(
+                RelTrans.EscapeInvalidNamesForNeo4JCompatibility()
+            ),
+            Transformer.match_nodes("ListHub").do(NodeTrans.PopListHubNodes()),
+        ]
+    )
+    with open(
+        "dict2graph_tests/part-00000-62ea41b2-423a-4648-8691-d75ec60b5b7e-c000.json",
+        "rt",
+    ) as f:
+        for index, raw_escaped_obj in enumerate(f):
+            raw_obj = raw_escaped_obj.replace('\\"', '"')
+
+            obj = json.loads(raw_escaped_obj)
+            obj["content"] = json.loads(obj["content"])
+
+            d2g.parse(obj)
+            d2g.merge(DRIVER)
+            print("MERGE", index)
+    print("Parsing done...")
+    # d2g.merge(DRIVER)
+    print("Merge")
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+    # print(json.dumps(result, indent=2))
+
+    expected_result_nodes: dict = [
+        {
+            "labels": ["Human", "Label1"],
+            "props": {"prop1": "val2", "name": "Drummer", "first_name": "Camina"},
+            "outgoing_rels": [],
+        }
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
-    test_merge_two_dicts_and_remove_list_hubs()
-    test_hubbing_edge()
-    test_pubmed_article_base_test()
+    # test_merge_two_dicts_and_remove_list_hubs()
+    # test_hubbing_edge()
+    # test_pubmed_article_base_test()
     # wip_test_pubmed_article()
-    test_pubmed_author_hubbing()
+    # test_pubmed_author_hubbing()
+    real_world_data()
