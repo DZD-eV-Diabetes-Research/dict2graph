@@ -30,6 +30,7 @@ dict2graph also comes with some powerful data transform capabilities.
 - [Dict2graph](#dict2graph)
 - [Install](#install)
 - [What is dict2graph](#what-is-dict2graph)
+  - [Difference compared to apoc.load.json](#difference-compared-to-apocloadjson)
   - [Recommended workflow](#recommended-workflow)
   - [What dict2graph is **not**](#what-dict2graph-is-not)
 - [py2neo depcrecation warning](#py2neo-depcrecation-warning)
@@ -47,6 +48,13 @@ dict2graph also comes with some powerful data transform capabilities.
 
 With dict2graph you can transfer python dicts into a neo4j graph out of the box.  
 And if you are not happy with the structure of the result, dict2graph comes with a bunch of, transformation tools, which are easy to apply to your model.
+
+
+### Difference compared to apoc.load.json
+
+* Client side python parsing (no [database setting](https://neo4j.com/labs/apoc/4.1/overview/apoc.load/apoc.load.json/#_reading_from_a_file) for file loading is necessary)
+* Iterative transforming of the json model to a graph model. You dont need to understand the complete json structure from the begining to load it into Neo4j.
+* More resiliant against changes and irregularities in the json source. 
 
 ### Recommended workflow
 

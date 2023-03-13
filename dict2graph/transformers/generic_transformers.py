@@ -11,12 +11,6 @@ log = logging.getLogger(__name__)
 class SanitizeInvalidNamesForNeo4JCompatibility(
     _RelationTransformerBase, _NodeTransformerBase
 ):
-    """
-    #
-
-    if you need non-destructive escaping have a look at EscapeInvalidNamesForNeo4JCompatibility
-    """
-
     """Destructive renaming of labels and property keys to be valid with Neo4j rules
 
     https://neo4j.com/docs/cypher-manual/current/syntax/naming/
