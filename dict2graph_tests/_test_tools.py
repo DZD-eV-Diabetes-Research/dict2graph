@@ -45,8 +45,13 @@ def wipe_all_neo4j_data(driver: Driver):
     run_delete(driver)
 
 
-def assert_result(result: Dict, expected_result: Dict):
+def assert_result(
+    result: Dict,
+    expected_result: Dict,
+    print_result: bool = True,
+    print_diff: bool = True,
+):
     diff = DeepDiff(expected_result, result, ignore_order=True)
     assert (
         diff == {}
-    ), f"Difference from expected Result:\nRESULT:\n{result}\nDIFFERENCE TO EXPECTATIONS:{diff}"
+    ), f"Difference from expected Result:\nRESULT:\n{result if print_result else 'Non printable'}\nDIFFERENCE TO EXPECTATIONS:{diff if print_diff else 'Non printable'}"

@@ -1476,6 +1476,50 @@ def test_ConvertLabelToProp():
     assert_result(result, expected_result_nodes)
 
 
+def test_SanitizeInvalidNamesForNeo4JCompatibility():
+    wipe_all_neo4j_data(DRIVER)
+
+    dic = {
+        "$person": {
+            "1name": "Camina Drummer",
+            "1friend*": {"person$": {"1name": "Klaes Ashford"}},
+        },
+    }
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes().do(
+            NodeTrans.SanitizeInvalidNamesForNeo4JCompatibility()
+        )
+    )
+    d2g.add_transformation(
+        Transformer.match_rels().do(
+            RelTrans.SanitizeInvalidNamesForNeo4JCompatibility()
+        )
+    )
+    d2g.parse(dic)
+    d2g.create(DRIVER)
+    result = get_all_neo4j_nodes_with_rels(DRIVER)
+
+    expected_result_nodes: dict = [
+        {"labels": ["person"], "props": {"name": "Klaes Ashford"}, "outgoing_rels": []},
+        {
+            "labels": ["person"],
+            "props": {"name": "Camina Drummer"},
+            "outgoing_rels": [
+                {
+                    "rel_props": {},
+                    "rel_type": "friend",
+                    "rel_target_node": {
+                        "labels": ["person"],
+                        "props": {"name": "Klaes Ashford"},
+                    },
+                }
+            ],
+        },
+    ]
+    assert_result(result, expected_result_nodes)
+
+
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
     test_OverrideLabel()
     test_RemoveLabel()
@@ -1503,3 +1547,5 @@ if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "tru
     test_CreateHubbing()
     test_AddProperty()
     test_ConvertLabelToProp()
+
+    test_SanitizeInvalidNamesForNeo4JCompatibility()

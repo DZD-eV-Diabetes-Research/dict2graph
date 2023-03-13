@@ -32,6 +32,9 @@ class NodeTrans:
     EscapeInvalidNamesForNeo4JCompatibility = (
         _gentrans.EscapeInvalidNamesForNeo4JCompatibility
     )
+    SanitizeInvalidNamesForNeo4JCompatibility = (
+        _gentrans.SanitizeInvalidNamesForNeo4JCompatibility
+    )
 
 
 class RelTrans:
@@ -44,4 +47,7 @@ class RelTrans:
     FlipNodes = _reltrans.FlipNodes
     EscapeInvalidNamesForNeo4JCompatibility = (
         _gentrans.EscapeInvalidNamesForNeo4JCompatibility
+    )
+    SanitizeInvalidNamesForNeo4JCompatibility = (
+        _gentrans.SanitizeInvalidNamesForNeo4JCompatibility
     )

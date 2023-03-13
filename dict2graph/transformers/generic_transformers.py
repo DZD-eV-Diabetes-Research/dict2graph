@@ -3,14 +3,111 @@ from dict2graph.node import Node
 from dict2graph.relation import Relation
 from dict2graph.transformers._base import _NodeTransformerBase, _RelationTransformerBase
 import json
+import logging
+
+log = logging.getLogger(__name__)
+
+
+class SanitizeInvalidNamesForNeo4JCompatibility(
+    _RelationTransformerBase, _NodeTransformerBase
+):
+    """
+    #
+
+    if you need non-destructive escaping have a look at EscapeInvalidNamesForNeo4JCompatibility
+    """
+
+    """Destructive renaming of labels and property keys to be valid with Neo4j rules
+
+    https://neo4j.com/docs/cypher-manual/current/syntax/naming/
+
+    Usage:
+    ```python
+    from dict2graph import Dict2graph, Transformer, NodeTrans
+    from neo4j import GraphDatabase
+
+    NEO4J_DRIVER = GraphDatabase.driver("neo4j://localhost")
+
+    dic = {"$person": {"1name": "Camina Drummer"}}
+    d2g = Dict2graph()
+    d2g.add_node_transformation(
+        Transformer.match_nodes().do(NodeTrans.SanitizeInvalidNamesForNeo4JCompatibility("name","fullname"))
+    )
+    d2g.parse(dic)
+    d2g.create(NEO4J_DRIVER)
+    ```
+    Results in a Neo4j node `(:Person{name:'Camina Drummer'})`
+    """
+
+    def is_string_valid(self, val: str):
+
+        if len(val) == 0:
+            return False
+        if not val[0].isalpha():
+            return False
+        elif not val.isalnum():
+            return False
+        elif len(val) > 65355:
+            return False
+        else:
+            return True
+
+    def make_valid(self, val: str):
+        result = ""
+        result_appendix = ""
+        starts_with_alpha: bool = False
+        for index, c in enumerate(val):
+            if index > 65353:
+                break
+            if not starts_with_alpha and c.isnumeric():
+                result_appendix += c
+                continue
+            elif not starts_with_alpha and c.isalpha():
+                starts_with_alpha = True
+            if c == "-":
+                result += "_"
+                continue
+            if c.isalnum():
+                result += c
+        return result
+
+    def _transform(self, obj: Dict):
+        new_props = {}
+        del_keys = []
+        for key in obj.keys():
+            if not self.is_string_valid(key):
+                new_props[self.make_valid(key)] = obj[key]
+                del_keys.append(key)
+        for k in del_keys:
+            del obj[k]
+        obj.update(new_props)
+
+    def transform_node(self, node: Node):
+        new_labels = []
+        for label in node.labels:
+            if not self.is_string_valid(label):
+                new_labels.append(self.make_valid(label))
+            else:
+                new_labels.append(label)
+        node.labels = new_labels
+        self._transform(node)
+
+    def transform_rel(self, rel: Relation):
+        if not self.is_string_valid(rel.relation_type):
+            rel.relation_type = self.make_valid(rel.relation_type)
+        self._transform(rel)
 
 
 class EscapeInvalidNamesForNeo4JCompatibility(
     _RelationTransformerBase, _NodeTransformerBase
 ):
-    """Rename labels and property keys to be valid with Neo4j rules
+    """Non destructive escaping of labels and property keys to be valid with Neo4j rules
     # https://neo4j.com/docs/cypher-manual/current/syntax/naming/
     """
+
+    def __init__(self):
+        warn_message = "`dict2graph.RelTrans.EscapeInvalidNamesForNeo4JCompatibility` will propably fail because of https://github.com/kaiserpreusse/graphio/issues/10. Use dict2graph.RelTrans.SanitizeInvalidNamesForNeo4JCompatibility as workaround"
+        log.warning(warn_message)
 
     def is_string_valid(self, val: str):
 

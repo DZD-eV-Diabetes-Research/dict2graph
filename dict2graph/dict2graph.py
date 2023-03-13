@@ -282,7 +282,11 @@ class Dict2graph:
         self._flush_cache()
         return self
 
-    def merge(self, graph: Union[Graph, Driver]):
+    def merge(
+        self,
+        graph: Union[Graph, Driver],
+        create_merge_indexes: bool = True,
+    ):
         """Push the data to a Neo4h database, with a merge operation.
 
         **usage**
@@ -304,6 +308,8 @@ class Dict2graph:
             graph (Union[Graph, Driver]): A [`neo4j.GraphDatabase` instance](https://neo4j.com/docs/api/python-driver/current/)
                 or a [`py2neo.Graph` instance](https://py2neo.org/2021.1/workflow.html#graph-objects)
         """
+        if create_merge_indexes:
+            self.create_indexes_for_merge_keys(graph)
         for nodes in self._nodeSets.values():
             nodes.merge(graph)
         for rels in self._relSets.values():
@@ -325,7 +331,7 @@ class Dict2graph:
         d2g.create(GraphDatabase.driver("neo4j://localhost"))
         ```
 
-         Will result in two nodes `(:car{wheels:4})`.
+        Will result in two nodes `(:car{wheels:4})`.
 
         Args:
             graph (Union[Graph, Driver]): A [Neo4j python driver instance](https://neo4j.com/docs/api/python-driver/current/)
@@ -335,6 +341,11 @@ class Dict2graph:
             nodes.create(graph)
         for rels in self._relSets.values():
             rels.create(graph)
+
+    def create_indexes_for_merge_keys(self, graph: Union[Graph, Driver]):
+        for nodes in self._nodeSets.values():
+
+            nodes.create_index(graph)
 
     def _prepare_root_node(self, node: Node):
         node.is_root_node = True

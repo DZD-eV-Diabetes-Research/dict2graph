@@ -817,37 +817,40 @@ def test_pubmed_author_hubbing():
 
 
 def real_world_data():
+    wipe_all_neo4j_data(DRIVER)
     import json
 
-    wipe_all_neo4j_data(DRIVER)
     d2g = Dict2graph()
     d2g.add_transformation(
         [
             Transformer.match_nodes().do(
-                NodeTrans.EscapeInvalidNamesForNeo4JCompatibility()
+                NodeTrans.SanitizeInvalidNamesForNeo4JCompatibility()
             ),
             Transformer.match_rels().do(
-                RelTrans.EscapeInvalidNamesForNeo4JCompatibility()
+                RelTrans.SanitizeInvalidNamesForNeo4JCompatibility()
             ),
             Transformer.match_nodes("ListHub").do(NodeTrans.PopListHubNodes()),
+            Transformer.match_nodes("ListItem").do(NodeTrans.RemoveListItemLabels()),
+            Transformer.match_nodes(
+                has_one_label_of=["studydesign", "resourcedescriptions"]
+            ).do(
+                NodeTrans.CreateNewMergePropertyFromHash(
+                    hash_includes_existing_merge_props=True
+                )
+            ),
         ]
     )
+
     with open(
         "dict2graph_tests/part-00000-62ea41b2-423a-4648-8691-d75ec60b5b7e-c000.json",
         "rt",
     ) as f:
-        for index, raw_escaped_obj in enumerate(f):
-            raw_obj = raw_escaped_obj.replace('\\"', '"')
-
+        for raw_escaped_obj in f:
             obj = json.loads(raw_escaped_obj)
             obj["content"] = json.loads(obj["content"])
-
             d2g.parse(obj)
-            d2g.merge(DRIVER)
-            print("MERGE", index)
-    print("Parsing done...")
-    # d2g.merge(DRIVER)
-    print("Merge")
+    d2g.merge(DRIVER, create_merge_indexes=True)
+
     result = get_all_neo4j_nodes_with_rels(DRIVER)
     # print(json.dumps(result, indent=2))
 
@@ -858,7 +861,26 @@ def real_world_data():
             "outgoing_rels": [],
         }
     ]
-    assert_result(result, expected_result_nodes)
+    assert_result(result, expected_result_nodes, print_result=False, print_diff=False)
+    """500
+# fresh database no indexing:_
+Code block 'Parsing' took: 36.93949 ms
+Parsing done...
+Code block 'Merging' took: 8418.97246 ms
+
+# warmed up databasee no indexing
+Code block 'Parsing' took: 41.73797 ms
+Parsing done...
+Code block 'Merging' took: 380.86404 ms
+
+Code block 'Parsing' took: 51.16920 ms
+Parsing done...
+Code block 'Merging' took: 680.78449 ms
+
+Code block 'Parsing' took: 34.57871 ms
+Parsing done...
+Code block 'Merging' took: 722.46307 ms
+    """
 
 
 if __name__ == "__main__" or os.getenv("DICT2GRAPH_RUN_ALL_TESTS", None) == "true":
