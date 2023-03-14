@@ -285,6 +285,7 @@ class Dict2graph:
     def merge(
         self,
         graph: Union[Graph, Driver],
+        database: str = None,
         create_merge_indexes: bool = True,
     ):
         """Push the data to a Neo4h database, with a merge operation.
@@ -307,15 +308,22 @@ class Dict2graph:
         Args:
             graph (Union[Graph, Driver]): A [`neo4j.GraphDatabase` instance](https://neo4j.com/docs/api/python-driver/current/)
                 or a [`py2neo.Graph` instance](https://py2neo.org/2021.1/workflow.html#graph-objects)
+            database (str, optional): Name of the Neo4j [database](https://neo4j.com/docs/cypher-manual/current/databases/). Defaults to None which will eb the default "neo4j" db.
+            create_merge_indexes (bool, optional): _description_. Defaults to True.
         """
+
         if create_merge_indexes:
             self.create_indexes_for_merge_keys(graph)
         for nodes in self._nodeSets.values():
-            nodes.merge(graph)
+            nodes.merge(graph, database=database)
         for rels in self._relSets.values():
-            rels.merge(graph)
+            rels.merge(graph, database=database)
 
-    def create(self, graph: Union[Graph, Driver]):
+    def create(
+        self,
+        graph: Union[Graph, Driver],
+        database: str = None,
+    ):
         """Push the data to a Neo4h database, with a create operation.
 
         **usage**
@@ -336,11 +344,12 @@ class Dict2graph:
         Args:
             graph (Union[Graph, Driver]): A [Neo4j python driver instance](https://neo4j.com/docs/api/python-driver/current/)
                 or a [`py2neo.Graph` instance](https://py2neo.org/2021.1/workflow.html#graph-objects)
+            database (str, optional): Name of the Neo4j [database](https://neo4j.com/docs/cypher-manual/current/databases/). Defaults to None which will eb the default "neo4j" db.
         """
         for nodes in self._nodeSets.values():
-            nodes.create(graph)
+            nodes.create(graph, database=database)
         for rels in self._relSets.values():
-            rels.create(graph)
+            rels.create(graph, database=database)
 
     def create_indexes_for_merge_keys(self, graph: Union[Graph, Driver]):
         for nodes in self._nodeSets.values():
