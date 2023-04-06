@@ -11,7 +11,7 @@ dict2graph also comes with some powerful data transform capabilities.
 
 **Licence**: MIT
 
-**public issue tracker**: [https://github.com/dzd-ev/dict2graph-docs/issues](https://github.com/dzd-ev/dict2graph-docs/issues)
+**public issue tracker**: [https://github.com/DZD-eV-Diabetes-Research/dict2graph/issues](https://github.com/DZD-eV-Diabetes-Research/dict2graph/issues)
 
 **user docs**: [https://dzd-ev.github.io/dict2graph-docs/](https://dzd-ev.github.io/dict2graph-docs/)
 

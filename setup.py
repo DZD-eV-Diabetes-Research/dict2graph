@@ -9,9 +9,14 @@ setup(
     description="Class to extract, transform and load (ETL) dicts/json to a Neo4j graph",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph",
-    author="TB",
-    author_email="tim.bleimehl@helmholtz-muenchen.de",
+    project_urls={
+        "Documentation": "https://dzd-ev.github.io/dict2graph-docs/",
+        "Source": "https://github.com/DZD-eV-Diabetes-Research/dict2graph",
+        "Tracker": "https://github.com/DZD-eV-Diabetes-Research/dict2graph/issues",
+    },
+    url="https://dzd-ev.github.io/dict2graph-docs/",
+    author="Tim Bleimehl",
+    author_email="tim.bleimehl@helmholtz-munich.de",
     license="MIT",
     packages=["dict2graph"],
     install_requires=[
