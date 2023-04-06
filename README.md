@@ -15,7 +15,7 @@ dict2graph also comes with some powerful data transform capabilities.
 
 **user docs**: [https://dzd-ev.github.io/dict2graph-docs/](https://dzd-ev.github.io/dict2graph-docs/)
 
-**source code**: [https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph](https://git.connect.dzd-ev.de/dzdpythonmodules/dict2graph)
+**source code**: [https://github.com/DZD-eV-Diabetes-Research/dict2graph](https://github.com/DZD-eV-Diabetes-Research/dict2graph)
 
 **important upstream modules**:
 
